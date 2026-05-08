@@ -7,7 +7,6 @@ import { Eye, EyeOff, Smartphone, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 export default function Login() {
   const router = useRouter();
@@ -25,7 +24,7 @@ export default function Login() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      {/* Top Section / Brand */}
+      {/* Top Section */}
       <div className="flex flex-col items-center pt-24 pb-12 px-8 text-center">
         <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Premium Payment Network</p>
         <div className="w-8 h-1 bg-primary/20 rounded-full mt-4"></div>
@@ -42,7 +41,7 @@ export default function Login() {
               </div>
               <Input 
                 type="tel" 
-                placeholder="Enter registered number" 
+                placeholder="Enter mobile number" 
                 className="bg-gray-50 border-gray-100 rounded-2xl h-14 pl-12 text-gray-900 font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all"
                 required
               />
@@ -57,7 +56,7 @@ export default function Login() {
               </div>
               <Input 
                 type={showPassword ? "text" : "password"} 
-                placeholder="Enter 6-digit pin" 
+                placeholder="6-digit pin" 
                 className="bg-gray-50 border-gray-100 rounded-2xl h-14 pl-12 pr-12 text-gray-900 font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all tracking-[0.3em] placeholder:tracking-normal"
                 required
               />
@@ -72,23 +71,22 @@ export default function Login() {
           </div>
 
           <div className="flex justify-end px-1">
-            <button type="button" className="text-[10px] font-bold text-primary uppercase tracking-wider">Reset Account Pin</button>
+            <button type="button" className="text-[10px] font-bold text-primary uppercase tracking-wider">Reset Pin</button>
           </div>
 
           <Button 
             className="w-full h-15 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-primary/15 mt-2 bg-primary hover:bg-primary/95 active:scale-[0.98] transition-all"
             disabled={loading}
           >
-            {loading ? "Verifying Credentials..." : "Login to Workspace"}
+            {loading ? "Verifying..." : "Login"}
             {!loading && <ArrowRight className="ml-2" size={16} />}
           </Button>
         </form>
 
         <div className="mt-auto pt-10 text-center">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-4">New to the Network?</p>
           <Link href="/register">
-            <Button variant="outline" className="w-full h-14 rounded-2xl font-bold uppercase tracking-[0.15em] border-gray-100 text-gray-600 hover:bg-gray-50 text-[10px] active:scale-[0.98] transition-all">
-              Create Partner ID
+            <Button variant="ghost" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:bg-transparent hover:text-primary">
+              Create New Account
             </Button>
           </Link>
         </div>
