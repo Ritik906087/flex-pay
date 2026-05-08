@@ -45,6 +45,8 @@ export default function Home() {
     );
   }
 
+  const avatarUrl = PlaceHolderImages.find(img => img.id === 'avatar-user')?.imageUrl || "https://picsum.photos/seed/default-avatar/200/200";
+
   return (
     <div className="flex flex-col min-h-screen pb-24">
       {/* Header */}
@@ -56,7 +58,7 @@ export default function Home() {
         <div className="relative">
           <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-primary/20 p-0.5">
             <Image 
-              src={PlaceHolderImages.find(img => img.id === 'avatar-user')?.imageUrl || ''} 
+              src={avatarUrl} 
               alt="Avatar" 
               width={48} 
               height={48}

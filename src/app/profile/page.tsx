@@ -16,6 +16,8 @@ export default function Profile() {
   const mobileNumber = "+91 9876543210";
   const uid = "FX102456";
 
+  const avatarUrl = PlaceHolderImages.find(img => img.id === 'avatar-user')?.imageUrl || "https://picsum.photos/seed/default-avatar/200/200";
+
   return (
     <div className="flex flex-col min-h-screen pb-24">
       {/* Profile Header */}
@@ -23,7 +25,7 @@ export default function Profile() {
         <div className="relative mb-6">
           <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-primary/20 p-1 shadow-2xl">
             <Image 
-              src={PlaceHolderImages.find(img => img.id === 'avatar-user')?.imageUrl || ''} 
+              src={avatarUrl} 
               alt="Avatar" 
               width={112} 
               height={112}

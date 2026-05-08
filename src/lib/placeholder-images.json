@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "banner-1",
+      "description": "Fintech Banner 1",
+      "imageUrl": "https://picsum.photos/seed/flexpay1/600/300",
+      "imageHint": "finance investment"
+    },
+    {
+      "id": "banner-2",
+      "description": "Fintech Banner 2",
+      "imageUrl": "https://picsum.photos/seed/flexpay2/600/300",
+      "imageHint": "technology abstract"
+    },
+    {
+      "id": "banner-3",
+      "description": "Fintech Banner 3",
+      "imageUrl": "https://picsum.photos/seed/flexpay3/600/300",
+      "imageHint": "crypto wallet"
+    },
+    {
+      "id": "avatar-user",
+      "description": "User Avatar",
+      "imageUrl": "https://picsum.photos/seed/useravatar/200/200",
+      "imageHint": "person portrait"
+    }
+  ]
 }
