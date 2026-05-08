@@ -26,18 +26,15 @@ export default function Login() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Top Section / Brand */}
-      <div className="flex flex-col items-center pt-16 pb-10 px-8">
-        <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 mb-5">
-          <span className="text-xl font-black text-white">FP</span>
-        </div>
-        <h1 className="text-2xl font-black text-gray-900 tracking-tight">WELCOME BACK</h1>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1.5">Premium Payment Network</p>
+      <div className="flex flex-col items-center pt-24 pb-12 px-8 text-center">
+        <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Premium Payment Network</p>
+        <div className="w-8 h-1 bg-primary/20 rounded-full mt-4"></div>
       </div>
 
       {/* Auth Form */}
       <div className="flex-1 px-8 pb-10 flex flex-col">
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div className="space-y-1.5">
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-2">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mobile Number</label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-primary">
@@ -52,7 +49,7 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Secure Pin</label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-primary">

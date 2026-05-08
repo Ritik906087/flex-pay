@@ -24,18 +24,15 @@ export default function Register() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Top Section */}
-      <div className="flex flex-col items-center pt-12 pb-8 px-8">
-        <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 mb-5">
-          <span className="text-xl font-black text-white">FP</span>
-        </div>
-        <h1 className="text-2xl font-black text-gray-900 tracking-tight">JOIN FLEXPAY</h1>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1.5">Authorized Partner Access</p>
+      <div className="flex flex-col items-center pt-20 pb-10 px-8 text-center">
+        <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Authorized Partner Access</p>
+        <div className="w-8 h-1 bg-primary/20 rounded-full mt-4"></div>
       </div>
 
       {/* Register Form */}
       <div className="flex-1 px-8 pb-10 flex flex-col overflow-y-auto no-scrollbar">
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div className="space-y-1.5">
+        <form onSubmit={handleRegister} className="space-y-5">
+          <div className="space-y-2">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mobile Contact</label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
@@ -50,7 +47,7 @@ export default function Register() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Create Pin</label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
@@ -65,7 +62,7 @@ export default function Register() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Invite Referral</label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
