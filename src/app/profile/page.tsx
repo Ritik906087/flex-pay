@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react";
@@ -45,42 +44,42 @@ export default function Profile() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
       {/* Profile Header */}
-      <div className="bg-white px-6 pt-12 pb-8 border-b border-gray-100">
+      <div className="bg-white px-6 pt-10 pb-7 border-b border-gray-100">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-50 p-0.5 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-50 p-0.5 shadow-sm">
               <Image 
                 src={avatarUrl} 
                 alt="Avatar" 
-                width={80} 
-                height={80}
-                className="rounded-[0.9rem] object-cover"
+                width={64} 
+                height={64}
+                className="rounded-[0.8rem] object-cover"
               />
             </div>
-            <button className="absolute -bottom-2 -right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center border border-gray-100 text-primary shadow-lg active:scale-95 transition-transform">
-              <Camera size={14} />
+            <button className="absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-white rounded-full flex items-center justify-center border border-gray-100 text-primary shadow-lg active:scale-95 transition-transform">
+              <Camera size={12} />
             </button>
           </div>
           <div>
             <button 
               onClick={() => handleCopy(mobileNumber, "Username")}
-              className="flex items-center gap-2 group active:opacity-70 transition-opacity"
+              className="flex items-center gap-1.5 group active:opacity-70 transition-opacity"
             >
-              <h2 className="text-lg font-black text-gray-900">{mobileNumber}</h2>
-              <Copy size={14} className="text-gray-300" />
+              <h2 className="text-base font-black text-gray-900">{mobileNumber}</h2>
+              <Copy size={12} className="text-gray-300" />
             </button>
             <div className="flex items-center gap-1.5 mt-0.5">
               <button 
                 onClick={() => handleCopy(uid, "UID")}
-                className="flex items-center gap-1 text-[10px] font-bold text-gray-400 active:text-primary transition-colors"
+                className="flex items-center gap-1 text-[9px] font-bold text-gray-400 active:text-primary transition-colors"
               >
                 <span>UID: {uid}</span>
-                <Copy size={10} />
+                <Copy size={9} />
               </button>
-              <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
+              <span className="w-0.5 h-0.5 bg-gray-200 rounded-full"></span>
               <div className="flex items-center gap-0.5">
-                <BadgeCheck size={12} className="text-primary" />
-                <span className="text-[10px] font-bold text-primary">VIP 1</span>
+                <BadgeCheck size={10} className="text-primary" />
+                <span className="text-[9px] font-black text-primary uppercase tracking-tighter">VIP 1</span>
               </div>
             </div>
           </div>
@@ -88,32 +87,32 @@ export default function Profile() {
       </div>
 
       {/* Wallet Brief */}
-      <div className="px-6 -mt-6">
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex justify-between items-center">
+      <div className="px-5 -mt-5">
+        <div className="bg-white rounded-[1.2rem] border border-gray-100 p-4 shadow-sm flex justify-between items-center">
           <div>
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Total Balance</span>
-            <p className="text-2xl font-black text-gray-900">₹{balance.toLocaleString()}</p>
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">Total Assets</span>
+            <p className="text-xl font-black text-gray-900">₹{balance.toLocaleString()}</p>
           </div>
-          <Button variant="secondary" className="rounded-xl h-10 px-4 font-bold text-xs bg-gray-50 border-0 hover:bg-gray-100">
-            <Wallet size={16} className="mr-2" />
+          <Button variant="secondary" className="rounded-xl h-9 px-3 font-bold text-[10px] bg-gray-50 border-0 hover:bg-gray-100">
+            <Wallet size={14} className="mr-2" />
             WALLET
           </Button>
         </div>
       </div>
 
       {/* Main Sections */}
-      <div className="px-6 mt-8 flex flex-col gap-6 pb-32">
+      <div className="px-5 mt-6 flex flex-col gap-5 pb-32">
         {/* Account Group */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-[1.2rem] border border-gray-100 overflow-hidden shadow-sm">
           <Link href="/profile/history">
-            <button className="w-full px-5 py-4 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                  <ShoppingCart size={18} />
+            <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                  <ShoppingCart size={16} />
                 </div>
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Buy History</span>
+                <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">Buy History</span>
               </div>
-              <ChevronRight size={16} className="text-gray-300" />
+              <ChevronRight size={14} className="text-gray-300" />
             </button>
           </Link>
           {[
@@ -125,23 +124,23 @@ export default function Profile() {
             <button 
               key={i} 
               className={cn(
-                "w-full px-5 py-4 flex items-center justify-between transition-all active:bg-gray-50",
+                "w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50",
                 i !== 3 && "border-b border-gray-50"
               )}
             >
-              <div className="flex items-center gap-4">
-                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", item.bg, item.color)}>
-                  <item.icon size={18} />
+              <div className="flex items-center gap-3">
+                <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", item.bg, item.color)}>
+                  <item.icon size={16} />
                 </div>
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{item.label}</span>
+                <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
               </div>
-              <ChevronRight size={16} className="text-gray-300" />
+              <ChevronRight size={14} className="text-gray-300" />
             </button>
           ))}
         </div>
 
         {/* Support Group */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-[1.2rem] border border-gray-100 overflow-hidden shadow-sm">
           {[
             { icon: Settings, label: "Settings", color: "text-gray-400" },
             { icon: ShieldCheck, label: "Security", color: "text-gray-400" },
@@ -151,17 +150,17 @@ export default function Profile() {
             <button 
               key={i} 
               className={cn(
-                "w-full px-5 py-4 flex items-center justify-between transition-all active:bg-gray-50",
+                "w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50",
                 i !== 3 && "border-b border-gray-50"
               )}
             >
-              <div className="flex items-center gap-4">
-                <div className={cn("w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center", item.color)}>
-                  <item.icon size={18} />
+              <div className="flex items-center gap-3">
+                <div className={cn("w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center", item.color)}>
+                  <item.icon size={16} />
                 </div>
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{item.label}</span>
+                <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
               </div>
-              <ChevronRight size={16} className="text-gray-300" />
+              <ChevronRight size={14} className="text-gray-300" />
             </button>
           ))}
         </div>
