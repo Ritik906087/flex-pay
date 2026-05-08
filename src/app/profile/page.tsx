@@ -1,19 +1,30 @@
+
 "use client"
 
 import { BottomNav } from "@/components/bottom-nav";
 import { 
   Settings, Headphones, LogOut, ShieldCheck, 
   History, CreditCard, Gift, Users, ChevronRight, 
-  Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp
+  Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
-  const mobileNumber = "98765 43210";
+  const { toast } = useToast();
+  const mobileNumber = "9876543210";
   const uid = "FLEX123456";
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied",
+      description: `${label} copied to clipboard.`,
+    });
+  };
 
   const avatarUrl = PlaceHolderImages.find(img => img.id === 'avatar-user')?.imageUrl || "https://picsum.photos/seed/default-avatar/200/200";
 
@@ -37,9 +48,21 @@ export default function Profile() {
             </button>
           </div>
           <div>
-            <h2 className="text-lg font-black text-gray-900">{mobileNumber}</h2>
+            <button 
+              onClick={() => handleCopy(mobileNumber, "Username")}
+              className="flex items-center gap-2 group active:opacity-70 transition-opacity"
+            >
+              <h2 className="text-lg font-black text-gray-900">{mobileNumber}</h2>
+              <Copy size={14} className="text-gray-300" />
+            </button>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] font-bold text-gray-400">UID: {uid}</span>
+              <button 
+                onClick={() => handleCopy(uid, "UID")}
+                className="flex items-center gap-1 text-[10px] font-bold text-gray-400 active:text-primary transition-colors"
+              >
+                <span>UID: {uid}</span>
+                <Copy size={10} />
+              </button>
               <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
               <div className="flex items-center gap-0.5">
                 <BadgeCheck size={12} className="text-primary" />

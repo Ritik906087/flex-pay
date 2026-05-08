@@ -1,24 +1,38 @@
+
 "use client"
 
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/bottom-nav";
 import { 
   TrendingUp, Wallet, ArrowDownCircle, ArrowUpCircle, 
-  Users, ShoppingCart, Share2, ChevronRight, Bell, Search
+  Users, ShoppingCart, Share2, ChevronRight, Bell, Search, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(12500);
+  const { toast } = useToast();
+
+  const mobileNumber = "9876543210";
+  const uid = "FLEX123456";
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied",
+      description: `${label} copied to clipboard.`,
+    });
+  };
 
   if (loading) {
     return (
@@ -47,9 +61,15 @@ export default function Home() {
               className="object-cover"
             />
           </div>
-          <div>
+          <div className="flex flex-col">
             <h2 className="text-gray-400 text-[10px] uppercase tracking-wider font-bold">Good Morning,</h2>
-            <h1 className="text-sm font-bold text-gray-900">98765 43210</h1>
+            <button 
+              onClick={() => handleCopy(mobileNumber, "Mobile Number")}
+              className="flex items-center gap-1 group active:opacity-70 transition-opacity"
+            >
+              <h1 className="text-sm font-bold text-gray-900">{mobileNumber}</h1>
+              <Copy size={10} className="text-gray-300" />
+            </button>
           </div>
         </div>
         <div className="flex gap-3">
