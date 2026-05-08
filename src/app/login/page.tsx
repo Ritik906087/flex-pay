@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Smartphone, Lock, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Smartphone, Lock, ArrowRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -25,39 +25,39 @@ export default function Login() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Top Section */}
-      <div className="flex flex-col items-center pt-24 pb-12 px-8 text-center">
-        <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Premium Payment Network</p>
-        <div className="w-8 h-1 bg-primary/20 rounded-full mt-4"></div>
+      <div className="flex flex-col items-center pt-24 pb-8 px-8 text-center">
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Secure Access</p>
+        <div className="w-6 h-1 bg-primary/20 rounded-full mt-3"></div>
       </div>
 
       {/* Auth Form */}
-      <div className="flex-1 px-8 pb-10 flex flex-col">
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mobile Number</label>
+      <div className="flex-1 px-8 pb-10 flex flex-col max-w-sm mx-auto w-full">
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mobile Number</label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-primary">
-                <Smartphone size={18} />
+                <Smartphone size={16} />
               </div>
               <Input 
                 type="tel" 
                 placeholder="Enter mobile number" 
-                className="bg-gray-50 border-gray-100 rounded-2xl h-14 pl-12 text-gray-900 font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all"
+                className="bg-gray-50 border-gray-100 rounded-2xl h-14 pl-11 text-sm font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all"
                 required
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Secure Pin</label>
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest ml-1">Secure Pin</label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-primary">
-                <Lock size={18} />
+                <Lock size={16} />
               </div>
               <Input 
                 type={showPassword ? "text" : "password"} 
                 placeholder="6-digit pin" 
-                className="bg-gray-50 border-gray-100 rounded-2xl h-14 pl-12 pr-12 text-gray-900 font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all tracking-[0.3em] placeholder:tracking-normal"
+                className="bg-gray-50 border-gray-100 rounded-2xl h-14 pl-11 pr-11 text-sm font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all tracking-[0.3em] placeholder:tracking-normal"
                 required
               />
               <button 
@@ -65,31 +65,36 @@ export default function Login() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
           <div className="flex justify-end px-1">
-            <button type="button" className="text-[10px] font-bold text-primary uppercase tracking-wider">Reset Pin</button>
+            <button type="button" className="text-[9px] font-bold text-primary uppercase tracking-wider hover:opacity-70">Forgot Pin?</button>
           </div>
 
-          <Button 
-            className="w-full h-15 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-primary/15 mt-2 bg-primary hover:bg-primary/95 active:scale-[0.98] transition-all"
-            disabled={loading}
-          >
-            {loading ? "Verifying..." : "Login"}
-            {!loading && <ArrowRight className="ml-2" size={16} />}
-          </Button>
-        </form>
-
-        <div className="mt-auto pt-10 text-center">
-          <Link href="/register">
-            <Button variant="ghost" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:bg-transparent hover:text-primary">
-              Create New Account
+          <div className="pt-2 space-y-4">
+            <Button 
+              className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/10 bg-primary hover:bg-primary/95 active:scale-[0.98] transition-all"
+              disabled={loading}
+            >
+              {loading ? "Verifying..." : "Login"}
+              {!loading && <ArrowRight className="ml-2" size={14} />}
             </Button>
-          </Link>
-        </div>
+
+            <Link href="/register" className="block">
+              <Button 
+                variant="outline"
+                type="button"
+                className="w-full h-14 rounded-2xl font-bold uppercase tracking-[0.1em] text-[10px] border-gray-100 text-gray-500 bg-white hover:bg-gray-50 active:scale-[0.98] transition-all"
+              >
+                <UserPlus className="mr-2" size={14} />
+                Create Account
+              </Button>
+            </Link>
+          </div>
+        </form>
       </div>
     </div>
   );
