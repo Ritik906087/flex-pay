@@ -6,6 +6,7 @@ import { UserPlus, Copy, Share2, Users, Trophy, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 export default function Invite() {
   const { toast } = useToast();
