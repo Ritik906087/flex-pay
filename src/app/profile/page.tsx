@@ -1,11 +1,10 @@
-
 "use client"
 
 import { BottomNav } from "@/components/bottom-nav";
 import { 
-  User, Settings, Headphones, LogOut, ShieldCheck, 
+  Settings, Headphones, LogOut, ShieldCheck, 
   History, CreditCard, Gift, Users, ChevronRight, 
-  Camera, Wallet, BadgeCheck 
+  Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -19,102 +18,105 @@ export default function Profile() {
   const avatarUrl = PlaceHolderImages.find(img => img.id === 'avatar-user')?.imageUrl || "https://picsum.photos/seed/default-avatar/200/200";
 
   return (
-    <div className="flex flex-col min-h-screen pb-24">
+    <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
       {/* Profile Header */}
-      <div className="px-6 pt-16 pb-10 flex flex-col items-center">
-        <div className="relative mb-6">
-          <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-primary/20 p-1 shadow-2xl">
-            <Image 
-              src={avatarUrl} 
-              alt="Avatar" 
-              width={112} 
-              height={112}
-              className="rounded-[1.5rem] object-cover"
-            />
+      <div className="bg-white px-6 pt-12 pb-8 border-b border-gray-100">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-50 p-0.5 shadow-sm">
+              <Image 
+                src={avatarUrl} 
+                alt="Avatar" 
+                width={80} 
+                height={80}
+                className="rounded-[0.9rem] object-cover"
+              />
+            </div>
+            <button className="absolute -bottom-2 -right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center border border-gray-100 text-primary shadow-lg">
+              <Camera size={14} />
+            </button>
           </div>
-          <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary rounded-2xl flex items-center justify-center border-4 border-background text-primary-foreground">
-            <Camera size={18} />
-          </button>
-        </div>
-        <h2 className="text-2xl font-black text-white mb-1">{mobileNumber}</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">UID: {uid}</span>
-          <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-          <div className="flex items-center gap-1">
-            <BadgeCheck size={12} className="text-primary" />
-            <span className="text-[10px] font-black text-primary uppercase">VIP 1 MEMBER</span>
+          <div>
+            <h2 className="text-lg font-black text-gray-900">{mobileNumber}</h2>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[10px] font-bold text-gray-400">UID: {uid}</span>
+              <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
+              <div className="flex items-center gap-0.5">
+                <BadgeCheck size={12} className="text-primary" />
+                <span className="text-[10px] font-bold text-primary">VIP 1</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Balance Grid */}
-      <div className="px-6 mb-8 grid grid-cols-2 gap-4">
-        <div className="glass-card p-5 rounded-[2rem] border border-white/10">
-          <Wallet size={20} className="text-primary mb-3" />
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Wallet Balance</span>
-          <p className="text-xl font-black text-white">₹12,500.00</p>
-        </div>
-        <div className="glass-card p-5 rounded-[2rem] border border-white/10">
-          <Gift size={20} className="text-amber-400 mb-3" />
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Total Rewards</span>
-          <p className="text-xl font-black text-white">₹2,450.00</p>
+      {/* Wallet Brief */}
+      <div className="px-6 -mt-6">
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex justify-between items-center">
+          <div>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Total Balance</span>
+            <p className="text-2xl font-black text-gray-900">₹12,500.00</p>
+          </div>
+          <Button variant="secondary" className="rounded-xl h-10 px-4 font-bold text-xs bg-gray-50 border-0 hover:bg-gray-100">
+            <Wallet size={16} className="mr-2" />
+            WALLET
+          </Button>
         </div>
       </div>
 
-      {/* Menu Sections */}
-      <div className="px-6 flex flex-col gap-6">
-        {/* Section 1: Financial */}
-        <div>
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4 text-muted-foreground ml-2">Account Management</h3>
-          <div className="glass-card rounded-[2rem] border border-white/10 overflow-hidden">
-            {[
-              { icon: CreditCard, label: "Bank Account", color: "text-cyan-400" },
-              { icon: History, label: "Transaction History", color: "text-blue-400" },
-              { icon: Gift, label: "Reward Wallet", color: "text-amber-400" },
-              { icon: Users, label: "Team Report", color: "text-indigo-400" },
-            ].map((item, i) => (
-              <button 
-                key={i} 
-                className={cn(
-                  "w-full px-6 py-5 flex items-center justify-between transition-all active:bg-white/5",
-                  i !== 3 && "border-b border-white/5"
-                )}
-              >
-                <div className="flex items-center gap-4">
-                  <item.icon size={20} className={item.color} />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">{item.label}</span>
+      {/* Main Sections */}
+      <div className="px-6 mt-8 flex flex-col gap-8 pb-32">
+        {/* Account Group */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          {[
+            { icon: ShoppingCart, label: "Buy History", color: "text-blue-500" },
+            { icon: TrendingUp, label: "Sell History", color: "text-green-500" },
+            { icon: CreditCard, label: "Linked Bank", color: "text-amber-500" },
+            { icon: Gift, label: "Rewards Wallet", color: "text-purple-500" },
+            { icon: Users, label: "My Team", color: "text-indigo-500" },
+          ].map((item, i) => (
+            <button 
+              key={i} 
+              className={cn(
+                "w-full px-5 py-4 flex items-center justify-between transition-all active:bg-gray-50",
+                i !== 4 && "border-b border-gray-50"
+              )}
+            >
+              <div className="flex items-center gap-4">
+                <div className={cn("w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center", item.color)}>
+                  <item.icon size={18} />
                 </div>
-                <ChevronRight size={16} className="text-muted-foreground" />
-              </button>
-            ))}
-          </div>
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{item.label}</span>
+              </div>
+              <ChevronRight size={16} className="text-gray-300" />
+            </button>
+          ))}
         </div>
 
-        {/* Section 2: Support & App */}
-        <div className="pb-10">
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4 text-muted-foreground ml-2">Preferences</h3>
-          <div className="glass-card rounded-[2rem] border border-white/10 overflow-hidden">
-            {[
-              { icon: Settings, label: "System Settings", color: "text-slate-400" },
-              { icon: ShieldCheck, label: "Security Center", color: "text-emerald-400" },
-              { icon: Headphones, label: "Customer Support", color: "text-rose-400" },
-              { icon: LogOut, label: "Sign Out", color: "text-muted-foreground" },
-            ].map((item, i) => (
-              <button 
-                key={i} 
-                className={cn(
-                  "w-full px-6 py-5 flex items-center justify-between transition-all active:bg-white/5",
-                  i !== 3 && "border-b border-white/5"
-                )}
-              >
-                <div className="flex items-center gap-4">
-                  <item.icon size={20} className={item.color} />
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">{item.label}</span>
+        {/* Support Group */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          {[
+            { icon: Settings, label: "Settings", color: "text-gray-400" },
+            { icon: ShieldCheck, label: "Security", color: "text-gray-400" },
+            { icon: Headphones, label: "Support", color: "text-gray-400" },
+            { icon: LogOut, label: "Logout", color: "text-red-400" },
+          ].map((item, i) => (
+            <button 
+              key={i} 
+              className={cn(
+                "w-full px-5 py-4 flex items-center justify-between transition-all active:bg-gray-50",
+                i !== 3 && "border-b border-gray-50"
+              )}
+            >
+              <div className="flex items-center gap-4">
+                <div className={cn("w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center", item.color)}>
+                  <item.icon size={18} />
                 </div>
-                <ChevronRight size={16} className="text-muted-foreground" />
-              </button>
-            ))}
-          </div>
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{item.label}</span>
+              </div>
+              <ChevronRight size={16} className="text-gray-300" />
+            </button>
+          ))}
         </div>
       </div>
 

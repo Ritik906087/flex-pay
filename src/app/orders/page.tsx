@@ -1,19 +1,20 @@
-
 "use client"
 
 import { useState } from "react";
 import { BottomNav } from "@/components/bottom-nav";
-import { ShoppingBag, ChevronRight, CheckCircle2, Loader2, Info } from "lucide-react";
+import { ShoppingBag, ChevronRight, CheckCircle2, Loader2, Info, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 const MOCK_ORDERS = [
-  { id: "#1246848879887", amount: 100, profit: 6, bonus: 5, status: "available" },
-  { id: "#1246848879888", amount: 500, profit: 6, bonus: 5, status: "available" },
-  { id: "#1246848879889", amount: 1000, profit: 6, bonus: 5, status: "available" },
-  { id: "#1246848879890", amount: 5000, profit: 8, bonus: 10, status: "available" },
-  { id: "#1246848879891", amount: 200, profit: 6, bonus: 5, status: "available" },
+  { id: "#124684887", amount: 100, profit: 6, bonus: 5, status: "available" },
+  { id: "#124684888", amount: 500, profit: 6, bonus: 5, status: "available" },
+  { id: "#124684889", amount: 1000, profit: 6, bonus: 5, status: "available" },
+  { id: "#124684890", amount: 5000, profit: 8, bonus: 10, status: "available" },
+  { id: "#124684891", amount: 200, profit: 6, bonus: 5, status: "available" },
+  { id: "#124684892", amount: 1500, profit: 6, bonus: 5, status: "available" },
+  { id: "#124684893", amount: 300, profit: 6, bonus: 5, status: "available" },
 ];
 
 export default function Orders() {
@@ -28,96 +29,83 @@ export default function Orders() {
     setTimeout(() => {
       setPurchasing(null);
       toast({
-        title: "Order Successful!",
-        description: `You earned ₹${reward.toFixed(2)} commission!`,
+        title: "Order Success",
+        description: `Commission ₹${reward.toFixed(2)} added to wallet.`,
       });
-    }, 1500);
+    }, 1200);
   };
 
   return (
-    <div className="flex flex-col min-h-screen pb-24">
+    <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
       {/* Header */}
-      <div className="px-6 pt-10 pb-6 flex flex-col gap-2">
-        <h1 className="text-2xl font-black tracking-tight text-white uppercase">Order Market</h1>
-        <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Earn passive commission daily</p>
-      </div>
+      <div className="bg-white px-6 pt-8 pb-4 border-b border-gray-100 sticky top-0 z-20">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-xl font-bold text-gray-900">Order Market</h1>
+          <button className="text-gray-400 p-2 bg-gray-50 rounded-full">
+            <Search size={20} />
+          </button>
+        </div>
 
-      {/* Tabs */}
-      <div className="px-6 mb-6">
-        <div className="glass-card p-1.5 rounded-2xl flex">
-          {["available", "pending", "history"].map((tab) => (
+        {/* Tabs */}
+        <div className="flex gap-6">
+          {["available", "completed", "history"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all duration-300",
-                activeTab === tab ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground"
+                "pb-3 text-xs font-bold uppercase tracking-wider relative transition-all",
+                activeTab === tab ? "text-primary" : "text-gray-400"
               )}
             >
               {tab}
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full"></span>
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Info Banner */}
-      <div className="px-6 mb-6">
-        <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 flex items-start gap-3">
-          <Info className="text-primary shrink-0" size={18} />
-          <p className="text-[10px] font-medium leading-relaxed text-primary-foreground/80">
-            Commission Rule: On every successful purchase, you receive <span className="text-primary font-bold">6% profit</span> + <span className="text-primary font-bold">₹5 extra bonus</span> instantly in your wallet.
+      {/* Info Notice */}
+      <div className="px-6 py-4">
+        <div className="bg-blue-50/50 rounded-xl p-3 flex gap-3 border border-blue-100">
+          <Info className="text-primary shrink-0" size={16} />
+          <p className="text-[10px] font-medium text-blue-900/80 leading-snug">
+            Each task gives <span className="text-primary font-bold">6% profit</span> plus an additional <span className="text-primary font-bold">₹5 bonus</span> instantly.
           </p>
         </div>
       </div>
 
       {/* Orders List */}
-      <div className="px-6 flex flex-col gap-4">
+      <div className="px-6 flex flex-col gap-3 pb-24">
         {MOCK_ORDERS.map((order) => (
-          <div key={order.id} className="glass-card p-5 rounded-[2rem] border border-white/10 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4">
-              <div className="px-3 py-1 bg-success/10 rounded-full border border-success/20">
-                <span className="text-[8px] font-bold text-success uppercase">Active</span>
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Order Serial</span>
-              <h4 className="text-sm font-black text-white">{order.id}</h4>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase">Amount</span>
-                <span className="text-xl font-black text-white">₹{order.amount.toLocaleString()}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase">Profit</span>
-                <span className="text-xl font-black text-primary">+{order.profit}% + ₹{order.bonus}</span>
+          <div key={order.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">{order.id}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-base font-black text-gray-900">₹{order.amount.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
+                  +{order.profit}% + ₹{order.bonus}
+                </span>
               </div>
             </div>
 
             <Button 
-              className="w-full py-6 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 ripple"
+              size="sm"
+              className="h-9 px-5 rounded-xl font-bold text-xs shadow-md shadow-primary/10"
               disabled={purchasing !== null}
               onClick={() => handlePurchase(order.id, order.amount, order.profit, order.bonus)}
             >
               {purchasing === order.id ? (
-                <>
-                  <Loader2 className="mr-2 animate-spin" size={18} />
-                  Processing...
-                </>
+                <Loader2 className="animate-spin" size={16} />
               ) : (
-                <>
-                  Purchase Now
-                  <ChevronRight className="ml-2" size={18} />
-                </>
+                "BUY"
               )}
             </Button>
           </div>
         ))}
       </div>
 
-      {/* Bottom Nav Placeholder */}
       <BottomNav />
     </div>
   );
