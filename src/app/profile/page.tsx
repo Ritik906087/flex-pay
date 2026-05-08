@@ -12,8 +12,8 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 
 export default function Profile() {
-  const mobileNumber = "+91 9876543210";
-  const uid = "FX102456";
+  const mobileNumber = "98765 43210";
+  const uid = "FLEX123456";
 
   const avatarUrl = PlaceHolderImages.find(img => img.id === 'avatar-user')?.imageUrl || "https://picsum.photos/seed/default-avatar/200/200";
 

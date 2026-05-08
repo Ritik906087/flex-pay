@@ -49,7 +49,7 @@ export default function Home() {
           </div>
           <div>
             <h2 className="text-gray-400 text-[10px] uppercase tracking-wider font-bold">Good Morning,</h2>
-            <h1 className="text-sm font-bold text-gray-900">+91 98765 43210</h1>
+            <h1 className="text-sm font-bold text-gray-900">98765 43210</h1>
           </div>
         </div>
         <div className="flex gap-3">
