@@ -31,7 +31,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-[#E5E7EB] flex items-center justify-center min-h-screen">
         <div className="relative w-full max-w-[430px] h-[100dvh] bg-background overflow-hidden flex flex-col shadow-2xl md:rounded-[3rem] md:border-[12px] md:border-white overflow-hidden">
-          <main className="flex-1 overflow-y-auto no-scrollbar pb-24">
+          <main className="flex-1 overflow-y-auto no-scrollbar pb-16">
             {children}
           </main>
           <Toaster />
