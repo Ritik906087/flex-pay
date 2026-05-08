@@ -6,7 +6,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { 
   Settings, Headphones, LogOut, ShieldCheck, 
   CreditCard, Gift, Users, ChevronRight, 
-  Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy, History
+  Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -105,7 +105,7 @@ export default function Profile() {
       <div className="px-6 mt-8 flex flex-col gap-6 pb-32">
         {/* Account Group */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-          <Link href="/orders?tab=history">
+          <Link href="/profile/history">
             <button className="w-full px-5 py-4 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
               <div className="flex items-center gap-4">
                 <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
