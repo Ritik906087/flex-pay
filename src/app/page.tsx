@@ -53,17 +53,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
       {/* Top Banner Slider as Header */}
-      <div className="pt-4 px-4 bg-white pb-6 border-b border-gray-100">
-        <div className="flex justify-between items-center mb-4 px-2">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="text-white font-black text-sm">FP</span>
-          </div>
-          <button className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 relative active:scale-90 transition-transform">
-            <Bell size={18} />
-            <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
-        </div>
-        
+      <div className="pt-6 px-4 bg-white pb-6 border-b border-gray-100">
         <div className="overflow-x-auto no-scrollbar flex gap-4">
           {PlaceHolderImages.filter(img => img.id.startsWith('banner-')).map((banner) => (
             <div key={banner.id} className="min-w-[320px] h-40 rounded-[2rem] overflow-hidden relative shadow-md">
