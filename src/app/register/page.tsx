@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react";
@@ -24,13 +23,13 @@ export default function Register() {
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
-      {/* Top Section */}
+      {/* Top Section - Minimalist */}
       <div className="flex flex-col items-center pt-8 pb-2 px-8 text-center">
         <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.3em]">Join Network</p>
         <div className="w-5 h-0.5 bg-primary/20 rounded-full mt-1.5"></div>
       </div>
 
-      {/* Register Form */}
+      {/* Register Form - Compact & Single Page */}
       <div className="flex-1 px-8 flex flex-col justify-center max-w-sm mx-auto w-full">
         <form onSubmit={handleRegister} className="space-y-2.5">
           <div className="space-y-1">
@@ -99,6 +98,7 @@ export default function Register() {
             </div>
           </div>
 
+          {/* Legal Small Text */}
           <div className="bg-gray-50/80 border border-gray-100 rounded-lg p-2 flex gap-2">
             <ShieldCheck className="text-primary shrink-0" size={12} />
             <p className="text-[7px] text-gray-500 font-medium leading-tight uppercase tracking-tight">
@@ -126,6 +126,8 @@ export default function Register() {
           </div>
         </form>
       </div>
+
+      {/* Bottom Spacer to prevent scrolling */}
       <div className="pb-8"></div>
     </div>
   );

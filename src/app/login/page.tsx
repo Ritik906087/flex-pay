@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react";
@@ -24,13 +23,13 @@ export default function Login() {
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
-      {/* Top Section */}
+      {/* Top Section - Minimalist */}
       <div className="flex flex-col items-center pt-8 pb-2 px-8 text-center">
         <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.3em]">Secure Access</p>
         <div className="w-5 h-0.5 bg-primary/20 rounded-full mt-1.5"></div>
       </div>
 
-      {/* Auth Form */}
+      {/* Auth Form - Compact & Single Page */}
       <div className="flex-1 px-8 flex flex-col justify-center max-w-sm mx-auto w-full">
         <form onSubmit={handleLogin} className="space-y-3">
           <div className="space-y-1">
@@ -96,6 +95,8 @@ export default function Login() {
           </div>
         </form>
       </div>
+
+      {/* Bottom Spacer to prevent scrolling */}
       <div className="pb-8"></div>
     </div>
   );
