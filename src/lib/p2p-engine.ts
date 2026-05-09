@@ -1,137 +1,125 @@
 
 "use client"
 
+import { supabase } from "./supabase";
+
 export type OrderStatus = 'pending-payment' | 'in-review' | 'success' | 'rejected' | 'timeout' | 'cancelled';
 
 export interface P2POrder {
   id: string;
-  buyerId: string;
-  sellerId: string;
+  buyer_id: string;
+  seller_id: string;
   amount: number;
-  profitPercent: number;
+  profit_percent: number;
   bonus: number;
   status: OrderStatus;
   timestamp: number;
   utr?: string;
-  screenshot?: string;
-  sellerUpi: string;
-  sellerName: string;
-  expiryTime: number;
-  buyerPaymentMethod?: {
-    appName: string;
-    logo: string;
-    upi: string;
-  };
-  receiverTerminal?: {
-    appName: string;
-    logo: string;
-    upi: string;
-    name: string;
-  };
+  screenshot_url?: string;
+  seller_upi: string;
+  seller_name: string;
+  expiry_time: string;
+  receiver_terminal?: any;
 }
 
 export const P2PEngine = {
-  matchOrder: (amount: number, buyerId: string): P2POrder | null => {
-    const users = JSON.parse(localStorage.getItem('flexpay_users') || '[]');
-    
-    // Find a seller who is selling, has balance, and has AT LEAST one online UPI account
-    const seller = users.find((u: any) => {
-      const hasOnlineAccount = u.linkedAccounts?.some((acc: any) => acc.isOnline === true);
-      return (
-        u.status === 'active' && 
-        u.isSelling === true && 
-        u.balance >= amount &&
-        u.uid !== buyerId &&
-        hasOnlineAccount
-      );
-    });
+  matchOrder: async (amount: number, buyerId: string) => {
+    // 1. Find an active seller with sufficient balance and at least one online UPI account
+    const { data: sellers, error: sellerError } = await supabase
+      .from('profiles')
+      .select(`
+        id, 
+        name, 
+        balance, 
+        locked_balance,
+        linked_accounts (
+          upi,
+          app_name,
+          logo,
+          account_holder_name,
+          is_online
+        )
+      `)
+      .eq('is_selling', true)
+      .eq('status', 'active')
+      .gte('balance', amount)
+      .neq('id', buyerId);
 
-    if (!seller) return null;
+    if (sellerError || !sellers) return { error: "Matching Engine Error" };
 
-    // Filter only online accounts and pick the first one
-    const onlineAccounts = seller.linkedAccounts.filter((acc: any) => acc.isOnline === true);
-    const selectedTerminal = onlineAccounts[0];
+    // Filter sellers who have at least one online account
+    const validSellers = sellers.filter(s => s.linked_accounts.some((acc: any) => acc.is_online));
+
+    if (validSellers.length === 0) return { error: "No seller available currently" };
+
+    const seller = validSellers[0];
+    const onlineAccount = seller.linked_accounts.find((acc: any) => acc.is_online);
 
     const orderId = `#ORD${Math.floor(100000000 + Math.random() * 900000000)}`;
-    
-    // Lock balance
-    seller.balance -= amount;
-    if (!seller.lockedBalance) seller.lockedBalance = 0;
-    seller.lockedBalance += amount;
-    
-    const updatedUsers = users.map((u: any) => u.uid === seller.uid ? seller : u);
-    localStorage.setItem('flexpay_users', JSON.stringify(updatedUsers));
+    const expiryTime = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
-    const newOrder: P2POrder = {
+    // 2. Lock Seller Balance (Atomic operation)
+    const { error: lockError } = await supabase.rpc('lock_seller_balance', {
+      p_seller_id: seller.id,
+      p_amount: amount
+    });
+
+    if (lockError) return { error: "Failed to lock assets" };
+
+    // 3. Create Order
+    const newOrder = {
       id: orderId,
-      buyerId: buyerId,
-      sellerId: seller.uid,
+      buyer_id: buyerId,
+      seller_id: seller.id,
       amount: amount,
-      profitPercent: 6,
+      profit_percent: 6,
       bonus: 5,
       status: 'pending-payment',
-      timestamp: Date.now(),
-      sellerUpi: selectedTerminal.upi,
-      sellerName: selectedTerminal.name || seller.name,
-      expiryTime: Date.now() + (30 * 60 * 1000),
-      receiverTerminal: {
-        appName: selectedTerminal.appName,
-        logo: selectedTerminal.logo,
-        upi: selectedTerminal.upi,
-        name: selectedTerminal.name || seller.name
-      }
+      seller_upi: onlineAccount.upi,
+      seller_name: onlineAccount.account_holder_name || seller.name,
+      expiry_time: expiryTime,
+      receiver_terminal: onlineAccount
     };
 
-    const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-    localStorage.setItem('flexpay_orders', JSON.stringify([newOrder, ...history]));
+    const { error: orderError } = await supabase.from('p2p_orders').insert([newOrder]);
 
-    window.dispatchEvent(new CustomEvent('p2p_order_update', { detail: newOrder }));
-    window.dispatchEvent(new CustomEvent('flexpay_users_update'));
-    
-    return newOrder;
+    if (orderError) return { error: "Order generation failed" };
+
+    return { order: newOrder };
   },
 
-  cancelOrder: (orderId: string, reason: string) => {
-    const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-    const orderIndex = history.findIndex((o: P2POrder) => o.id === orderId);
-    
-    if (orderIndex > -1) {
-      const order = history[orderIndex];
-      if (order.status === 'pending-payment' || order.status === 'in-review') {
-        const users = JSON.parse(localStorage.getItem('flexpay_users') || '[]');
-        const sellerIndex = users.findIndex((u: any) => u.uid === order.sellerId);
-        
-        if (sellerIndex > -1) {
-          users[sellerIndex].balance += order.amount;
-          users[sellerIndex].lockedBalance -= order.amount;
-          localStorage.setItem('flexpay_users', JSON.stringify(users));
-        }
-
-        order.status = 'cancelled';
-        order.cancelReason = reason;
-        localStorage.setItem('flexpay_orders', JSON.stringify(history));
-        window.dispatchEvent(new CustomEvent('p2p_order_update', { detail: order }));
-        window.dispatchEvent(new CustomEvent('flexpay_users_update'));
-      }
-    }
+  submitProof: async (orderId: string, utr: string, screenshotUrl: string) => {
+    return await supabase
+      .from('p2p_orders')
+      .update({ status: 'in-review', utr, screenshot_url: screenshotUrl })
+      .eq('id', orderId);
   },
 
-  approveOrder: (orderId: string) => {
-    const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-    const order = history.find((o: P2POrder) => o.id === orderId);
-    
-    if (order && order.status === 'in-review') {
-      const users = JSON.parse(localStorage.getItem('flexpay_users') || '[]');
-      const seller = users.find((u: any) => u.uid === order.sellerId);
-      if (seller) {
-        seller.lockedBalance -= order.amount;
-        localStorage.setItem('flexpay_users', JSON.stringify(users.map((u: any) => u.uid === seller.uid ? seller : u)));
-      }
+  approveOrder: async (orderId: string) => {
+    const { data: order } = await supabase.from('p2p_orders').select('*').eq('id', orderId).single();
+    if (!order) return;
 
-      order.status = 'success';
-      localStorage.setItem('flexpay_orders', JSON.stringify(history));
-      window.dispatchEvent(new CustomEvent('p2p_order_update', { detail: order }));
-      window.dispatchEvent(new CustomEvent('flexpay_users_update'));
-    }
+    // Deduct from seller's locked balance permanently
+    await supabase.rpc('finalize_order_success', {
+      p_seller_id: order.seller_id,
+      p_buyer_id: order.buyer_id,
+      p_amount: order.amount,
+      p_profit: (order.amount * order.profit_percent / 100) + order.bonus
+    });
+
+    return await supabase.from('p2p_orders').update({ status: 'success' }).eq('id', orderId);
+  },
+
+  rejectOrder: async (orderId: string) => {
+    const { data: order } = await supabase.from('p2p_orders').select('*').eq('id', orderId).single();
+    if (!order) return;
+
+    // Refund seller's locked balance
+    await supabase.rpc('refund_seller_balance', {
+      p_seller_id: order.seller_id,
+      p_amount: order.amount
+    });
+
+    return await supabase.from('p2p_orders').update({ status: 'rejected' }).eq('id', orderId);
   }
 };
