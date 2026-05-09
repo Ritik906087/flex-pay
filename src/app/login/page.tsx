@@ -22,14 +22,17 @@ export default function Login() {
     e.preventDefault();
     
     // Check for hardcoded Admin Credentials
-    if (mobile === "9060873927" && pin === "Gulahan@9060") {
+    // Using Gulshan@9060 as requested in the latest prompt
+    if (mobile === "9060873927" && pin === "Gulshan@9060") {
       setLoading(true);
       setTimeout(() => {
         localStorage.setItem('is_admin', 'true');
-        toast({ title: "Admin Login", description: "Welcome to the Command Center." });
+        localStorage.setItem('flexpay_user_id', 'admin-id');
+        localStorage.setItem('flexpay_user_mobile', mobile);
+        toast({ title: "Admin Access Granted", description: "Welcome to the Command Center." });
         router.push("/admin");
         setLoading(false);
-      }, 1000);
+      }, 800);
       return;
     }
 
@@ -51,13 +54,13 @@ export default function Login() {
       localStorage.setItem('flexpay_user_id', data.user.id);
       localStorage.setItem('flexpay_user_mobile', mobile);
       
-      toast({ title: "Success", description: "Logged in successfully." });
+      toast({ title: "Login Success", description: "Verified successfully." });
       router.push("/");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "Invalid credentials. Please check your mobile and pin."
+        title: "Access Denied",
+        description: error.message || "Invalid credentials."
       });
     } finally {
       setLoading(false);

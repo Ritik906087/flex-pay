@@ -61,13 +61,13 @@ export default function Register() {
 
       if (error) throw error;
 
-      toast({ title: "Account Created", description: "Welcome to FlexPay! Please login to continue." });
+      toast({ title: "Success", description: "Account created! Please login." });
       router.push("/login");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Registration Failed",
-        description: error.message || "An error occurred during registration."
+        title: "Error",
+        description: error.message || "Could not register."
       });
     } finally {
       setLoading(false);
