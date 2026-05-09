@@ -12,40 +12,39 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Mock data with Levels
-const MOCK_REFERRALS = [
-  { uid: "FLEX772101", registeredAt: "2024-03-20", totalPurchase: 1250, status: "completed", level: "L1" },
-  { uid: "FLEX772102", registeredAt: "2024-03-19", totalPurchase: 500, status: "pending", level: "L1" },
-  { uid: "FLEX772103", registeredAt: "2024-03-18", totalPurchase: 2500, status: "completed", level: "L1" },
-  { uid: "FLEX772201", registeredAt: "2024-03-18", totalPurchase: 3000, status: "completed", level: "L2" },
-  { uid: "FLEX772202", registeredAt: "2024-03-17", totalPurchase: 1100, status: "completed", level: "L2" },
-  { uid: "FLEX772106", registeredAt: "2024-03-15", totalPurchase: 950, status: "pending", level: "L1" },
-];
-
 export default function MyTeam() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeLevel, setActiveLevel] = useState("L1");
+  const [referrals, setReferrals] = useState<any[]>([]);
 
-  const l1Referrals = MOCK_REFERRALS.filter(r => r.level === "L1");
-  const l2Referrals = MOCK_REFERRALS.filter(r => r.level === "L2");
+  useEffect(() => {
+    // Load from local storage for now, will be Supabase later
+    const saved = localStorage.getItem('flexpay_referrals');
+    if (saved) {
+      setReferrals(JSON.parse(saved));
+    } else {
+      setReferrals([]);
+    }
+  }, []);
+
+  const l1Referrals = referrals.filter(r => r.level === "L1");
+  const l2Referrals = referrals.filter(r => r.level === "L2");
 
   const completedL1Targets = l1Referrals.filter(r => r.totalPurchase >= 1000).length;
   
-  // Commission calculation
   const l1Comm = l1Referrals.reduce((acc, r) => acc + (r.totalPurchase * 0.003), 0);
   const l2Comm = l2Referrals.reduce((acc, r) => acc + (r.totalPurchase * 0.002), 0);
   const milestoneEarnings = completedL1Targets * 100;
   const totalEarnings = l1Comm + l2Comm + milestoneEarnings;
 
-  const filteredReferrals = MOCK_REFERRALS.filter(r => 
+  const filteredReferrals = referrals.filter(r => 
     r.level === activeLevel && 
-    r.uid.toLowerCase().includes(searchQuery.toLowerCase())
+    (r.uid?.toLowerCase().includes(searchQuery.toLowerCase()) || r.mobile?.includes(searchQuery))
   );
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Header */}
       <div className="bg-white px-5 pt-8 pb-4 border-b border-gray-100 sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="p-1.5 -ml-1.5 active:scale-90 transition-transform">
@@ -59,7 +58,6 @@ export default function MyTeam() {
       </div>
 
       <div className="flex-1 px-5 pt-5 pb-10 overflow-y-auto no-scrollbar">
-        {/* Earnings Card */}
         <div className="bg-primary rounded-[2rem] p-6 text-white shadow-xl shadow-primary/20 relative overflow-hidden mb-6">
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-6">
@@ -89,7 +87,6 @@ export default function MyTeam() {
           <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white/10 rounded-full blur-[40px]"></div>
         </div>
 
-        {/* Level Tabs */}
         <Tabs defaultValue="L1" onValueChange={setActiveLevel} className="mb-6">
           <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-xl h-11 p-1">
             <TabsTrigger value="L1" className="rounded-lg text-[9px] font-black uppercase data-[state=active]:bg-white">Level 1</TabsTrigger>
@@ -97,9 +94,8 @@ export default function MyTeam() {
           </TabsList>
         </Tabs>
 
-        {/* Milestone Tracker - Only for L1 */}
         {activeLevel === "L1" ? (
-          <div className="bg-white p-5 rounded-[1.8rem] border border-gray-100 shadow-sm mb-6 animate-in fade-in duration-300">
+          <div className="bg-white p-5 rounded-[1.8rem] border border-gray-100 shadow-sm mb-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
                 <Trophy size={20} />
@@ -119,7 +115,7 @@ export default function MyTeam() {
             </div>
           </div>
         ) : (
-          <div className="bg-gray-50/50 p-5 rounded-[1.8rem] border border-dashed border-gray-200 mb-6 flex items-center gap-3 animate-in fade-in duration-300">
+          <div className="bg-gray-50/50 p-5 rounded-[1.8rem] border border-dashed border-gray-200 mb-6 flex items-center gap-3">
             <div className="w-10 h-10 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400">
               <Target size={20} />
             </div>
@@ -130,7 +126,6 @@ export default function MyTeam() {
           </div>
         )}
 
-        {/* Team List */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">{activeLevel} Members</h3>
@@ -155,7 +150,7 @@ export default function MyTeam() {
             {filteredReferrals.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 opacity-20">
                 <Users size={32} />
-                <p className="text-[9px] font-black mt-2 uppercase">No members</p>
+                <p className="text-[9px] font-black mt-2 uppercase tracking-widest">Team Empty</p>
               </div>
             ) : (
               filteredReferrals.map((referral, i) => (
@@ -171,7 +166,7 @@ export default function MyTeam() {
                     </div>
                     <div>
                       <h4 className="text-[11px] font-black text-gray-900">{referral.uid}</h4>
-                      <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tight">Level {referral.level} • Joined {referral.registeredAt}</p>
+                      <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tight">Joined {referral.registeredAt}</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -179,7 +174,7 @@ export default function MyTeam() {
                       "text-[10px] font-black uppercase tracking-tight block",
                       referral.status === 'completed' ? "text-green-600" : "text-gray-400"
                     )}>
-                      ₹{referral.totalPurchase.toLocaleString()}
+                      ₹{referral.totalPurchase?.toLocaleString() || 0}
                     </span>
                     <span className={cn(
                       "text-[7px] font-bold uppercase tracking-widest",

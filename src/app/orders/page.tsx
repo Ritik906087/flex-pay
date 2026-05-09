@@ -23,25 +23,16 @@ import { cn } from "@/lib/utils";
 import { P2PEngine } from "@/lib/p2p-engine";
 import { useToast } from "@/hooks/use-toast";
 
-const MOCK_MARKET_ORDERS = [
-  { id: "#124684887", amount: 100, profit: 6, bonus: 5 },
-  { id: "#124684888", amount: 500, profit: 6, bonus: 5 },
-  { id: "#124684889", amount: 1000, profit: 6, bonus: 5 },
-  { id: "#124684890", amount: 5000, profit: 6, bonus: 5 },
-  { id: "#124684891", amount: 200, profit: 6, bonus: 5 },
-  { id: "#124684892", amount: 1500, profit: 6, bonus: 5 },
-  { id: "#124684893", amount: 300, profit: 6, bonus: 5 },
-  { id: "#124684894", amount: 10000, profit: 6, bonus: 5 },
-];
+// Market orders will be empty initially until sellers post them
+const MARKET_ORDERS: any[] = [];
 
 export default function Orders() {
   const router = useRouter();
   const { toast } = useToast();
   const [pendingOrder, setPendingOrder] = useState<any>(null);
-  const [showPendingDialog, setShowPendingDialog] = useState(false);
   const [isMatching, setIsMatching] = useState(false);
   
-  const [minAmount, setMinAmount] = useState<string>("100");
+  const [minAmount, setMinAmount] = useState<string>("0");
   const [maxAmount, setMaxAmount] = useState<string>("1000000");
 
   useEffect(() => {
@@ -59,14 +50,13 @@ export default function Orders() {
 
   const handleBuyClick = (order: any) => {
     if (pendingOrder) {
-      setShowPendingDialog(true);
+      toast({ variant: "destructive", title: "Active Order", description: "Please complete or cancel your pending order first." });
       return;
     }
 
     setIsMatching(true);
-    // Simulate server delay for matching
     setTimeout(() => {
-      const buyerId = "FLEX123456"; // Current User ID
+      const buyerId = localStorage.getItem('flexpay_user_id') || "USER_" + Math.random().toString(36).substr(2, 6);
       const matched = P2PEngine.matchOrder(order.amount, buyerId);
 
       setIsMatching(false);
@@ -84,7 +74,7 @@ export default function Orders() {
   };
 
   const filteredOrders = useMemo(() => {
-    return MOCK_MARKET_ORDERS.filter(order => {
+    return MARKET_ORDERS.filter(order => {
       const min = minAmount ? parseInt(minAmount) : 0;
       const max = maxAmount ? parseInt(maxAmount) : 1000000;
       return order.amount >= min && order.amount <= max;
@@ -131,22 +121,29 @@ export default function Orders() {
             )}
 
             <div className="flex flex-col gap-2">
-              {filteredOrders.map((order) => (
-                <div key={order.id} className="bg-white p-3.5 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
-                  <div>
-                    <span className="text-[7px] font-bold text-gray-400 uppercase">{order.id}</span>
-                    <p className="text-sm font-black text-gray-900">₹{order.amount.toLocaleString()}</p>
-                  </div>
-                  <Button 
-                    size="sm"
-                    className="h-8 px-6 rounded-lg font-black text-[9px] uppercase tracking-wider"
-                    onClick={() => handleBuyClick(order)}
-                    disabled={isMatching}
-                  >
-                    BUY
-                  </Button>
+              {filteredOrders.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                  <BadgeIndianRupee size={40} className="text-gray-400 mb-3" />
+                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">No Active Orders in Market</p>
                 </div>
-              ))}
+              ) : (
+                filteredOrders.map((order) => (
+                  <div key={order.id} className="bg-white p-3.5 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                    <div>
+                      <span className="text-[7px] font-bold text-gray-400 uppercase">{order.id}</span>
+                      <p className="text-sm font-black text-gray-900">₹{order.amount.toLocaleString()}</p>
+                    </div>
+                    <Button 
+                      size="sm"
+                      className="h-8 px-6 rounded-lg font-black text-[9px] uppercase tracking-wider"
+                      onClick={() => handleBuyClick(order)}
+                      disabled={isMatching}
+                    >
+                      BUY
+                    </Button>
+                  </div>
+                ))
+              )}
             </div>
           </TabsContent>
         </div>
