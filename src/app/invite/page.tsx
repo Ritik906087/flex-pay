@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 export default function Invite() {
   const { toast } = useToast();
-  const inviteCode = "FX9872";
+  const inviteCode = "FLEX123456";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(`https://flexpay.app/register?ref=${inviteCode}`);
@@ -56,8 +56,8 @@ export default function Invite() {
             <QrCode size={120} className="text-gray-900" />
           </div>
           <div className="text-center">
-            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 block">Your Unique Code</span>
-            <p className="text-lg font-black text-primary tracking-[0.2em]">{inviteCode}</p>
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 block">Your Invite Code (UID)</span>
+            <p className="text-lg font-black text-primary tracking-[0.1em]">{inviteCode}</p>
           </div>
         </div>
       </div>
