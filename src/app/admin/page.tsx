@@ -532,9 +532,9 @@ export default function AdminPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Professional Full-Screen Evidence Preview Terminal */}
+      {/* Professional Evidence Preview Terminal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-[98vw] w-[98vw] h-[98vh] max-h-[98vh] bg-black/95 border-0 p-0 flex flex-col rounded-3xl overflow-hidden shadow-2xl z-[100]">
+        <DialogContent className="max-w-5xl w-[95%] h-[85vh] max-h-[85vh] bg-black/95 border-0 p-0 flex flex-col rounded-[2.5rem] overflow-hidden shadow-2xl z-[100]">
           {/* Header Controls */}
           <div className="h-16 px-8 flex items-center justify-between bg-black/40 backdrop-blur-xl border-b border-white/10 shrink-0">
             <div className="flex items-center gap-4">
@@ -593,11 +593,11 @@ export default function AdminPanel() {
               onMouseDown={handleMouseDown}
             >
               {/* Actual Screenshot Holder */}
-              <div className="w-[380px] h-[780px] bg-slate-900 rounded-[3rem] shadow-2xl border-[12px] border-slate-800 flex items-center justify-center overflow-hidden">
+              <div className="w-[340px] h-[700px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[10px] border-slate-800 flex items-center justify-center overflow-hidden">
                  <div className="flex flex-col items-center gap-4 text-center opacity-20 text-white">
-                   <ShieldCheck size={120} />
-                   <p className="text-xl font-black uppercase tracking-[0.4em]">Encrypted Proof</p>
-                   <p className="text-[10px] font-bold uppercase tracking-widest max-w-[200px]">Node data accessible for production terminals only</p>
+                   <ShieldCheck size={100} />
+                   <p className="text-lg font-black uppercase tracking-[0.4em]">Encrypted Proof</p>
+                   <p className="text-[9px] font-bold uppercase tracking-widest max-w-[180px]">Node data accessible for production terminals only</p>
                  </div>
               </div>
             </div>
