@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ShoppingBag, ChevronLeft, Clock, Copy, 
-  CheckCircle2, Info, Building2, User, AlertCircle
+  CheckCircle2, Info, User, AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -93,7 +93,7 @@ export default function BuyHistory() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5">
+      <div className="flex-1 overflow-y-auto px-5 py-5 pb-24">
         {filteredHistory.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 opacity-20">
             <ShoppingBag size={40} />
@@ -102,7 +102,7 @@ export default function BuyHistory() {
         ) : (
           <div className="flex flex-col gap-2.5">
             {filteredHistory.map((order) => (
-              <div key={`${order.id}-${order.timestamp}`} className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+              <div key={`${order.id}-${order.timestamp}`} className="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tight">{order.id}</span>
@@ -111,7 +111,7 @@ export default function BuyHistory() {
                   <div className={cn(
                     "px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-wider",
                     order.status === 'success' ? "bg-green-50 text-green-600 border border-green-100" :
-                    order.status === 'in-review' ? "bg-yellow-50 text-yellow-600 border border-yellow-100" :
+                    order.status === 'in-review' ? "bg-amber-50 text-amber-600 border border-amber-100" :
                     order.status === 'pending-payment' ? "bg-blue-50 text-blue-600 border border-blue-100" :
                     order.status === 'rejected' ? "bg-red-50 text-red-600 border border-red-100" : "bg-gray-50 text-gray-500 border border-gray-100"
                   )}>
@@ -141,16 +141,16 @@ export default function BuyHistory() {
                         }}
                         className="text-[8px] font-black text-white uppercase tracking-widest px-3 py-1 bg-primary rounded-lg active:scale-95 transition-all"
                       >
-                        COMPLETE
+                        RESUME
                       </button>
                     )}
                     <Dialog>
                       <DialogTrigger asChild>
                         <button className="text-[8px] font-black text-primary uppercase tracking-widest px-3 py-1 bg-primary/5 rounded-lg active:scale-95 transition-all">
-                          View Details
+                          Details
                         </button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-[85%] rounded-[1.5rem] border-0 p-0 overflow-hidden shadow-2xl">
+                      <DialogContent className="max-w-[85%] rounded-[1.8rem] border-0 p-0 overflow-hidden shadow-2xl">
                         <div className="bg-white px-5 pt-6 pb-6">
                           <DialogHeader className="mb-4">
                             <div className="mx-auto w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-2">
@@ -164,9 +164,9 @@ export default function BuyHistory() {
                             <div className="bg-gray-50 rounded-xl p-3.5 space-y-2.5 border border-gray-100">
                               <div className="flex justify-between items-center">
                                 <span className="text-[8px] font-bold text-gray-400 uppercase">Order ID</span>
-                                <button onClick={() => handleCopy(order.id, "Order ID")} className="flex items-center gap-1.5">
+                                <button onClick={() => handleCopy(order.id, "Order ID")} className="flex items-center gap-1.5 group">
                                   <span className="text-[9px] font-black text-gray-900">{order.id}</span>
-                                  <Copy size={10} className="text-gray-300" />
+                                  <Copy size={10} className="text-gray-300 group-active:text-primary transition-colors" />
                                 </button>
                               </div>
                               <div className="flex justify-between items-center">
@@ -175,20 +175,16 @@ export default function BuyHistory() {
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-[8px] font-bold text-gray-400 uppercase">Status</span>
-                                <span className={cn("text-[8px] font-black uppercase", order.status === 'success' ? "text-green-600" : "text-yellow-600")}>
+                                <span className={cn("text-[8px] font-black uppercase", order.status === 'success' ? "text-green-600" : "text-amber-600")}>
                                   {order.status.replace('-', ' ')}
                                 </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-[8px] font-bold text-gray-400 uppercase">Time</span>
-                                <span className="text-[9px] font-bold text-gray-700">{new Date(order.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}</span>
                               </div>
                               {order.utr && (
                                 <div className="flex justify-between items-center border-t border-gray-100 pt-2.5">
                                   <span className="text-[8px] font-bold text-gray-400 uppercase">UTR</span>
-                                  <button onClick={() => handleCopy(order.utr!, "UTR")} className="flex items-center gap-1.5">
+                                  <button onClick={() => handleCopy(order.utr!, "UTR")} className="flex items-center gap-1.5 group">
                                     <span className="text-[9px] font-black text-primary tracking-widest">{order.utr}</span>
-                                    <Copy size={10} className="text-primary/30" />
+                                    <Copy size={10} className="text-primary/30 group-active:text-primary transition-colors" />
                                   </button>
                                 </div>
                               )}
@@ -196,7 +192,7 @@ export default function BuyHistory() {
 
                             {/* Merchant Payment Details */}
                             <div className="space-y-2">
-                              <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Merchant Info</h4>
+                              <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Merchant Details</h4>
                               <div className="bg-white rounded-xl border border-gray-100 p-3.5 space-y-3 shadow-sm">
                                 <div className="flex items-start gap-2.5">
                                   <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
@@ -206,7 +202,7 @@ export default function BuyHistory() {
                                     <span className="text-[7px] font-bold text-gray-400 uppercase block mb-0.5">Name</span>
                                     <button onClick={() => handleCopy("FLEXPAY MERCHANT LTD", "Merchant Name")} className="flex items-center gap-1.5 group">
                                       <p className="text-[9px] font-black text-gray-900">FLEXPAY MERCHANT LTD</p>
-                                      <Copy size={9} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                      <Copy size={9} className="text-gray-300 opacity-60 group-active:text-primary" />
                                     </button>
                                   </div>
                                 </div>
@@ -217,9 +213,9 @@ export default function BuyHistory() {
                                   </div>
                                   <div className="flex-1">
                                     <span className="text-[7px] font-bold text-gray-400 uppercase block mb-0.5">UPI ID</span>
-                                    <button onClick={() => handleCopy("flexpay@upi", "UPI ID")} className="flex items-center gap-1.5 group">
+                                    <button onClick={() => handleCopy("flexpay@upi", "UPI ID")} className="flex items-center gap-1.5 group text-left">
                                       <p className="text-[9px] font-black text-primary">flexpay@upi</p>
-                                      <Copy size={9} className="text-primary/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                      <Copy size={9} className="text-primary/30 opacity-60 group-active:text-primary" />
                                     </button>
                                   </div>
                                 </div>
@@ -228,13 +224,14 @@ export default function BuyHistory() {
                           </div>
 
                           <Button 
-                            className="w-full h-10 rounded-xl mt-6 font-black uppercase tracking-widest text-[9px] shadow-lg shadow-primary/10"
-                            onClick={(e) => {
+                            className="w-full h-11 rounded-xl mt-6 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10"
+                            onClick={() => {
+                              // Close dialog using a click on the close button (radix convention)
                               const closeBtn = document.querySelector('[data-radix-collection-item]') as HTMLElement;
                               closeBtn?.click();
                             }}
                           >
-                            CLOSE
+                            DISMISS
                           </Button>
                         </div>
                       </DialogContent>

@@ -44,12 +44,12 @@ export default function Checkout() {
   };
 
   useEffect(() => {
-    // Mark order as pending in history on land
-    if (!initialized.current) {
+    if (!initialized.current && orderData.id !== "#ORD000") {
       const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-      const exists = history.find((o: any) => o.id === orderData.id);
+      const existingIdx = history.findIndex((o: any) => o.id === orderData.id);
       
-      if (!exists) {
+      if (existingIdx === -1) {
+        // Only add if it doesn't exist at all
         const newOrder = {
           ...orderData,
           profitPercent: orderData.profit,
@@ -57,6 +57,9 @@ export default function Checkout() {
           timestamp: Date.now(),
         };
         localStorage.setItem('flexpay_orders', JSON.stringify([newOrder, ...history]));
+      } else if (history[existingIdx].status === 'cancelled' || history[existingIdx].status === 'rejected') {
+        // If it was cancelled/rejected before but we are re-entering (though Task Market should block this)
+        // For safety, we allow it to be pending again if needed, but normally Task Market blocks new orders
       }
       initialized.current = true;
     }
@@ -101,7 +104,7 @@ export default function Checkout() {
       setIsCancelling(false);
       toast({ title: "Order Cancelled", description: "The order has been successfully cancelled." });
       router.push('/orders');
-    }, 1200);
+    }, 1000);
   };
 
   const handleSubmitProof = () => {
@@ -130,13 +133,14 @@ export default function Checkout() {
       toast({ title: "Submitted", description: "Order under review." });
       router.push('/orders');
 
+      // Simulate admin approval after 15 seconds
       setTimeout(() => {
         const current = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
         const finalized = current.map((o: any) => 
           o.id === orderData.id ? { ...o, status: 'success' } : o
         );
         localStorage.setItem('flexpay_orders', JSON.stringify(finalized));
-      }, 10000);
+      }, 15000);
     }, 1500);
   };
 
@@ -197,11 +201,11 @@ export default function Checkout() {
 
             {/* Instructions */}
             <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-              <h4 className="text-[8px] font-black text-blue-900 uppercase mb-2">Instructions:</h4>
-              <ul className="text-[9px] text-blue-900/70 space-y-1.5 font-medium leading-relaxed">
-                <li className="flex gap-2.5"><ArrowRight size={10} className="mt-0.5 shrink-0 text-primary" /> Transfer exact <span className="text-primary font-bold">₹{orderData.amount}</span></li>
-                <li className="flex gap-2.5"><ArrowRight size={10} className="mt-0.5 shrink-0 text-primary" /> Note the <span className="text-primary font-bold">12-digit UTR</span> number</li>
-                <li className="flex gap-2.5"><ArrowRight size={10} className="mt-0.5 shrink-0 text-primary" /> Take a payment success screenshot</li>
+              <h4 className="text-[8px] font-black text-blue-900 uppercase mb-2 tracking-widest">Instructions:</h4>
+              <ul className="text-[9px] text-blue-900/70 space-y-1.5 font-bold leading-relaxed uppercase tracking-tight">
+                <li className="flex gap-2.5"><ArrowRight size={10} className="mt-0.5 shrink-0 text-primary" /> Transfer exact <span className="text-primary font-black">₹{orderData.amount}</span></li>
+                <li className="flex gap-2.5"><ArrowRight size={10} className="mt-0.5 shrink-0 text-primary" /> Note the <span className="text-primary font-black">12-digit UTR</span></li>
+                <li className="flex gap-2.5"><ArrowRight size={10} className="mt-0.5 shrink-0 text-primary" /> Take a success screenshot</li>
               </ul>
             </div>
 
@@ -210,12 +214,12 @@ export default function Checkout() {
                 <DialogTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="flex-1 h-14 rounded-xl font-bold uppercase tracking-wider text-[9px] border-red-100 text-red-500 bg-red-50/30 hover:bg-red-50 active:scale-95 transition-all"
+                    className="flex-1 h-14 rounded-xl font-black uppercase tracking-wider text-[9px] border-red-100 text-red-500 bg-red-50/30 hover:bg-red-50 active:scale-95 transition-all"
                   >
-                    CANCEL ORDER
+                    CANCEL
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[85%] rounded-[1.5rem] border-0 p-6 shadow-2xl">
+                <DialogContent className="max-w-[85%] rounded-[1.8rem] border-0 p-6 shadow-2xl">
                   <DialogHeader className="mb-4">
                     <div className="mx-auto w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500 mb-2">
                       <XCircle size={20} />
@@ -224,12 +228,12 @@ export default function Checkout() {
                   </DialogHeader>
 
                   <div className="space-y-4">
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest text-center">Select reason for cancellation:</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest text-center">Select reason:</p>
                     <RadioGroup value={cancelReason} onValueChange={setCancelReason} className="grid gap-2">
-                      {["Wrong amount transferred", "Merchant UPI issue", "Technical error", "Changed my mind"].map((reason) => (
+                      {["Wrong amount", "UPI issue", "Technical error", "Changed mind"].map((reason) => (
                         <div key={reason} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-xl border border-gray-100 active:bg-gray-100 transition-colors cursor-pointer">
                           <RadioGroupItem value={reason} id={reason} className="h-4 w-4" />
-                          <Label htmlFor={reason} className="text-[10px] font-bold text-gray-700 cursor-pointer flex-1">{reason}</Label>
+                          <Label htmlFor={reason} className="text-[10px] font-bold text-gray-700 cursor-pointer flex-1 uppercase tracking-tight">{reason}</Label>
                         </div>
                       ))}
                     </RadioGroup>
@@ -244,7 +248,7 @@ export default function Checkout() {
                         onClick={() => handleCancelOrder()}
                         disabled={isCancelling}
                       >
-                        {isCancelling ? "Processing..." : "Confirm Cancel"}
+                        {isCancelling ? "..." : "CONFIRM"}
                       </Button>
                     </div>
                   </div>
@@ -266,7 +270,7 @@ export default function Checkout() {
                 <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">Payment Screenshot</label>
                 <div 
                   className={cn(
-                    "h-40 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden relative",
+                    "h-44 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden relative",
                     file ? "border-green-400 bg-green-50/20" : "border-gray-200 bg-gray-50 hover:bg-gray-100"
                   )}
                   onClick={() => document.getElementById('file-upload')?.click()}
@@ -279,7 +283,7 @@ export default function Checkout() {
                   ) : (
                     <div className="flex flex-col items-center gap-1.5">
                       <Upload size={24} className="text-gray-300" />
-                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Select Screenshot</span>
+                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Select screenshot</span>
                     </div>
                   )}
                   <input 
@@ -295,14 +299,14 @@ export default function Checkout() {
               <div className="flex flex-col gap-2">
                 <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">UTR / Reference Number</label>
                 <Input 
-                  placeholder="Enter 12-digit UTR number" 
+                  placeholder="Enter 12-digit UTR" 
                   className="h-12 bg-gray-50 border-gray-100 rounded-xl font-black text-[13px] tracking-widest placeholder:tracking-normal placeholder:font-medium placeholder:text-gray-300"
                   value={utr}
                   onChange={(e) => setUtr(e.target.value)}
                 />
                 <div className="flex items-start gap-2 px-1 mt-0.5">
                   <AlertCircle size={10} className="text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-[7.5px] font-bold text-amber-600 uppercase leading-tight tracking-tight">Wrong UTR leads to immediate order rejection and permanent block.</p>
+                  <p className="text-[7.5px] font-bold text-amber-600 uppercase leading-tight tracking-tight">Incorrect UTR leads to immediate order rejection and permanent block.</p>
                 </div>
               </div>
             </div>
