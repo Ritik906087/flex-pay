@@ -192,36 +192,29 @@ export default function Orders() {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="upi" className="mt-6 space-y-6">
-              {/* Premium Filter Controls */}
-              <div className="bg-white p-4 rounded-[1.8rem] border border-gray-100 shadow-sm space-y-4">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <SlidersHorizontal size={12} className="text-primary" />
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Filter Amount</span>
-                  </div>
-                  <span className="text-[8px] font-bold text-gray-300 uppercase tracking-tighter">Min: 100 • Max: 10Cr</span>
+            <TabsContent value="upi" className="mt-6 space-y-4">
+              {/* Ultra Compact Filter Row */}
+              <div className="bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
+                <div className="bg-gray-50 p-2 rounded-xl text-gray-400 border border-gray-100">
+                  <SlidersHorizontal size={12} />
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[7px] font-bold text-gray-400 uppercase ml-1">Min (₹)</label>
+                <div className="flex-1 flex gap-2">
+                  <div className="flex-1 relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[8px] font-black text-gray-300">MIN</span>
                     <Input 
                       type="number" 
-                      placeholder="100" 
-                      min="100"
-                      className="h-10 bg-gray-50/50 border-gray-100 rounded-xl text-[11px] font-black placeholder:font-medium transition-all focus:bg-white"
+                      placeholder="₹100" 
+                      className="h-9 bg-gray-50/50 border-gray-100 rounded-xl text-[10px] font-black pl-8 pr-2 focus:bg-white transition-colors"
                       value={minAmount}
                       onChange={(e) => setMinAmount(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[7px] font-bold text-gray-400 uppercase ml-1">Max (₹)</label>
+                  <div className="flex-1 relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[8px] font-black text-gray-300">MAX</span>
                     <Input 
                       type="number" 
-                      placeholder="10,000,000" 
-                      max="100000000"
-                      className="h-10 bg-gray-50/50 border-gray-100 rounded-xl text-[11px] font-black placeholder:font-medium transition-all focus:bg-white"
+                      placeholder="₹10Cr" 
+                      className="h-9 bg-gray-50/50 border-gray-100 rounded-xl text-[10px] font-black pl-8 pr-2 focus:bg-white transition-colors"
                       value={maxAmount}
                       onChange={(e) => setMaxAmount(e.target.value)}
                     />
