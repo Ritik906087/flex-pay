@@ -7,7 +7,7 @@ import {
   TrendingUp, Wallet, ShieldCheck, 
   IndianRupee, User, Users,
   Hash, Eye, ArrowUpRight, 
-  CheckCircle2, Search, History, CheckCircle, Ban, Copy, Menu, Clock
+  CheckCircle2, Search, History, CheckCircle, Ban, Copy, Menu, Clock, Maximize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,10 +31,11 @@ import { MOCK_USERS } from "@/lib/mock-admin-data";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import Image from "next/image";
 
-const RECEIVER_LOGOS = {
+const APP_LOGOS = {
   Paytm: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(5).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDUpLnBuZyIsImlhdCI6MTc3NTE0ODYzMiwiZXhwIjoxODA2Njg0NjMyfQ.QXSbgSLV3ULTcV3ss9Co9ZMe1oj3tb9bR_OP8xY-Nds",
   PhonePe: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(4).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDQpLnBuZyIsImlhdCI6MTc3NTE0ODYyMSwiZXhwIjoxODA2Njg0NjIxfQ.b_cMHhiCw52krGt2edtt1k5C1Keo8uGJwYIWpe6vZVo",
-  MobiKwik: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDEpLnBuZyIsImlhdCI6MTc3NTE0ODU3MywiZXhwIjoxODA2Njg0NTczfQ.m8Z7gn5FV-0ss58kTEUZ833u8Wv_bFun3YZeZtyIa9s"
+  MobiKwik: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDEpLnBuZyIsImlhdCI6MTc3NTE0ODU3MywiZXhwIjoxODA2Njg0NTczfQ.m8Z7gn5FV-0ss58kTEUZ833u8Wv_bFun3YZeZtyIa9s",
+  Freecharge: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(3).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDMpLnBuZyIsImlhdCI6MTc3NTE0ODYwOSwiZXhwIjoxODA2Njg0NjA5fQ.pus8pOlgEXCFb2pjIzNsVtU9DxnIxEeaVaeR3TuIQPc"
 };
 
 export default function AdminPanel() {
@@ -48,6 +49,7 @@ export default function AdminPanel() {
   
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [stats, setStats] = useState({ todayVolume: 0, todayCount: 0, totalVolume: 0, totalCount: 0 });
 
   useEffect(() => {
@@ -63,7 +65,10 @@ export default function AdminPanel() {
           status: 'in-review', 
           utr: '884210992341', 
           timestamp: now - 120000,
-          receiver: { appName: "MobiKwik", upi: "flexpay@upi", logo: RECEIVER_LOGOS.MobiKwik }
+          userName: "Aryan Sharma",
+          userMobile: "9876543210",
+          buyerMethod: { appName: "PhonePe", upi: "aryan@ybl", logo: APP_LOGOS.PhonePe },
+          receiver: { appName: "MobiKwik", upi: "flexpay@upi", logo: APP_LOGOS.MobiKwik }
         },
         { 
           id: "#ORD55202", 
@@ -73,7 +78,10 @@ export default function AdminPanel() {
           status: 'in-review', 
           utr: '772109448211', 
           timestamp: now - 300000,
-          receiver: { appName: "PhonePe", upi: "flexpay@upi", logo: RECEIVER_LOGOS.PhonePe }
+          userName: "Priya Patel",
+          userMobile: "9988776655",
+          buyerMethod: { appName: "Paytm", upi: "priya@paytm", logo: APP_LOGOS.Paytm },
+          receiver: { appName: "PhonePe", upi: "flexpay@upi", logo: APP_LOGOS.PhonePe }
         },
         { 
           id: "#ORD55203", 
@@ -83,28 +91,11 @@ export default function AdminPanel() {
           status: 'success', 
           utr: '992104423188', 
           timestamp: now - 3600000,
-          receiver: { appName: "Paytm", upi: "flexpay@upi", logo: RECEIVER_LOGOS.Paytm }
-        },
-        { 
-          id: "#ORD55204", 
-          amount: 200, 
-          profitPercent: 6, 
-          bonus: 5, 
-          status: 'success', 
-          utr: '110229443821', 
-          timestamp: now - 7200000,
-          receiver: { appName: "PhonePe", upi: "flexpay@upi", logo: RECEIVER_LOGOS.PhonePe }
-        },
-        { 
-          id: "#ORD55205", 
-          amount: 1000, 
-          profitPercent: 6, 
-          bonus: 5, 
-          status: 'rejected', 
-          utr: '001293348122', 
-          timestamp: now - 14400000,
-          receiver: { appName: "MobiKwik", upi: "flexpay@upi", logo: RECEIVER_LOGOS.MobiKwik }
-        },
+          userName: "Vikram Singh",
+          userMobile: "9123456789",
+          buyerMethod: { appName: "MobiKwik", upi: "vikram@mbk", logo: APP_LOGOS.MobiKwik },
+          receiver: { appName: "Paytm", upi: "flexpay@upi", logo: APP_LOGOS.Paytm }
+        }
       ];
       localStorage.setItem('flexpay_orders', JSON.stringify(demoOrders));
     }
@@ -164,8 +155,8 @@ export default function AdminPanel() {
       return (
         o.id.toLowerCase().includes(query) ||
         (o.utr && o.utr.toLowerCase().includes(query)) ||
-        (o.txid && o.txid.toLowerCase().includes(query)) ||
-        o.amount.toString().includes(query)
+        o.amount.toString().includes(query) ||
+        (o.userName && o.userName.toLowerCase().includes(query))
       );
     });
   }, [orders, searchQuery]);
@@ -213,18 +204,6 @@ export default function AdminPanel() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-[10px] font-black text-slate-900">Root Admin</p>
-                <div className="flex items-center gap-1 justify-end">
-                  <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-[8px] font-bold text-green-600 uppercase tracking-tighter">Live</span>
-                </div>
-              </div>
-              <div className="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
-                <User size={20} />
-              </div>
-            </div>
           </div>
         </header>
 
@@ -255,106 +234,21 @@ export default function AdminPanel() {
                   </Card>
                 ))}
               </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="lg:col-span-2 border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden">
-                  <CardHeader className="px-8 py-6 border-b border-slate-100 flex flex-row items-center justify-between bg-slate-50/30">
-                    <div>
-                      <CardTitle className="text-[14px] font-black uppercase tracking-tight">Real-time Terminal Activity</CardTitle>
-                      <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-1">Live incoming trade nodes</CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="divide-y divide-slate-100">
-                      {orders.length === 0 ? (
-                        <div className="py-32 flex flex-col items-center justify-center opacity-20">
-                          <History size={48} />
-                          <p className="text-[12px] font-black uppercase mt-4 tracking-widest">No terminal traffic detected</p>
-                        </div>
-                      ) : (
-                        orders.slice(0, 10).map((order) => (
-                          <div key={order.id} className="px-8 py-6 flex items-center justify-between group hover:bg-slate-50/50 transition-all">
-                            <div className="flex items-center gap-5">
-                              <div className={cn(
-                                "w-12 h-12 rounded-2xl flex items-center justify-center border shadow-sm",
-                                order.status === 'success' ? "bg-green-50 border-green-100 text-green-600" :
-                                order.status === 'in-review' ? "bg-amber-50 border-amber-100 text-amber-600" :
-                                "bg-slate-50 border-slate-100 text-slate-400"
-                              )}>
-                                <IndianRupee size={20} />
-                              </div>
-                              <div>
-                                <h4 className="text-[13px] font-black text-slate-900 uppercase tracking-tight">{order.id}</h4>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                  {new Date(order.timestamp).toLocaleString()} • Global Node
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-black text-slate-900">₹{order.amount.toLocaleString()}</p>
-                              <Badge className={cn(
-                                "text-[8px] h-5 px-2.5 uppercase tracking-tighter border-0 mt-1 shadow-sm",
-                                order.status === 'success' ? "bg-green-50 text-green-600" :
-                                order.status === 'in-review' ? "bg-amber-50 text-amber-600" :
-                                "bg-slate-100 text-slate-400"
-                              )}>
-                                {order.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-                <div className="space-y-8">
-                  <Card className="border-slate-200 shadow-xl rounded-[2.5rem] bg-slate-900 text-white overflow-hidden relative">
-                    <CardHeader className="relative z-10 p-8">
-                      <CardTitle className="text-[11px] font-black uppercase tracking-widest opacity-50">Node Health</CardTitle>
-                    </CardHeader>
-                    <CardContent className="relative z-10 px-8 pb-10">
-                      <div className="flex items-center gap-5 mb-8">
-                        <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white border border-white/10 backdrop-blur-xl shadow-2xl">
-                          <ShieldCheck size={28} />
-                        </div>
-                        <div>
-                          <p className="text-xl font-black tracking-tight">Encryption Active</p>
-                          <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">AES-512 Secure</p>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        {[
-                          { label: "Server Load", status: "Nominal", color: "text-green-400" },
-                          { label: "Network Ping", status: "12ms", color: "text-white" },
-                        ].map((stat, i) => (
-                          <div key={i} className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest border-b border-white/5 pb-3">
-                            <span className="opacity-40">{stat.label}</span>
-                            <span className={stat.color}>{stat.status}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
             </div>
           )}
 
           {activeTab === "users" && (
-            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-500">
+            <div className="space-y-10 animate-in fade-in duration-500">
               <div className="flex justify-between items-center">
                 <div className="relative group max-w-xl w-full">
                   <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <Input 
-                    placeholder="Search by Identity or UID..." 
+                    placeholder="Search by Identity or Mobile..." 
                     className="h-16 pl-14 bg-white border-slate-200 rounded-3xl text-[13px] font-bold shadow-sm focus:ring-8 focus:ring-primary/5 transition-all"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <Button className="h-16 px-10 rounded-3xl font-black text-[12px] uppercase tracking-widest shadow-2xl shadow-primary/20">
-                  Manual Registration
-                </Button>
               </div>
 
               <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white">
@@ -420,12 +314,12 @@ export default function AdminPanel() {
           )}
 
           {activeTab === "approvals" && (
-            <div className="space-y-10 animate-in fade-in slide-in-from-right-5 duration-500">
+            <div className="space-y-10 animate-in fade-in duration-500">
               <div className="flex justify-between items-center">
                 <div className="relative group max-w-xl w-full">
                   <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <Input 
-                    placeholder="Search by UTR or ID..." 
+                    placeholder="Search by UTR, ID, or Mobile..." 
                     className="h-16 pl-14 bg-white border-slate-200 rounded-3xl text-[13px] font-bold shadow-sm focus:ring-8 focus:ring-primary/5 transition-all"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -464,42 +358,22 @@ export default function AdminPanel() {
 
                         <div className="grid grid-cols-2 gap-6 mb-10">
                           <div className="bg-slate-50 p-6 rounded-[1.5rem] border border-slate-100">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Hash (UTR/TXID)</span>
-                            <div className="flex items-center justify-between">
-                              <code className="text-[14px] font-black text-slate-900 tracking-wider">{order.utr || order.txid || "N/A"}</code>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleCopy(order.utr || order.txid || "", "Hash")}>
-                                <Copy size={14} />
-                              </Button>
-                            </div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Hash (UTR)</span>
+                            <code className="text-[14px] font-black text-slate-900 tracking-wider">{order.utr || "N/A"}</code>
                           </div>
                           <div className="bg-slate-50 p-6 rounded-[1.5rem] border border-slate-100">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Node Info</span>
-                            <div className="flex items-center gap-3 mt-1">
-                                <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
-                                    <User size={12} />
-                                </div>
-                                <p className="text-[12px] font-black text-slate-900 uppercase">Aryan Sharma</p>
-                            </div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">User</span>
+                            <p className="text-[12px] font-black text-slate-900 uppercase">{order.userName || "Aryan Sharma"}</p>
                           </div>
                         </div>
 
-                        <div className="flex gap-4">
-                          <Button 
-                            variant="outline"
-                            className="flex-1 h-16 rounded-[1.5rem] font-black text-[11px] uppercase tracking-wider"
-                            onClick={() => setSelectedOrder(order)}
-                          >
-                            <Eye size={18} className="mr-3" />
-                            Inspect Proof
-                          </Button>
-                          <Button 
-                            className="flex-[2] h-16 rounded-[1.5rem] bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-widest shadow-xl shadow-green-100"
-                            onClick={() => updateOrderStatus(order.id, 'success')}
-                          >
-                            <CheckCircle2 size={22} className="mr-3" />
-                            Approve Node
-                          </Button>
-                        </div>
+                        <Button 
+                          className="w-full h-16 rounded-[1.5rem] font-black text-[12px] uppercase tracking-widest shadow-xl shadow-primary/5"
+                          onClick={() => setSelectedOrder(order)}
+                        >
+                          <Eye size={18} className="mr-3" />
+                          Inspect Proof
+                        </Button>
                       </div>
                     </Card>
                   ))
@@ -510,80 +384,116 @@ export default function AdminPanel() {
         </main>
       </div>
 
+      {/* Verification Dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl bg-white border-0 rounded-[4rem] p-0 overflow-hidden shadow-2xl">
-          <div className="p-12">
-            <DialogHeader className="mb-10">
+        <DialogContent className="max-w-4xl bg-white border-0 rounded-[3rem] p-0 overflow-hidden shadow-2xl">
+          <div className="p-10">
+            <DialogHeader className="mb-8">
               <div className="flex justify-between items-center">
                 <div>
-                  <DialogTitle className="text-2xl font-black text-slate-900 uppercase">Proof Verification</DialogTitle>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">{selectedOrder?.id} • {new Date(selectedOrder?.timestamp).toLocaleString()}</p>
+                  <DialogTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">Proof Verification</DialogTitle>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{selectedOrder?.id} • Node Process</p>
                 </div>
-                <Badge className="bg-primary text-white border-0 text-[14px] h-10 px-6 uppercase font-black rounded-2xl shadow-xl shadow-primary/20">
+                <Badge className="bg-primary text-white text-[16px] h-10 px-6 font-black rounded-2xl">
                   ₹{selectedOrder?.amount?.toLocaleString()}
                 </Badge>
               </div>
             </DialogHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Media Section */}
-              <div className="aspect-[4/5] bg-slate-100 rounded-[3rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 group relative overflow-hidden">
-                <div className="flex flex-col items-center gap-5">
-                  <Eye size={64} className="opacity-40" />
-                  <p className="text-[12px] font-black uppercase tracking-widest opacity-40 text-center px-6">Verification Screenshot Unavailable in Sandbox</p>
+              {/* Left Column - Evidence */}
+              <div className="space-y-4">
+                <div className="aspect-[4/5] bg-slate-50 rounded-[2.5rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 relative group overflow-hidden">
+                  <div className="flex flex-col items-center gap-4 text-center px-6">
+                    <Maximize2 size={48} className="opacity-20" />
+                    <p className="text-[11px] font-black uppercase tracking-widest opacity-40">Verification Evidence</p>
+                  </div>
+                  {/* Overlay for hover preview */}
+                  <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <Button 
+                      className="bg-white text-slate-900 hover:bg-white/90 rounded-2xl h-12 px-6 font-black text-[10px] uppercase tracking-widest"
+                      onClick={() => setIsPreviewOpen(true)}
+                    >
+                      View Full Image
+                    </Button>
+                  </div>
                 </div>
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12 rounded-2xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
+                  onClick={() => setIsPreviewOpen(true)}
+                >
+                  <Maximize2 size={16} className="mr-2" />
+                  View Full Image
+                </Button>
               </div>
 
-              {/* Data Section */}
-              <div className="flex flex-col gap-8">
-                <div className="space-y-6">
-                  <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Receiver Terminal Details</h5>
-                  <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-center gap-5">
-                    <div className="w-14 h-14 relative rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm p-2">
-                        {selectedOrder?.receiver?.logo && (
-                            <Image src={selectedOrder.receiver.logo} alt={selectedOrder.receiver.appName} fill className="object-contain" />
-                        )}
+              {/* Right Column - Audit Trails */}
+              <div className="space-y-6 flex flex-col h-full">
+                {/* Receiver Info */}
+                <div className="space-y-3">
+                  <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Receiver Terminal</h5>
+                  <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 flex items-center gap-4">
+                    <div className="w-12 h-12 relative rounded-xl overflow-hidden bg-white border border-slate-200 p-1.5 shadow-sm">
+                      {selectedOrder?.receiver?.logo && (
+                        <Image src={selectedOrder.receiver.logo} alt="Receiver" fill className="object-contain" />
+                      )}
                     </div>
                     <div>
-                        <p className="text-[14px] font-black text-slate-900 uppercase tracking-tight">{selectedOrder?.receiver?.appName || "Merchant Network"}</p>
-                        <p className="text-[10px] font-bold text-primary tracking-widest mt-0.5">{selectedOrder?.receiver?.upi || "flexpay@upi"}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Transaction Hash (UTR)</span>
-                        <div className="flex items-center justify-between">
-                            <p className="text-[16px] font-black text-slate-900 tracking-widest">{selectedOrder?.utr || selectedOrder?.txid || "N/A"}</p>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleCopy(selectedOrder?.utr || selectedOrder?.txid || "", "Hash")}>
-                                <Copy size={14} />
-                            </Button>
-                        </div>
-                    </div>
-                    
-                    <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center">
-                        <div>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Process Time</span>
-                            <div className="flex items-center gap-2 text-amber-600">
-                                <Clock size={14} />
-                                <p className="text-[12px] font-black">12m 45s wait</p>
-                            </div>
-                        </div>
+                      <p className="text-[13px] font-black text-slate-900 uppercase tracking-tight">{selectedOrder?.receiver?.appName || "Merchant Node"}</p>
+                      <p className="text-[10px] font-bold text-primary tracking-widest">{selectedOrder?.receiver?.upi || "flexpay@upi"}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-auto flex gap-4">
+                {/* Buyer Info */}
+                <div className="space-y-3">
+                  <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Buyer Payment Method</h5>
+                  <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 flex items-center gap-4">
+                    <div className="w-12 h-12 relative rounded-xl overflow-hidden bg-white border border-slate-200 p-1.5 shadow-sm">
+                      {selectedOrder?.buyerMethod?.logo && (
+                        <Image src={selectedOrder.buyerMethod.logo} alt="Buyer" fill className="object-contain" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-black text-slate-900 uppercase tracking-tight">{selectedOrder?.buyerMethod?.appName || "Payment App"}</p>
+                      <p className="text-[10px] font-bold text-slate-500 tracking-widest">{selectedOrder?.buyerMethod?.upi || "user@upi"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transaction Metadata */}
+                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction UTR</span>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[14px] font-black text-slate-900 tracking-widest">{selectedOrder?.utr}</p>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => handleCopy(selectedOrder?.utr, "UTR")}>
+                        <Copy size={12} />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Process Time</span>
+                    <div className="flex items-center gap-2 text-slate-600">
+                      <Clock size={12} />
+                      <p className="text-[11px] font-black uppercase tracking-widest">{new Date(selectedOrder?.timestamp).toLocaleTimeString()}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="mt-auto grid grid-cols-2 gap-4">
                   <Button 
                     variant="outline" 
-                    className="flex-1 h-16 rounded-2xl border-red-100 text-red-500 font-black text-[11px] uppercase tracking-widest hover:bg-red-50"
+                    className="h-16 rounded-2xl border-red-100 text-red-500 font-black text-[11px] uppercase tracking-widest hover:bg-red-50"
                     onClick={() => updateOrderStatus(selectedOrder?.id, 'rejected')}
                   >
-                    <Ban size={22} className="mr-3" />
+                    <Ban size={20} className="mr-3" />
                     Reject
                   </Button>
                   <Button 
-                    className="flex-[2] h-16 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-widest shadow-2xl shadow-green-100"
+                    className="h-16 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-widest shadow-xl shadow-green-100"
                     onClick={() => updateOrderStatus(selectedOrder?.id, 'success')}
                   >
                     <CheckCircle2 size={22} className="mr-3" />
@@ -592,6 +502,29 @@ export default function AdminPanel() {
                 </div>
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Full Image Preview Modal */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-[90vw] h-[90vh] bg-slate-950 border-0 p-0 flex flex-col rounded-[2rem] overflow-hidden">
+          <DialogHeader className="p-6 bg-slate-900 flex flex-row items-center justify-between">
+            <DialogTitle className="text-white text-[14px] font-black uppercase tracking-widest">Verification Proof Preview</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 bg-slate-900 relative p-10 flex items-center justify-center">
+             <div className="flex flex-col items-center gap-6 opacity-30 text-white">
+               <Maximize2 size={120} />
+               <p className="text-lg font-black uppercase tracking-[0.5em]">Sandbox Preview Restricted</p>
+             </div>
+          </div>
+          <div className="p-6 bg-slate-900 border-t border-white/5 flex justify-end">
+            <Button 
+              className="bg-white text-slate-900 hover:bg-white/90 rounded-xl h-12 px-10 font-black text-[11px] uppercase tracking-widest"
+              onClick={() => setIsPreviewOpen(false)}
+            >
+              Close Preview
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
