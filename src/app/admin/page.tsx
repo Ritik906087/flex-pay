@@ -384,10 +384,10 @@ export default function AdminPanel() {
         </main>
       </div>
 
-      {/* Verification Dialog */}
+      {/* Verification Dialog - Refined Size */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-4xl bg-white border-0 rounded-[3rem] p-0 overflow-hidden shadow-2xl">
-          <div className="p-10">
+        <DialogContent className="max-w-4xl w-[95%] max-h-[90vh] bg-white border-0 rounded-[3rem] p-0 overflow-hidden shadow-2xl flex flex-col">
+          <div className="flex-1 overflow-y-auto no-scrollbar p-10">
             <DialogHeader className="mb-8">
               <div className="flex justify-between items-center">
                 <div>
@@ -506,21 +506,21 @@ export default function AdminPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Full Image Preview Modal */}
+      {/* Full Image Preview Modal - Optimized Mobile Size */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-[90vw] h-[90vh] bg-slate-950 border-0 p-0 flex flex-col rounded-[2rem] overflow-hidden">
-          <DialogHeader className="p-6 bg-slate-900 flex flex-row items-center justify-between">
-            <DialogTitle className="text-white text-[14px] font-black uppercase tracking-widest">Verification Proof Preview</DialogTitle>
+        <DialogContent className="max-w-[400px] w-[95%] max-h-[85vh] bg-slate-950 border-0 p-0 flex flex-col rounded-[2rem] overflow-hidden shadow-2xl">
+          <DialogHeader className="p-5 bg-slate-900 flex flex-row items-center justify-between">
+            <DialogTitle className="text-white text-[12px] font-black uppercase tracking-widest">Evidence Proof</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 bg-slate-900 relative p-10 flex items-center justify-center">
-             <div className="flex flex-col items-center gap-6 opacity-30 text-white">
-               <Maximize2 size={120} />
-               <p className="text-lg font-black uppercase tracking-[0.5em]">Sandbox Preview Restricted</p>
+          <div className="flex-1 bg-slate-900 relative p-8 flex items-center justify-center">
+             <div className="flex flex-col items-center gap-4 text-center opacity-30 text-white">
+               <Maximize2 size={80} />
+               <p className="text-sm font-black uppercase tracking-[0.3em]">Sandbox Preview Restricted</p>
              </div>
           </div>
-          <div className="p-6 bg-slate-900 border-t border-white/5 flex justify-end">
+          <div className="p-5 bg-slate-900 border-t border-white/5 flex justify-center">
             <Button 
-              className="bg-white text-slate-900 hover:bg-white/90 rounded-xl h-12 px-10 font-black text-[11px] uppercase tracking-widest"
+              className="bg-white text-slate-900 hover:bg-white/90 rounded-2xl h-11 px-10 font-black text-[10px] uppercase tracking-widest w-full"
               onClick={() => setIsPreviewOpen(false)}
             >
               Close Preview
