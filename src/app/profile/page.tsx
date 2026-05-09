@@ -1,12 +1,11 @@
-
 "use client"
 
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/bottom-nav";
 import { 
-  Headphones, LogOut, 
+  LogOut, 
   CreditCard, Users, ChevronRight, 
-  Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy, User
+  Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy, User, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -91,6 +90,21 @@ export default function Profile() {
       {/* Main Sections */}
       <div className="px-5 mt-5 flex flex-col gap-4 pb-32">
         <div className="bg-white rounded-[1rem] border border-gray-100 overflow-hidden shadow-sm">
+          <Link href="/profile/newbie-reward">
+            <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50 group">
+              <div className="flex items-center gap-3">
+                <div className="w-6.5 h-6.5 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+                  <Sparkles size={15} />
+                </div>
+                <span className="text-[9.5px] font-black text-gray-700 uppercase tracking-tight">Newbie Reward</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[7px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded-full uppercase tracking-tighter">CLAIM NOW</span>
+                <ChevronRight size={13} className="text-gray-300" />
+              </div>
+            </button>
+          </Link>
+
           <Link href="/profile/history">
             <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
               <div className="flex items-center gap-3">
@@ -136,16 +150,6 @@ export default function Profile() {
               <ChevronRight size={13} className="text-gray-300" />
             </button>
           </Link>
-
-          <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
-            <div className="flex items-center gap-3">
-              <div className="w-6.5 h-6.5 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
-                <Headphones size={15} />
-              </div>
-              <span className="text-[9.5px] font-black text-gray-700 uppercase tracking-tight">Support</span>
-            </div>
-            <ChevronRight size={13} className="text-gray-300" />
-          </button>
 
           <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-red-50">
             <div className="flex items-center gap-3">
