@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, CreditCard, User, 
-  Smartphone, Hash, ShieldCheck, AlertCircle, RefreshCw, StopCircle, ChevronRight, Plus, Trash2
+  Smartphone, Hash, AlertCircle, RefreshCw, StopCircle, ChevronRight, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +84,7 @@ export default function LinkAccount() {
     // Duplicate check
     const isDuplicate = accounts.some(acc => acc.upi.toLowerCase() === formData.upi.toLowerCase() && acc.id !== editingId);
     if (isDuplicate) {
-      toast({ variant: "destructive", title: "Duplicate UPI", description: "Already linked, please change your UPI" });
+      toast({ variant: "destructive", title: "Already Linked", description: "This UPI is already linked. Please change your UPI." });
       return;
     }
 
@@ -129,12 +129,6 @@ export default function LinkAccount() {
     setFormData({ name: account.name, mobile: account.mobile, upi: account.upi });
     setSelectedApp(PAYMENT_APPS.find(a => a.name === account.appName));
     setStep("form");
-  };
-
-  const handleDelete = (id: string) => {
-    const updated = accounts.filter(acc => acc.id !== id);
-    saveAccounts(updated);
-    toast({ title: "Removed", description: "Account removed successfully" });
   };
 
   return (
@@ -280,7 +274,7 @@ export default function LinkAccount() {
         )}
 
         {step === "linked" && accounts.length > 0 && (
-          <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300">
+          <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300 pb-10">
             {accounts.map((acc) => (
               <div key={acc.id} className="bg-white rounded-[1.2rem] border border-gray-100 p-4 shadow-sm relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
@@ -298,9 +292,6 @@ export default function LinkAccount() {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(acc.id)} className="p-1.5 text-gray-300 hover:text-red-500 active:scale-90 transition-all">
-                    <Trash2 size={12} />
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-y-2 mb-4">
