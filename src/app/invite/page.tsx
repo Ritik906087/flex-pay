@@ -13,9 +13,19 @@ export default function Invite() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(`https://flexpay.app/register?ref=${inviteCode}`);
+    if (window.navigator.vibrate) window.navigator.vibrate(50);
     toast({
       title: "Success",
       description: "Invite link copied to clipboard.",
+    });
+  };
+
+  const copyUid = () => {
+    navigator.clipboard.writeText(inviteCode);
+    if (window.navigator.vibrate) window.navigator.vibrate(50);
+    toast({
+      title: "Copied",
+      description: "UID copied to clipboard.",
     });
   };
 
@@ -51,15 +61,22 @@ export default function Invite() {
 
       {/* QR Section */}
       <div className="px-5 mt-6 flex flex-col items-center">
-        <div className="bg-white p-5 rounded-[1.8rem] border border-gray-100 flex flex-col items-center gap-3 shadow-sm w-full max-w-[240px]">
-          <div className="bg-gray-50 p-2.5 rounded-2xl border border-gray-100">
+        <button 
+          onClick={copyUid}
+          className="bg-white p-5 rounded-[1.8rem] border border-gray-100 flex flex-col items-center gap-3 shadow-sm w-full max-w-[240px] active:scale-[0.98] transition-all group"
+        >
+          <div className="bg-gray-50 p-2.5 rounded-2xl border border-gray-100 group-active:bg-gray-100 transition-colors">
             <QrCode size={120} className="text-gray-900" />
           </div>
           <div className="text-center">
             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 block">Your Invite Code (UID)</span>
-            <p className="text-lg font-black text-primary tracking-[0.1em]">{inviteCode}</p>
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-lg font-black text-primary tracking-[0.1em]">{inviteCode}</p>
+              <Copy size={12} className="text-primary/30" />
+            </div>
+            <span className="text-[7px] font-bold text-gray-300 uppercase tracking-tighter mt-1 block">Tap to copy UID</span>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Actions */}
