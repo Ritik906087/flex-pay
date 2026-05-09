@@ -115,9 +115,30 @@ export default function Profile() {
               <ChevronRight size={12} className="text-gray-300" />
             </button>
           </Link>
+          
+          <button className="w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-lg bg-green-50 flex items-center justify-center text-green-500">
+                <TrendingUp size={14} />
+              </div>
+              <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">Sell History</span>
+            </div>
+            <ChevronRight size={12} className="text-gray-300" />
+          </button>
+
+          <Link href="/profile/link-account">
+            <button className="w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
+                  <CreditCard size={14} />
+                </div>
+                <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">Linked Account</span>
+              </div>
+              <ChevronRight size={12} className="text-gray-300" />
+            </button>
+          </Link>
+
           {[
-            { icon: TrendingUp, label: "Sell History", color: "text-green-500", bg: "bg-green-50" },
-            { icon: CreditCard, label: "Linked Account", color: "text-amber-500", bg: "bg-amber-50" },
             { icon: Gift, label: "Rewards Wallet", color: "text-purple-500", bg: "bg-purple-50" },
             { icon: Users, label: "My Team", color: "text-indigo-500", bg: "bg-indigo-50" },
           ].map((item, i) => (
@@ -125,7 +146,7 @@ export default function Profile() {
               key={i} 
               className={cn(
                 "w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50",
-                i !== 3 && "border-b border-gray-50"
+                i !== 1 && "border-b border-gray-50"
               )}
             >
               <div className="flex items-center gap-3">
