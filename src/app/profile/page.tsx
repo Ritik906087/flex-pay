@@ -6,7 +6,8 @@ import { BottomNav } from "@/components/bottom-nav";
 import { 
   LogOut, 
   CreditCard, Users, ChevronRight, 
-  Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy, User, Sparkles
+  Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy, User, Sparkles,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,18 @@ export default function Profile() {
       {/* Main Sections */}
       <div className="px-5 mt-5 flex flex-col gap-4 pb-32">
         <div className="bg-white rounded-[1rem] border border-gray-100 overflow-hidden shadow-sm">
+          <Link href="/admin">
+            <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-slate-50 border-b border-gray-50 group">
+              <div className="flex items-center gap-3">
+                <div className="w-6.5 h-6.5 rounded-lg bg-slate-900 flex items-center justify-center text-white">
+                  <ShieldCheck size={15} />
+                </div>
+                <span className="text-[9.5px] font-black text-gray-700 uppercase tracking-tight">Admin Terminal</span>
+              </div>
+              <ChevronRight size={13} className="text-gray-300" />
+            </button>
+          </Link>
+
           <Link href="/profile/history">
             <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
               <div className="flex items-center gap-3">
