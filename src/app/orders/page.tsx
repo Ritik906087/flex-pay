@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/bottom-nav";
-import { Info, Search, AlertCircle, ArrowRight } from "lucide-react";
+import { Info, AlertCircle, ArrowRight, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import {
@@ -73,16 +73,15 @@ export default function Orders() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Header */}
+      {/* Header - Updated with Red Profit Info & USDT Rate */}
       <div className="bg-white px-5 pt-8 pb-4 border-b border-gray-100 sticky top-0 z-20">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-sm font-black text-gray-900 uppercase tracking-tight">Task Market</h1>
-            <p className="text-[8px] text-gray-400 uppercase tracking-widest font-bold mt-0.5">Available Buy Orders</p>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-black text-red-600 uppercase tracking-tight">6% + ₹5 per order</span>
+            <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
+            <span className="text-[11px] font-black text-red-600 uppercase tracking-tight">1 USDT = ₹110</span>
           </div>
-          <button className="text-gray-400 p-2 bg-gray-50 rounded-xl active:scale-95 transition-transform">
-            <Search size={16} />
-          </button>
+          <p className="text-[8px] text-gray-400 uppercase tracking-widest font-bold">Guaranteed Profit Sharing</p>
         </div>
       </div>
 
@@ -112,7 +111,7 @@ export default function Orders() {
           <div className="bg-primary/5 rounded-xl p-3.5 flex gap-3 border border-primary/10">
             <Info className="text-primary shrink-0" size={14} />
             <p className="text-[9px] font-bold text-primary/80 leading-snug uppercase tracking-tight">
-              Complete tasks to earn <span className="font-black">6-8% profit</span>. Review time: 30 mins.
+              Complete tasks to earn commission. Standard review time: 30 mins.
             </p>
           </div>
         </div>
