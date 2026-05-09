@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react";
@@ -69,9 +70,25 @@ export default function LinkAccount() {
     }
   }, []);
 
+  const syncToUser = (newAccounts: Account[]) => {
+    const currentUserId = localStorage.getItem('flexpay_user_id');
+    if (!currentUserId) return;
+
+    const users = JSON.parse(localStorage.getItem('flexpay_users') || '[]');
+    const updatedUsers = users.map((u: any) => {
+      if (u.uid === currentUserId) {
+        return { ...u, linkedAccounts: newAccounts };
+      }
+      return u;
+    });
+    localStorage.setItem('flexpay_users', JSON.stringify(updatedUsers));
+    window.dispatchEvent(new CustomEvent('flexpay_users_update'));
+  };
+
   const saveAccounts = (newAccounts: Account[]) => {
     setAccounts(newAccounts);
     localStorage.setItem('flexpay_linked_accounts', JSON.stringify(newAccounts));
+    syncToUser(newAccounts);
     if (newAccounts.length === 0) setStep("initial");
   };
 
@@ -81,10 +98,9 @@ export default function LinkAccount() {
       return;
     }
 
-    // Duplicate check
     const isDuplicate = accounts.some(acc => acc.upi.toLowerCase() === formData.upi.toLowerCase() && acc.id !== editingId);
     if (isDuplicate) {
-      toast({ variant: "destructive", title: "Already Linked", description: "This UPI is already linked. Please change your UPI." });
+      toast({ variant: "destructive", title: "Already Linked", description: "This UPI is already linked." });
       return;
     }
 
@@ -120,7 +136,7 @@ export default function LinkAccount() {
     const acc = updated.find(a => a.id === id);
     toast({ 
       title: acc?.isOnline ? "Started Selling" : "Stopped Selling", 
-      description: acc?.isOnline ? "Account is now online." : "Account is now offline."
+      description: acc?.isOnline ? "This UPI is now Online." : "This UPI is now Offline."
     });
   };
 
@@ -133,7 +149,6 @@ export default function LinkAccount() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Compact Header */}
       <div className="bg-white px-5 pt-8 pb-3 border-b border-gray-100 sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

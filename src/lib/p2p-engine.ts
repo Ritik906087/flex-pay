@@ -34,25 +34,33 @@ export const P2PEngine = {
   matchOrder: (amount: number, buyerId: string): P2POrder | null => {
     const users = JSON.parse(localStorage.getItem('flexpay_users') || '[]');
     
-    const seller = users.find((u: any) => 
-      u.status === 'active' && 
-      u.isSelling === true && 
-      u.balance >= amount &&
-      u.uid !== buyerId
-    );
+    // Find a seller who is selling, has balance, and has AT LEAST one online UPI account
+    const seller = users.find((u: any) => {
+      const hasOnlineAccount = u.linkedAccounts?.some((acc: any) => acc.isOnline === true);
+      return (
+        u.status === 'active' && 
+        u.isSelling === true && 
+        u.balance >= amount &&
+        u.uid !== buyerId &&
+        hasOnlineAccount
+      );
+    });
 
     if (!seller) return null;
 
+    // Filter only online accounts and pick the first one
+    const onlineAccounts = seller.linkedAccounts.filter((acc: any) => acc.isOnline === true);
+    const selectedTerminal = onlineAccounts[0];
+
     const orderId = `#ORD${Math.floor(100000000 + Math.random() * 900000000)}`;
     
+    // Lock balance
     seller.balance -= amount;
     if (!seller.lockedBalance) seller.lockedBalance = 0;
     seller.lockedBalance += amount;
     
     const updatedUsers = users.map((u: any) => u.uid === seller.uid ? seller : u);
     localStorage.setItem('flexpay_users', JSON.stringify(updatedUsers));
-
-    const selectedTerminal = seller.linkedAccounts?.[0] || { appName: "Default Pay", logo: "", upi: "merchant@upi", name: seller.name };
 
     const newOrder: P2POrder = {
       id: orderId,
@@ -64,7 +72,7 @@ export const P2PEngine = {
       status: 'pending-payment',
       timestamp: Date.now(),
       sellerUpi: selectedTerminal.upi,
-      sellerName: seller.name,
+      sellerName: selectedTerminal.name || seller.name,
       expiryTime: Date.now() + (30 * 60 * 1000),
       receiverTerminal: {
         appName: selectedTerminal.appName,

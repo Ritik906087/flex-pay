@@ -12,7 +12,6 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { P2POrder } from "@/lib/p2p-engine";
-import { MOCK_USERS } from "@/lib/mock-admin-data";
 
 export default function SellCenter() {
   const router = useRouter();
@@ -33,20 +32,26 @@ export default function SellCenter() {
   }, []);
 
   const loadState = () => {
-    const users = JSON.parse(localStorage.getItem('flexpay_users') || JSON.stringify(MOCK_USERS));
-    const currentUser = users.find((u: any) => u.uid === "FLEX772101"); // Simulating Current User as a Seller
+    const currentUserId = localStorage.getItem('flexpay_user_id');
+    if (!currentUserId) return;
+
+    const users = JSON.parse(localStorage.getItem('flexpay_users') || '[]');
+    const currentUser = users.find((u: any) => u.uid === currentUserId);
     setUser(currentUser);
 
     const orders = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-    const matched = orders.find((o: P2POrder) => o.sellerId === currentUser?.uid && (o.status === 'pending-payment' || o.status === 'in-review'));
+    const matched = orders.find((o: P2POrder) => o.sellerId === currentUserId && (o.status === 'pending-payment' || o.status === 'in-review'));
     setActiveOrder(matched || null);
     
-    setHistory(orders.filter((o: P2POrder) => o.sellerId === currentUser?.uid));
+    setHistory(orders.filter((o: P2POrder) => o.sellerId === currentUserId));
   };
 
   const toggleSelling = (checked: boolean) => {
-    const users = JSON.parse(localStorage.getItem('flexpay_users') || JSON.stringify(MOCK_USERS));
-    const updated = users.map((u: any) => u.uid === user.uid ? { ...u, isSelling: checked } : u);
+    const currentUserId = localStorage.getItem('flexpay_user_id');
+    if (!currentUserId) return;
+
+    const users = JSON.parse(localStorage.getItem('flexpay_users') || '[]');
+    const updated = users.map((u: any) => u.uid === currentUserId ? { ...u, isSelling: checked } : u);
     localStorage.setItem('flexpay_users', JSON.stringify(updated));
     setUser({ ...user, isSelling: checked });
     
@@ -75,11 +80,10 @@ export default function SellCenter() {
       </div>
 
       <div className="px-5 mt-5 space-y-5">
-        {/* Balance Card */}
         <div className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl relative overflow-hidden">
           <div className="relative z-10">
             <span className="text-[8px] font-bold opacity-60 uppercase tracking-[0.2em] block mb-1">Available Assets</span>
-            <h2 className="text-3xl font-black mb-6">₹{user?.balance?.toLocaleString()}</h2>
+            <h2 className="text-3xl font-black mb-6">₹{user?.balance?.toLocaleString() || 0}</h2>
             
             <div className="bg-white/10 rounded-2xl p-4 border border-white/5 flex justify-between items-center">
               <div>
@@ -91,7 +95,6 @@ export default function SellCenter() {
           </div>
         </div>
 
-        {/* Active Matched Order */}
         {activeOrder ? (
           <div className="bg-white rounded-[2rem] border border-primary/20 p-5 shadow-lg shadow-primary/5 animate-pulse">
             <div className="flex justify-between items-start mb-4">
@@ -115,7 +118,7 @@ export default function SellCenter() {
                 <span className="text-[9px] font-black text-gray-700 uppercase">Waiting for Buyer</span>
               </div>
               <span className="text-[9px] font-black text-amber-600 uppercase bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
-                Processing
+                {activeOrder.status.replace('-', ' ')}
               </span>
             </div>
 
@@ -130,20 +133,18 @@ export default function SellCenter() {
             </div>
             <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-1">Waiting for Match</h4>
             <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight">
-              Keep the terminal online to receive incoming P2P buy orders.
+              Keep the terminal online and at least one UPI account 'Online' to receive orders.
             </p>
           </div>
         )}
 
-        {/* Info Box */}
         <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex gap-3">
           <AlertCircle size={14} className="text-blue-500 shrink-0 mt-0.5" />
           <p className="text-[8px] font-bold text-blue-800 uppercase leading-relaxed">
-            Your VPA (UPI ID) is shared automatically with matched buyers. Do not share credentials elsewhere.
+            Only your 'Online' UPI accounts will be used for P2P matches. Offline accounts are hidden from buyers.
           </p>
         </div>
 
-        {/* History */}
         <div className="space-y-3 pt-2">
           <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Recent Sell Network</h3>
           {history.length === 0 ? (
@@ -160,9 +161,10 @@ export default function SellCenter() {
                 </div>
                 <div className={cn(
                   "px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider",
-                  h.status === 'success' ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
+                  h.status === 'success' ? "bg-green-50 text-green-600" : 
+                  h.status === 'cancelled' ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-400"
                 )}>
-                  {h.status}
+                  {h.status.replace('-', ' ')}
                 </div>
               </div>
             ))
