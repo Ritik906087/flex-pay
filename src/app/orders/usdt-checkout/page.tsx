@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   CheckCircle2, Loader2, Copy, Clock, QrCode, 
-  Upload, ArrowRight, AlertCircle, ChevronLeft, XCircle, ShieldCheck
+  ArrowRight, AlertCircle, ChevronLeft, XCircle, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,6 @@ export default function UsdtCheckout() {
   const [step, setStep] = useState<1 | 2>(1);
   const [timeLeft, setTimeLeft] = useState(1800);
   const [txid, setTxid] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
@@ -105,8 +104,8 @@ export default function UsdtCheckout() {
   };
 
   const handleSubmitProof = () => {
-    if (!txid || !file) {
-      toast({ variant: "destructive", title: "Missing Info", description: "Please enter TXID and upload screenshot." });
+    if (!txid || txid.length < 10) {
+      toast({ variant: "destructive", title: "Invalid TXID", description: "Please enter a valid Transaction Hash." });
       return;
     }
 
@@ -123,6 +122,7 @@ export default function UsdtCheckout() {
       );
       localStorage.setItem('flexpay_orders', JSON.stringify(updated));
       setIsSubmitting(false);
+      toast({ title: "Submitted", description: "Transaction verification in progress." });
       router.push('/orders');
     }, 1500);
   };
@@ -150,9 +150,9 @@ export default function UsdtCheckout() {
           <div className="space-y-6">
             <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 shadow-sm flex justify-between items-center">
               <div>
-                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Amount to Transfer</span>
+                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Transfer Exactly</span>
                 <span className="text-2xl font-black text-primary">{orderData.usdt} USDT</span>
-                <p className="text-[8px] font-bold text-gray-400 mt-1">Cost: ₹{orderData.amount.toLocaleString()}</p>
+                <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Approx: ₹{orderData.amount.toLocaleString()}</p>
               </div>
               <ShieldCheck size={32} className="text-green-500 opacity-20" />
             </div>
@@ -176,12 +176,12 @@ export default function UsdtCheckout() {
             <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 space-y-2">
               <div className="flex items-center gap-2 text-amber-700">
                 <AlertCircle size={14} />
-                <h4 className="text-[9px] font-black uppercase tracking-widest">Crucial Warning:</h4>
+                <h4 className="text-[9px] font-black uppercase tracking-widest">Network Rules:</h4>
               </div>
               <ul className="text-[8px] text-amber-900/70 space-y-1.5 font-bold leading-relaxed uppercase tracking-tight">
-                <li>• SUPPORTED: <span className="text-amber-600 font-black">BINANCE, COINDCX</span> ONLY</li>
-                <li>• NETWORK: <span className="text-amber-600 font-black">TRC20 (TRON)</span> ONLY</li>
-                <li>• WRONG NETWORK/EXCHANGE LEADS TO <span className="text-red-500 font-black">TOTAL ASSET LOSS</span></li>
+                <li>• USE <span className="text-amber-600 font-black">BINANCE</span> OR <span className="text-amber-600 font-black">COINDCX</span> ONLY</li>
+                <li>• NETWORK: <span className="text-amber-600 font-black">TRON (TRC20)</span></li>
+                <li>• SUBMIT <span className="text-amber-600 font-black">TXID</span> AFTER SUCCESSFUL TRANSFER</li>
               </ul>
             </div>
 
@@ -193,7 +193,7 @@ export default function UsdtCheckout() {
                 <DialogContent className="max-w-[85%] rounded-[1.8rem] border-0 p-6 shadow-2xl">
                   <DialogHeader className="mb-4">
                     <XCircle size={20} className="mx-auto text-red-500 mb-2" />
-                    <DialogTitle className="text-center text-[13px] font-black uppercase tracking-tight text-gray-900">Cancel USDT Order</DialogTitle>
+                    <DialogTitle className="text-center text-[13px] font-black uppercase tracking-tight text-gray-900">Cancel Order</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <RadioGroup value={cancelReason} onValueChange={setCancelReason} className="grid gap-2">
@@ -216,49 +216,41 @@ export default function UsdtCheckout() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">Transfer Screenshot</label>
-                <div 
-                  className={cn(
-                    "h-44 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer overflow-hidden relative",
-                    file ? "border-green-400 bg-green-50/20" : "border-gray-200 bg-gray-50 hover:bg-gray-100"
-                  )}
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                >
-                  {file ? (
-                    <div className="flex flex-col items-center gap-1.5">
-                      <CheckCircle2 size={24} className="text-green-500" />
-                      <span className="text-[8px] font-bold text-green-600 uppercase px-3 text-center truncate max-w-[150px]">{file.name}</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-1.5">
-                      <Upload size={24} className="text-gray-300" />
-                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Select screenshot</span>
-                    </div>
-                  )}
-                  <input id="file-upload" type="file" accept="image/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-                </div>
-              </div>
+            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-2">
+              <p className="text-[9px] font-bold text-blue-900 text-center uppercase tracking-tight">
+                Submit your Transaction Hash (TXID) below. Verification takes 15-30 minutes.
+              </p>
+            </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">TXID / Transaction ID</label>
-                <Input 
-                  placeholder="Enter Transaction Hash" 
-                  className="h-12 bg-gray-50 border-gray-100 rounded-xl font-black text-[11px] tracking-wider placeholder:tracking-normal placeholder:font-medium placeholder:text-gray-300"
-                  value={txid}
-                  onChange={(e) => setTxid(e.target.value)}
-                />
-                <div className="flex items-start gap-2 px-1 mt-0.5">
-                  <AlertCircle size={10} className="text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-[7.5px] font-bold text-amber-600 uppercase leading-tight tracking-tight">Verify TXID carefully. False submissions lead to account suspension.</p>
-                </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">TXID / Transaction Hash</label>
+              <Input 
+                placeholder="Paste TXID here" 
+                className="h-14 bg-gray-50 border-gray-100 rounded-xl font-black text-[11px] tracking-wider placeholder:tracking-normal placeholder:font-medium placeholder:text-gray-300 focus:bg-white transition-all"
+                value={txid}
+                onChange={(e) => setTxid(e.target.value)}
+              />
+              <div className="flex items-start gap-2 px-1 mt-1">
+                <AlertCircle size={10} className="text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[7.5px] font-bold text-amber-600 uppercase leading-tight tracking-tight">
+                  Verification is automatic. Incorrect TXID will result in order failure and account review.
+                </p>
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" className="flex-1 h-14 rounded-xl font-bold uppercase tracking-wider text-[9px] border-gray-100 text-gray-400 bg-white" onClick={() => setStep(1)}>Back</Button>
-              <Button className="flex-[2] h-14 rounded-xl font-black uppercase tracking-[0.1em] text-[10px] shadow-xl shadow-primary/20" disabled={isSubmitting} onClick={handleSubmitProof}>
+            <div className="flex gap-3 pt-6">
+              <Button 
+                variant="outline" 
+                className="flex-1 h-14 rounded-xl font-bold uppercase tracking-wider text-[9px] border-gray-100 text-gray-400 bg-white" 
+                onClick={() => setStep(1)}
+              >
+                Back
+              </Button>
+              <Button 
+                className="flex-[2] h-14 rounded-xl font-black uppercase tracking-[0.1em] text-[10px] shadow-xl shadow-primary/20" 
+                disabled={isSubmitting} 
+                onClick={handleSubmitProof}
+              >
                 {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : "SUBMIT TXID"}
               </Button>
             </div>
