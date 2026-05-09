@@ -3,8 +3,9 @@
 
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/bottom-nav";
-import { Info, AlertCircle, ArrowRight, TrendingUp } from "lucide-react";
+import { Info, AlertCircle, ArrowRight, Wallet, BadgeIndianRupee, CircleDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const MOCK_MARKET_ORDERS = [
   { id: "#124684887", amount: 100, profit: 6, bonus: 5 },
@@ -28,6 +30,9 @@ export default function Orders() {
   const router = useRouter();
   const [pendingOrder, setPendingOrder] = useState<any>(null);
   const [showPendingDialog, setShowPendingDialog] = useState(false);
+  const [usdtAmount, setUsdtAmount] = useState<string>("");
+
+  const USDT_RATE = 110;
 
   useEffect(() => {
     checkAndSetPending();
@@ -60,33 +65,57 @@ export default function Orders() {
     router.push(`/orders/checkout?${params.toString()}`);
   };
 
+  const startUsdtOrder = () => {
+    const pending = checkAndSetPending();
+    if (pending) {
+      setShowPendingDialog(true);
+      return;
+    }
+
+    if (!usdtAmount || parseFloat(usdtAmount) <= 0) return;
+
+    const inrAmount = parseFloat(usdtAmount) * USDT_RATE;
+    const params = new URLSearchParams({
+      id: `#USDT${Math.floor(Math.random() * 1000000)}`,
+      amount: inrAmount.toString(),
+      usdt: usdtAmount,
+      profit: "8",
+      bonus: "0"
+    });
+    router.push(`/orders/usdt-checkout?${params.toString()}`);
+  };
+
   const resumePendingOrder = () => {
     if (!pendingOrder) return;
+    const isUsdt = pendingOrder.id.startsWith('#USDT');
+    const path = isUsdt ? '/orders/usdt-checkout' : '/orders/checkout';
+    
     const params = new URLSearchParams({
       id: pendingOrder.id,
       amount: pendingOrder.amount.toString(),
       profit: (pendingOrder.profitPercent || 0).toString(),
       bonus: (pendingOrder.bonus || 0).toString()
     });
-    router.push(`/orders/checkout?${params.toString()}`);
+    if (isUsdt && pendingOrder.usdt) params.set('usdt', pendingOrder.usdt);
+    
+    router.push(`${path}?${params.toString()}`);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Header - Updated with Red Profit Info & USDT Rate */}
+      {/* Header */}
       <div className="bg-white px-5 pt-8 pb-4 border-b border-gray-100 sticky top-0 z-20">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-black text-red-600 uppercase tracking-tight">6% + ₹5 per order</span>
             <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
-            <span className="text-[11px] font-black text-red-600 uppercase tracking-tight">1 USDT = ₹110</span>
+            <span className="text-[11px] font-black text-red-600 uppercase tracking-tight">1 USDT = ₹{USDT_RATE}</span>
           </div>
           <p className="text-[8px] text-gray-400 uppercase tracking-widest font-bold">Guaranteed Profit Sharing</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-24">
-        {/* Active Task Banner if exists */}
         {pendingOrder && (
           <div className="px-5 mt-4">
             <button 
@@ -107,37 +136,92 @@ export default function Orders() {
           </div>
         )}
 
-        <div className="px-5 py-4">
-          <div className="bg-primary/5 rounded-xl p-3.5 flex gap-3 border border-primary/10">
-            <Info className="text-primary shrink-0" size={14} />
-            <p className="text-[9px] font-bold text-primary/80 leading-snug uppercase tracking-tight">
-              Complete tasks to earn commission. Standard review time: 30 mins.
-            </p>
-          </div>
-        </div>
+        <div className="px-5 mt-4">
+          <Tabs defaultValue="upi" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100/50 p-1 h-10 rounded-xl border border-gray-100">
+              <TabsTrigger value="upi" className="text-[9px] font-black uppercase tracking-widest rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <BadgeIndianRupee size={12} className="mr-1.5" />
+                UPI +
+              </TabsTrigger>
+              <TabsTrigger value="usdt" className="text-[9px] font-black uppercase tracking-widest rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <CircleDollarSign size={12} className="mr-1.5" />
+                USDT
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upi" className="mt-4">
+              <div className="flex flex-col gap-2.5">
+                {MOCK_MARKET_ORDERS.map((order) => (
+                  <div key={order.id} className="bg-white p-3.5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm active:bg-gray-50 transition-colors">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tight">{order.id}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-gray-900">₹{order.amount.toLocaleString()}</span>
+                        <div className="flex items-center gap-1 bg-green-50 px-1.5 py-0.5 rounded-lg border border-green-100">
+                          <span className="text-[8px] font-black text-green-600 uppercase">+{order.profit}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm"
+                      className="h-8 px-5 rounded-xl font-black text-[9px] uppercase tracking-wider shadow-lg shadow-primary/10"
+                      onClick={() => startOrder(order)}
+                    >
+                      BUY
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
 
-        <div className="px-5 flex flex-col gap-2.5">
-          {MOCK_MARKET_ORDERS.map((order) => (
-            <div key={order.id} className="bg-white p-3.5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm active:bg-gray-50 transition-colors">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tight">{order.id}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-black text-gray-900">₹{order.amount.toLocaleString()}</span>
-                  <div className="flex items-center gap-1 bg-green-50 px-1.5 py-0.5 rounded-lg border border-green-100">
-                    <span className="text-[8px] font-black text-green-600 uppercase">+{order.profit}%</span>
+            <TabsContent value="usdt" className="mt-4">
+              <div className="bg-white p-5 rounded-[1.8rem] border border-gray-100 shadow-sm space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">USDT Amount</label>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
+                      <CircleDollarSign size={18} />
+                    </div>
+                    <Input 
+                      type="number" 
+                      placeholder="Enter USDT to buy" 
+                      className="h-14 bg-gray-50 border-gray-100 rounded-2xl pl-11 text-base font-black placeholder:font-medium placeholder:text-gray-300 focus:bg-white transition-all"
+                      value={usdtAmount}
+                      onChange={(e) => setUsdtAmount(e.target.value)}
+                    />
                   </div>
                 </div>
-              </div>
 
-              <Button 
-                size="sm"
-                className="h-8 px-5 rounded-xl font-black text-[9px] uppercase tracking-wider shadow-lg shadow-primary/10"
-                onClick={() => startOrder(order)}
-              >
-                BUY
-              </Button>
-            </div>
-          ))}
+                {usdtAmount && parseFloat(usdtAmount) > 0 && (
+                  <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 flex justify-between items-center">
+                    <div>
+                      <p className="text-[8px] font-bold text-primary/60 uppercase tracking-widest mb-0.5">Estimated Cost</p>
+                      <p className="text-xl font-black text-primary">₹{(parseFloat(usdtAmount) * USDT_RATE).toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[8px] font-bold text-primary/60 uppercase tracking-widest mb-0.5">Rate</p>
+                      <p className="text-[10px] font-black text-primary">₹110 / USDT</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-amber-50 rounded-xl p-3 flex gap-3 border border-amber-100">
+                  <Info className="text-amber-600 shrink-0" size={14} />
+                  <p className="text-[8px] font-bold text-amber-700 leading-snug uppercase tracking-tight">
+                    USDT settlements are processed within 15-30 minutes. Use TRC20 network only.
+                  </p>
+                </div>
+
+                <Button 
+                  className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
+                  onClick={startUsdtOrder}
+                  disabled={!usdtAmount || parseFloat(usdtAmount) <= 0}
+                >
+                  CONFIRM PURCHASE
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 
