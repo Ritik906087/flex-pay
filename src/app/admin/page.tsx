@@ -384,7 +384,7 @@ export default function AdminPanel() {
         </main>
       </div>
 
-      {/* Verification Dialog - Refined Size */}
+      {/* Verification Dialog - Optimized Desktop Size */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-4xl w-[95%] max-h-[90vh] bg-white border-0 rounded-[3rem] p-0 overflow-hidden shadow-2xl flex flex-col">
           <div className="flex-1 overflow-y-auto no-scrollbar p-10">
@@ -506,14 +506,14 @@ export default function AdminPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Full Image Preview Modal - Optimized Mobile Size */}
+      {/* Full Image Preview Modal - Balanced Size */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-[400px] w-[95%] max-h-[85vh] bg-slate-950 border-0 p-0 flex flex-col rounded-[2rem] overflow-hidden shadow-2xl">
+        <DialogContent className="max-w-[500px] w-[95%] max-h-[85vh] bg-slate-950 border-0 p-0 flex flex-col rounded-[2rem] overflow-hidden shadow-2xl">
           <DialogHeader className="p-5 bg-slate-900 flex flex-row items-center justify-between">
             <DialogTitle className="text-white text-[12px] font-black uppercase tracking-widest">Evidence Proof</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 bg-slate-900 relative p-8 flex items-center justify-center">
-             <div className="flex flex-col items-center gap-4 text-center opacity-30 text-white">
+          <div className="flex-1 bg-slate-900 relative p-8 flex items-center justify-center overflow-y-auto no-scrollbar">
+             <div className="flex flex-col items-center gap-4 text-center opacity-30 text-white py-10">
                <Maximize2 size={80} />
                <p className="text-sm font-black uppercase tracking-[0.3em]">Sandbox Preview Restricted</p>
              </div>
