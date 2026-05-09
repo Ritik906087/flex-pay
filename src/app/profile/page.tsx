@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/bottom-nav";
 import { 
-  Settings, Headphones, LogOut, ShieldCheck, 
+  Settings, Headphones, LogOut, 
   CreditCard, Gift, Users, ChevronRight, 
   Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy
 } from "lucide-react";
@@ -44,20 +44,20 @@ export default function Profile() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
       {/* Profile Header */}
-      <div className="bg-white px-6 pt-10 pb-7 border-b border-gray-100">
+      <div className="bg-white px-6 pt-10 pb-6 border-b border-gray-100">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-50 p-0.5 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-gray-50 p-0.5 shadow-sm">
               <Image 
                 src={avatarUrl} 
                 alt="Avatar" 
-                width={64} 
-                height={64}
-                className="rounded-[0.8rem] object-cover"
+                width={56} 
+                height={56}
+                className="rounded-[0.7rem] object-cover"
               />
             </div>
-            <button className="absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-white rounded-full flex items-center justify-center border border-gray-100 text-primary shadow-lg active:scale-95 transition-transform">
-              <Camera size={12} />
+            <button className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border border-gray-100 text-primary shadow-lg active:scale-95 transition-transform">
+              <Camera size={10} />
             </button>
           </div>
           <div>
@@ -65,21 +65,21 @@ export default function Profile() {
               onClick={() => handleCopy(mobileNumber, "Username")}
               className="flex items-center gap-1.5 group active:opacity-70 transition-opacity"
             >
-              <h2 className="text-base font-black text-gray-900">{mobileNumber}</h2>
-              <Copy size={12} className="text-gray-300" />
+              <h2 className="text-sm font-black text-gray-900">{mobileNumber}</h2>
+              <Copy size={10} className="text-gray-300" />
             </button>
             <div className="flex items-center gap-1.5 mt-0.5">
               <button 
                 onClick={() => handleCopy(uid, "UID")}
-                className="flex items-center gap-1 text-[9px] font-bold text-gray-400 active:text-primary transition-colors"
+                className="flex items-center gap-1 text-[8px] font-bold text-gray-400 active:text-primary transition-colors"
               >
                 <span>UID: {uid}</span>
-                <Copy size={9} />
+                <Copy size={8} />
               </button>
               <span className="w-0.5 h-0.5 bg-gray-200 rounded-full"></span>
               <div className="flex items-center gap-0.5">
-                <BadgeCheck size={10} className="text-primary" />
-                <span className="text-[9px] font-black text-primary uppercase tracking-tighter">VIP 1</span>
+                <BadgeCheck size={9} className="text-primary" />
+                <span className="text-[8px] font-black text-primary uppercase tracking-tighter">VIP 1</span>
               </div>
             </div>
           </div>
@@ -87,80 +87,79 @@ export default function Profile() {
       </div>
 
       {/* Wallet Brief */}
-      <div className="px-5 -mt-5">
-        <div className="bg-white rounded-[1.2rem] border border-gray-100 p-4 shadow-sm flex justify-between items-center">
+      <div className="px-5 -mt-4">
+        <div className="bg-white rounded-[1rem] border border-gray-100 p-3.5 shadow-sm flex justify-between items-center">
           <div>
-            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">Total Assets</span>
-            <p className="text-xl font-black text-gray-900">₹{balance.toLocaleString()}</p>
+            <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">Total Assets</span>
+            <p className="text-lg font-black text-gray-900">₹{balance.toLocaleString()}</p>
           </div>
-          <Button variant="secondary" className="rounded-xl h-9 px-3 font-bold text-[10px] bg-gray-50 border-0 hover:bg-gray-100">
-            <Wallet size={14} className="mr-2" />
+          <Button variant="secondary" className="rounded-xl h-8 px-3 font-bold text-[9px] bg-gray-50 border-0 hover:bg-gray-100">
+            <Wallet size={12} className="mr-1.5" />
             WALLET
           </Button>
         </div>
       </div>
 
       {/* Main Sections */}
-      <div className="px-5 mt-6 flex flex-col gap-5 pb-32">
+      <div className="px-5 mt-5 flex flex-col gap-4 pb-32">
         {/* Account Group */}
-        <div className="bg-white rounded-[1.2rem] border border-gray-100 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-[1rem] border border-gray-100 overflow-hidden shadow-sm">
           <Link href="/profile/history">
-            <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
+            <button className="w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                  <ShoppingCart size={16} />
+                <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                  <ShoppingCart size={14} />
                 </div>
-                <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">Buy History</span>
+                <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">Buy History</span>
               </div>
-              <ChevronRight size={14} className="text-gray-300" />
+              <ChevronRight size={12} className="text-gray-300" />
             </button>
           </Link>
           {[
             { icon: TrendingUp, label: "Sell History", color: "text-green-500", bg: "bg-green-50" },
-            { icon: CreditCard, label: "Linked Bank", color: "text-amber-500", bg: "bg-amber-50" },
+            { icon: CreditCard, label: "Linked Account", color: "text-amber-500", bg: "bg-amber-50" },
             { icon: Gift, label: "Rewards Wallet", color: "text-purple-500", bg: "bg-purple-50" },
             { icon: Users, label: "My Team", color: "text-indigo-500", bg: "bg-indigo-50" },
           ].map((item, i) => (
             <button 
               key={i} 
               className={cn(
-                "w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50",
+                "w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50",
                 i !== 3 && "border-b border-gray-50"
               )}
             >
               <div className="flex items-center gap-3">
-                <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", item.bg, item.color)}>
-                  <item.icon size={16} />
+                <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", item.bg, item.color)}>
+                  <item.icon size={14} />
                 </div>
-                <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
+                <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
               </div>
-              <ChevronRight size={14} className="text-gray-300" />
+              <ChevronRight size={12} className="text-gray-300" />
             </button>
           ))}
         </div>
 
         {/* Support Group */}
-        <div className="bg-white rounded-[1.2rem] border border-gray-100 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-[1rem] border border-gray-100 overflow-hidden shadow-sm">
           {[
             { icon: Settings, label: "Settings", color: "text-gray-400" },
-            { icon: ShieldCheck, label: "Security", color: "text-gray-400" },
             { icon: Headphones, label: "Support", color: "text-gray-400" },
             { icon: LogOut, label: "Logout", color: "text-red-400" },
           ].map((item, i) => (
             <button 
               key={i} 
               className={cn(
-                "w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50",
-                i !== 3 && "border-b border-gray-50"
+                "w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50",
+                i !== 2 && "border-b border-gray-50"
               )}
             >
               <div className="flex items-center gap-3">
-                <div className={cn("w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center", item.color)}>
-                  <item.icon size={16} />
+                <div className={cn("w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center", item.color)}>
+                  <item.icon size={14} />
                 </div>
-                <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
+                <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
               </div>
-              <ChevronRight size={14} className="text-gray-300" />
+              <ChevronRight size={12} className="text-gray-300" />
             </button>
           ))}
         </div>
