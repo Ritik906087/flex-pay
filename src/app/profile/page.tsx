@@ -100,9 +100,8 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Main Sections */}
+      {/* Main Sections - Single Unified Group */}
       <div className="px-5 mt-5 flex flex-col gap-4 pb-32">
-        {/* Account Group */}
         <div className="bg-white rounded-[1rem] border border-gray-100 overflow-hidden shadow-sm">
           <Link href="/profile/history">
             <button className="w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
@@ -140,6 +139,8 @@ export default function Profile() {
 
           {[
             { icon: Users, label: "My Team", color: "text-indigo-500", bg: "bg-indigo-50" },
+            { icon: Headphones, label: "Support", color: "text-gray-400", bg: "bg-gray-50" },
+            { icon: LogOut, label: "Logout", color: "text-red-400", bg: "bg-red-50/50" },
           ].map((item, i, arr) => (
             <button 
               key={i} 
@@ -150,30 +151,6 @@ export default function Profile() {
             >
               <div className="flex items-center gap-3">
                 <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", item.bg, item.color)}>
-                  <item.icon size={14} />
-                </div>
-                <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
-              </div>
-              <ChevronRight size={12} className="text-gray-300" />
-            </button>
-          ))}
-        </div>
-
-        {/* Support Group */}
-        <div className="bg-white rounded-[1rem] border border-gray-100 overflow-hidden shadow-sm">
-          {[
-            { icon: Headphones, label: "Support", color: "text-gray-400" },
-            { icon: LogOut, label: "Logout", color: "text-red-400" },
-          ].map((item, i, arr) => (
-            <button 
-              key={i} 
-              className={cn(
-                "w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50",
-                i !== arr.length - 1 && "border-b border-gray-50"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className={cn("w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center", item.color)}>
                   <item.icon size={14} />
                 </div>
                 <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
