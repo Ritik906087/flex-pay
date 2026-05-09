@@ -6,7 +6,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { 
   Headphones, LogOut, 
   CreditCard, Users, ChevronRight, 
-  Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy, User
+  Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,9 +47,6 @@ export default function Profile() {
             <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center border-2 border-gray-100 p-0.5 shadow-sm">
               <User size={28} className="text-gray-300" strokeWidth={1.5} />
             </div>
-            <button className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border border-gray-100 text-primary shadow-lg active:scale-95 transition-transform">
-              <Camera size={10} />
-            </button>
           </div>
           <div>
             <button 
@@ -166,4 +163,3 @@ export default function Profile() {
     </div>
   );
 }
-
