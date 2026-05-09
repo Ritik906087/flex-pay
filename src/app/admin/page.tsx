@@ -44,6 +44,21 @@ export default function AdminPanel() {
   const [stats, setStats] = useState({ todayVolume: 0, todayCount: 0, totalVolume: 0, totalCount: 0 });
 
   useEffect(() => {
+    // Seed demo data if localStorage is empty
+    const existingOrders = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
+    if (existingOrders.length === 0) {
+      const now = Date.now();
+      const demoOrders = [
+        { id: "#ORD55201", amount: 5000, profitPercent: 6, bonus: 5, status: 'in-review', utr: '884210992341', timestamp: now - 120000 },
+        { id: "#ORD55202", amount: 1500, profitPercent: 6, bonus: 5, status: 'in-review', utr: '772109448211', timestamp: now - 300000 },
+        { id: "#ORD55203", amount: 12000, profitPercent: 6, bonus: 5, status: 'success', utr: '992104423188', timestamp: now - 3600000 },
+        { id: "#ORD55204", amount: 200, profitPercent: 6, bonus: 5, status: 'success', utr: '110229443821', timestamp: now - 7200000 },
+        { id: "#ORD55205", amount: 1000, profitPercent: 6, bonus: 5, status: 'rejected', utr: '001293348122', timestamp: now - 14400000 },
+        { id: "#ORD55206", amount: 25000, profitPercent: 6, bonus: 5, status: 'success', utr: '552109442311', timestamp: now - 86400000 },
+      ];
+      localStorage.setItem('flexpay_orders', JSON.stringify(demoOrders));
+    }
+    
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
@@ -169,7 +184,7 @@ export default function AdminPanel() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                   { label: "Today Volume", value: `₹${stats.todayVolume.toLocaleString()}`, sub: `${stats.todayCount} Node Success`, icon: IndianRupee, color: "text-primary", bg: "bg-primary/5" },
-                  { label: "Active Nodes", value: "1,248", sub: "99.9% Uptime", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+                  { label: "Active Nodes", value: MOCK_USERS.length.toString(), sub: "99.9% Uptime", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
                   { label: "Pending Verification", value: pendingApprovals.toString(), sub: "Awaiting review", icon: CheckCircle2, color: "text-amber-600", bg: "bg-amber-50" },
                   { label: "Net Pool", value: `₹${stats.totalVolume.toLocaleString()}`, sub: "Total network liquidity", icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
                 ].map((item, i) => (
@@ -417,7 +432,7 @@ export default function AdminPanel() {
                         <div className="flex gap-4">
                           <Button 
                             variant="outline"
-                            className="flex-1 h-16 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest"
+                            className="flex-1 h-16 rounded-[1.5rem] font-black text-[11px] uppercase tracking-wider"
                             onClick={() => setSelectedOrder(order)}
                           >
                             <Eye size={18} className="mr-3" />
