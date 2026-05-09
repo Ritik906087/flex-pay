@@ -141,176 +141,149 @@ export default function Orders() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Premium Header */}
-      <div className="bg-white px-5 pt-8 pb-4 border-b border-gray-100 sticky top-0 z-20">
-        <div className="flex justify-between items-end">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black text-primary uppercase tracking-tight">Active Market</span>
-              <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
-              <span className="text-[11px] font-bold text-gray-400">FIXED: 6% + ₹5</span>
-            </div>
-            <p className="text-[8px] text-gray-400 uppercase tracking-widest font-bold">Guaranteed P2P Settlements</p>
+      {/* Super Compact Header */}
+      <div className="bg-white px-5 pt-6 pb-2 border-b border-gray-100 sticky top-0 z-20">
+        <div className="flex justify-between items-center mb-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-black text-primary uppercase tracking-tight">Active Market</span>
+            <span className="bg-green-100 text-green-600 text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase">Live</span>
           </div>
-          <div className="bg-green-50 px-2 py-1 rounded-lg border border-green-100">
-            <span className="text-[9px] font-black text-green-600 uppercase">Live</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] font-bold text-gray-400 uppercase">Fixed:</span>
+            <span className="text-[9px] font-black text-gray-900 uppercase">6% + ₹5</span>
           </div>
         </div>
+
+        <Tabs defaultValue="upi" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-100/50 p-1 h-9 rounded-xl border border-gray-50">
+            <TabsTrigger value="upi" className="text-[9px] font-black uppercase tracking-widest rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <BadgeIndianRupee size={12} className="mr-1.5" />
+              UPI+
+            </TabsTrigger>
+            <TabsTrigger value="usdt" className="text-[9px] font-black uppercase tracking-widest rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <CircleDollarSign size={12} className="mr-1.5" />
+              USDT
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-24">
-        {pendingOrder && (
-          <div className="px-5 mt-4">
-            <button 
-              onClick={() => setShowPendingDialog(true)}
-              className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center justify-between group active:bg-amber-100 transition-all shadow-sm"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-amber-500 shadow-sm">
-                  <AlertCircle size={18} />
+      <div className="flex-1 overflow-y-auto pb-24 px-5">
+        <Tabs defaultValue="upi" className="w-full">
+          {/* Internal Content for Tabs */}
+          <TabsContent value="upi" className="mt-2 space-y-2.5">
+            {/* Compact Filter Row */}
+            <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm flex items-center gap-2">
+              <div className="flex-1 flex gap-2">
+                <div className="flex-1 relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[7px] font-black text-gray-300">MIN</span>
+                  <Input 
+                    type="number" 
+                    placeholder="₹100" 
+                    className="h-8 bg-gray-50/50 border-gray-100 rounded-lg text-[10px] font-black pl-7 pr-1 focus:bg-white transition-colors"
+                    value={minAmount}
+                    onChange={(e) => setMinAmount(e.target.value)}
+                  />
                 </div>
-                <div className="text-left">
-                  <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-0.5">Active Task Pending</p>
-                  <p className="text-[11px] font-bold text-amber-900">{pendingOrder.id} • ₹{pendingOrder.amount.toLocaleString()}</p>
-                </div>
-              </div>
-              <ArrowRight size={16} className="text-amber-400 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          </div>
-        )}
-
-        <div className="px-5 mt-5">
-          <Tabs defaultValue="upi" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100/50 p-1.5 h-12 rounded-2xl border border-gray-100">
-              <TabsTrigger value="upi" className="text-[10px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md">
-                <BadgeIndianRupee size={14} className="mr-2" />
-                UPI+
-              </TabsTrigger>
-              <TabsTrigger value="usdt" className="text-[10px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md">
-                <CircleDollarSign size={14} className="mr-2" />
-                USDT Node
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="upi" className="mt-6 space-y-4">
-              {/* Ultra Compact Filter Row */}
-              <div className="bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
-                <div className="bg-gray-50 p-2 rounded-xl text-gray-400 border border-gray-100">
-                  <SlidersHorizontal size={12} />
-                </div>
-                <div className="flex-1 flex gap-2">
-                  <div className="flex-1 relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[8px] font-black text-gray-300">MIN</span>
-                    <Input 
-                      type="number" 
-                      placeholder="₹100" 
-                      className="h-9 bg-gray-50/50 border-gray-100 rounded-xl text-[10px] font-black pl-8 pr-2 focus:bg-white transition-colors"
-                      value={minAmount}
-                      onChange={(e) => setMinAmount(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex-1 relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[8px] font-black text-gray-300">MAX</span>
-                    <Input 
-                      type="number" 
-                      placeholder="₹10Cr" 
-                      className="h-9 bg-gray-50/50 border-gray-100 rounded-xl text-[10px] font-black pl-8 pr-2 focus:bg-white transition-colors"
-                      value={maxAmount}
-                      onChange={(e) => setMaxAmount(e.target.value)}
-                    />
-                  </div>
+                <div className="flex-1 relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[7px] font-black text-gray-300">MAX</span>
+                  <Input 
+                    type="number" 
+                    placeholder="₹10Cr" 
+                    className="h-8 bg-gray-50/50 border-gray-100 rounded-lg text-[10px] font-black pl-7 pr-1 focus:bg-white transition-colors"
+                    value={maxAmount}
+                    onChange={(e) => setMaxAmount(e.target.value)}
+                  />
                 </div>
               </div>
+            </div>
 
-              {/* Order List */}
-              <div className="flex flex-col gap-3">
-                {filteredOrders.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 opacity-20">
-                    <Search size={40} />
-                    <p className="text-[10px] font-black mt-3 uppercase tracking-widest">No matching tasks</p>
+            {pendingOrder && (
+              <button 
+                onClick={() => setShowPendingDialog(true)}
+                className="w-full bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-center justify-between group active:bg-amber-100 transition-all shadow-sm"
+              >
+                <div className="flex items-center gap-2.5">
+                  <AlertCircle size={14} className="text-amber-500" />
+                  <div className="text-left">
+                    <p className="text-[10px] font-bold text-amber-900 leading-none">Task Active: {pendingOrder.id}</p>
                   </div>
-                ) : (
-                  filteredOrders.map((order) => (
-                    <div key={order.id} className="bg-white p-4 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm active:bg-gray-50 transition-all group">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tight">{order.id}</span>
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-base font-black text-gray-900 tracking-tight">₹{order.amount.toLocaleString()}</span>
-                          <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-lg border border-green-100">
-                            <span className="text-[9px] font-black text-green-600 uppercase">+{order.profit}%</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
-                          <span className="text-[8px] font-bold text-gray-400 uppercase">Bonus: ₹{order.bonus}</span>
+                </div>
+                <ArrowRight size={12} className="text-amber-400" />
+              </button>
+            )}
+
+            {/* Order List */}
+            <div className="flex flex-col gap-2">
+              {filteredOrders.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 opacity-20">
+                  <Search size={32} />
+                  <p className="text-[10px] font-black mt-3 uppercase tracking-widest">No matching tasks</p>
+                </div>
+              ) : (
+                filteredOrders.map((order) => (
+                  <div key={order.id} className="bg-white p-3 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm active:bg-gray-50 transition-all group">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tight">{order.id}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-gray-900 tracking-tight">₹{order.amount.toLocaleString()}</span>
+                        <div className="flex items-center gap-1 bg-green-50 px-1.5 py-0.5 rounded-md border border-green-100">
+                          <span className="text-[8px] font-black text-green-600 uppercase">6%+₹5</span>
                         </div>
                       </div>
-                      <Button 
-                        size="sm"
-                        className="h-9 px-6 rounded-xl font-black text-[10px] uppercase tracking-wider shadow-lg shadow-primary/10 transition-transform active:scale-95"
-                        onClick={() => handleBuyClick(order)}
-                      >
-                        BUY
-                      </Button>
                     </div>
-                  ))
-                )}
-              </div>
-            </TabsContent>
+                    <Button 
+                      size="sm"
+                      className="h-8 px-5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-md shadow-primary/10 transition-transform active:scale-95"
+                      onClick={() => handleBuyClick(order)}
+                    >
+                      BUY
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </TabsContent>
 
-            <TabsContent value="usdt" className="mt-6">
-              <div className="bg-white p-6 rounded-[2.2rem] border border-gray-100 shadow-sm space-y-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center px-1">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">USDT Investment</label>
-                    <span className="text-[9px] font-black text-primary">₹110 / USDT</span>
-                  </div>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
-                      <CircleDollarSign size={20} />
-                    </div>
-                    <Input 
-                      type="number" 
-                      placeholder="Enter USDT to buy" 
-                      className="h-16 bg-gray-50 border-gray-100 rounded-2xl pl-12 text-lg font-black placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all"
-                      value={usdtAmount}
-                      onChange={(e) => setUsdtAmount(e.target.value)}
-                    />
-                  </div>
+          <TabsContent value="usdt" className="mt-2">
+            <div className="bg-white p-5 rounded-[1.8rem] border border-gray-100 shadow-sm space-y-4">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest">USDT Amount</label>
+                  <span className="text-[9px] font-black text-primary">₹110 / USDT</span>
                 </div>
-
-                {usdtAmount && parseFloat(usdtAmount) > 0 && (
-                  <div className="bg-primary/5 rounded-2xl p-5 border border-primary/10 flex justify-between items-center animate-in fade-in zoom-in-95 duration-300">
-                    <div>
-                      <p className="text-[8px] font-bold text-primary/60 uppercase tracking-widest mb-1">Total INR Cost</p>
-                      <p className="text-2xl font-black text-primary">₹{(parseFloat(usdtAmount) * USDT_RATE).toLocaleString()}</p>
-                    </div>
-                    <div className="bg-white/50 p-2 rounded-xl border border-white">
-                      <Info className="text-primary/40" size={16} />
-                    </div>
-                  </div>
-                )}
-
-                <div className="bg-amber-50/50 rounded-2xl p-4 flex gap-3.5 border border-amber-100">
-                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-amber-500 shrink-0 shadow-sm">
-                    <AlertCircle size={14} />
-                  </div>
-                  <p className="text-[8.5px] font-bold text-amber-700 leading-normal uppercase tracking-tight">
-                    USDT Node settlements are high-priority and processed within 15 mins via TRC20 network.
-                  </p>
+                <div className="relative group">
+                  <CircleDollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                  <Input 
+                    type="number" 
+                    placeholder="Enter amount" 
+                    className="h-12 bg-gray-50 border-gray-100 rounded-xl pl-10 text-base font-black placeholder:font-medium placeholder:text-gray-300 focus:bg-white transition-all"
+                    value={usdtAmount}
+                    onChange={(e) => setUsdtAmount(e.target.value)}
+                  />
                 </div>
-
-                <Button 
-                  className="w-full h-16 rounded-2xl font-black text-[12px] uppercase tracking-[0.25em] shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
-                  onClick={startUsdtOrder}
-                  disabled={!usdtAmount || parseFloat(usdtAmount) <= 0}
-                >
-                  CONFIRM PURCHASE
-                </Button>
               </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+
+              {usdtAmount && parseFloat(usdtAmount) > 0 && (
+                <div className="bg-primary/5 rounded-xl p-3 border border-primary/10 flex justify-between items-center">
+                  <div>
+                    <p className="text-[7px] font-bold text-primary/60 uppercase tracking-widest">Total Cost</p>
+                    <p className="text-lg font-black text-primary">₹{(parseFloat(usdtAmount) * USDT_RATE).toLocaleString()}</p>
+                  </div>
+                  <Info className="text-primary/40" size={14} />
+                </div>
+              )}
+
+              <Button 
+                className="w-full h-12 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-primary/10 transition-all active:scale-[0.98]"
+                onClick={startUsdtOrder}
+                disabled={!usdtAmount || parseFloat(usdtAmount) <= 0}
+              >
+                CONFIRM PURCHASE
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Account Selection Drawer */}
