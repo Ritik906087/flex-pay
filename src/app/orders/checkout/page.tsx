@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   CheckCircle2, Loader2, Copy, Clock, QrCode, 
@@ -25,6 +26,7 @@ export default function Checkout() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const initialized = useRef(false);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [timeLeft, setTimeLeft] = useState(1800);
@@ -42,9 +44,28 @@ export default function Checkout() {
   };
 
   useEffect(() => {
+    // Mark order as pending in history on land
+    if (!initialized.current) {
+      const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
+      const exists = history.find((o: any) => o.id === orderData.id);
+      
+      if (!exists) {
+        const newOrder = {
+          ...orderData,
+          profitPercent: orderData.profit,
+          status: 'pending-payment',
+          timestamp: Date.now(),
+        };
+        localStorage.setItem('flexpay_orders', JSON.stringify([newOrder, ...history]));
+      }
+      initialized.current = true;
+    }
+  }, [orderData]);
+
+  useEffect(() => {
     if (timeLeft <= 0) {
       toast({ variant: "destructive", title: "Order Cancelled", description: "Time limit exceeded." });
-      router.back();
+      handleCancelOrder("Time limit exceeded");
       return;
     }
     const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
@@ -63,13 +84,20 @@ export default function Checkout() {
     toast({ title: "Copied", description: `${label} copied to clipboard.` });
   };
 
-  const handleCancelOrder = () => {
-    if (!cancelReason) {
+  const handleCancelOrder = (reason?: string) => {
+    const r = reason || cancelReason;
+    if (!r && !reason) {
       toast({ variant: "destructive", title: "Select Reason", description: "Please provide a reason for cancellation." });
       return;
     }
     setIsCancelling(true);
     setTimeout(() => {
+      const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
+      const updated = history.map((o: any) => 
+        o.id === orderData.id ? { ...o, status: 'cancelled', cancelReason: r } : o
+      );
+      localStorage.setItem('flexpay_orders', JSON.stringify(updated));
+      
       setIsCancelling(false);
       toast({ title: "Order Cancelled", description: "The order has been successfully cancelled." });
       router.push('/orders');
@@ -87,28 +115,27 @@ export default function Checkout() {
 
     setTimeout(() => {
       const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-      const newOrder = {
-        id: orderData.id,
-        amount: orderData.amount,
-        profitPercent: orderData.profit,
-        bonus: orderData.bonus,
-        status: 'in-review',
-        utr,
-        timestamp: Date.now(),
-      };
+      const updated = history.map((o: any) => 
+        o.id === orderData.id ? { 
+          ...o, 
+          status: 'in-review', 
+          utr, 
+          timestamp: Date.now() 
+        } : o
+      );
       
-      localStorage.setItem('flexpay_orders', JSON.stringify([newOrder, ...history]));
+      localStorage.setItem('flexpay_orders', JSON.stringify(updated));
       
       setIsSubmitting(false);
       toast({ title: "Submitted", description: "Order under review." });
-      router.push('/orders?tab=completed');
+      router.push('/orders');
 
       setTimeout(() => {
         const current = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-        const updated = current.map((o: any) => 
+        const finalized = current.map((o: any) => 
           o.id === orderData.id ? { ...o, status: 'success' } : o
         );
-        localStorage.setItem('flexpay_orders', JSON.stringify(updated));
+        localStorage.setItem('flexpay_orders', JSON.stringify(finalized));
       }, 10000);
     }, 1500);
   };
@@ -118,7 +145,7 @@ export default function Checkout() {
       {/* Header */}
       <div className="px-5 pt-8 pb-3 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-1.5 -ml-1.5 active:scale-90 transition-transform">
+          <button onClick={() => router.push('/orders')} className="p-1.5 -ml-1.5 active:scale-90 transition-transform">
             <ChevronLeft size={20} className="text-gray-900" />
           </button>
           <div>
@@ -214,7 +241,7 @@ export default function Checkout() {
                       <Button 
                         variant="destructive" 
                         className="flex-[2] h-11 rounded-xl font-black text-[9px] uppercase tracking-[0.15em] shadow-lg shadow-red-100"
-                        onClick={handleCancelOrder}
+                        onClick={() => handleCancelOrder()}
                         disabled={isCancelling}
                       >
                         {isCancelling ? "Processing..." : "Confirm Cancel"}
