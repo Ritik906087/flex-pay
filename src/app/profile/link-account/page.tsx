@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  ChevronLeft, CreditCard, Plus, User, 
-  Smartphone, Hash, CheckCircle2, XCircle, 
-  AlertCircle, ShieldCheck, ArrowRight, RefreshCw, StopCircle
+  ChevronLeft, CreditCard, User, 
+  Smartphone, Hash, ShieldCheck, AlertCircle, RefreshCw, StopCircle, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,17 +99,20 @@ export default function LinkAccount() {
         {step === "selection" && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Select Payment App</h3>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="flex flex-col gap-2">
               {PAYMENT_APPS.map((app) => (
                 <button
                   key={app.id}
                   onClick={() => { setSelectedApp(app); setStep("form"); }}
-                  className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-all"
+                  className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:bg-gray-50 transition-all"
                 >
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-[10px]", app.color)}>
-                    {app.name[0]}
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-[10px]", app.color)}>
+                      {app.name[0]}
+                    </div>
+                    <span className="text-[10px] font-black text-gray-700 uppercase">{app.name}</span>
                   </div>
-                  <span className="text-[9px] font-black text-gray-700 uppercase">{app.name}</span>
+                  <ChevronRight size={14} className="text-gray-300" />
                 </button>
               ))}
             </div>
