@@ -55,14 +55,12 @@ export default function Orders() {
   };
 
   const handleBuyClick = (marketOrder: any) => {
-    // 1. Check for pending orders
     const pending = checkAndSetPending();
     if (pending) {
       setShowPendingDialog(true);
       return;
     }
 
-    // 2. Check for MobiKwik/Freecharge accounts
     const linkedAccounts = JSON.parse(localStorage.getItem('flexpay_linked_accounts') || '[]');
     const compatible = linkedAccounts.filter((acc: any) => 
       acc.appName === "MobiKwik" || acc.appName === "Freecharge"
@@ -78,8 +76,9 @@ export default function Orders() {
     }
   };
 
-  const confirmPurchase = () => {
+  const handleAccountSelect = (account: any) => {
     if (!selectedMarketOrder) return;
+    setShowAccountSelectionDialog(false);
     const params = new URLSearchParams({
       id: selectedMarketOrder.id,
       amount: selectedMarketOrder.amount.toString(),
@@ -127,7 +126,6 @@ export default function Orders() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Header */}
       <div className="bg-white px-5 pt-8 pb-4 border-b border-gray-100 sticky top-0 z-20">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
@@ -249,45 +247,42 @@ export default function Orders() {
         </div>
       </div>
 
-      {/* Account Selection Dialog (Shown if compatible accounts exist) */}
+      {/* Account Selection Drawer (Bottom Aligned) */}
       <Dialog open={showAccountSelectionDialog} onOpenChange={setShowAccountSelectionDialog}>
-        <DialogContent className="max-w-[85%] rounded-[1.8rem] border-0 p-6 shadow-2xl">
+        <DialogContent className="max-w-[430px] w-full rounded-t-[2rem] rounded-b-none border-0 p-6 shadow-2xl fixed bottom-0 top-auto translate-y-0 translate-x-[-50%] pb-10">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-center text-[13px] font-black uppercase tracking-tight text-gray-900">Confirm Order</DialogTitle>
+            <DialogTitle className="text-center text-[13px] font-black uppercase tracking-tight text-gray-900">Select Order Account</DialogTitle>
             <DialogDescription className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">
-              Available compatible accounts
+              Choose linked account to proceed
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-2.5 max-h-[200px] overflow-y-auto no-scrollbar mb-6">
+          <div className="flex flex-col gap-2.5 max-h-[250px] overflow-y-auto no-scrollbar mb-4">
             {compatibleAccounts.map((acc, i) => (
-              <div key={i} className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 relative rounded-lg overflow-hidden border border-gray-100 bg-white">
+              <button 
+                key={i} 
+                onClick={() => handleAccountSelect(acc)}
+                className="bg-gray-50 border border-gray-100 rounded-xl p-3.5 flex items-center justify-between active:bg-gray-100 transition-all text-left w-full group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 relative rounded-xl overflow-hidden border border-gray-100 bg-white">
                     <Image src={acc.logo} alt={acc.appName} fill className="object-cover" />
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-gray-900 uppercase">{acc.appName}</p>
-                    <p className="text-[7px] font-bold text-gray-400 tracking-tight">{acc.upi}</p>
+                    <p className="text-[10px] font-black text-gray-900 uppercase">{acc.appName}</p>
+                    <p className="text-[8px] font-bold text-gray-400 tracking-tight">{acc.upi}</p>
                   </div>
                 </div>
-                <CheckCircle2 size={14} className="text-green-500" />
-              </div>
+                <ChevronRight size={16} className="text-gray-300 group-active:text-primary transition-colors" />
+              </button>
             ))}
           </div>
-
-          <Button 
-            className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
-            onClick={confirmPurchase}
-          >
-            CONFIRM BUY
-          </Button>
         </DialogContent>
       </Dialog>
 
-      {/* Link Required Dialog (Shown if NO MobiKwik/Freecharge found) */}
+      {/* Link Required Drawer (Bottom Aligned) */}
       <Dialog open={showLinkRequiredDialog} onOpenChange={setShowLinkRequiredDialog}>
-        <DialogContent className="max-w-[85%] rounded-[1.8rem] border-0 p-6 shadow-2xl">
+        <DialogContent className="max-w-[430px] w-full rounded-t-[2rem] rounded-b-none border-0 p-6 shadow-2xl fixed bottom-0 top-auto translate-y-0 translate-x-[-50%] pb-10">
           <DialogHeader className="mb-4">
             <div className="mx-auto w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 mb-3">
               <AlertCircle size={24} />
@@ -302,7 +297,7 @@ export default function Orders() {
           </div>
 
           <Button 
-            className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
+            className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-red-200 bg-red-500 hover:bg-red-600 border-0"
             onClick={() => router.push('/profile/link-account')}
           >
             GET UPI
@@ -310,9 +305,9 @@ export default function Orders() {
         </DialogContent>
       </Dialog>
 
-      {/* Pending Order Dialog */}
+      {/* Pending Order Drawer (Bottom Aligned) */}
       <Dialog open={showPendingDialog} onOpenChange={setShowPendingDialog}>
-        <DialogContent className="max-w-[85%] rounded-[1.8rem] border-0 p-6 shadow-2xl">
+        <DialogContent className="max-w-[430px] w-full rounded-t-[2rem] rounded-b-none border-0 p-6 shadow-2xl fixed bottom-0 top-auto translate-y-0 translate-x-[-50%] pb-10">
           <DialogHeader className="mb-4">
             <div className="mx-auto w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 mb-3">
               <AlertCircle size={24} />
@@ -336,7 +331,7 @@ export default function Orders() {
 
           <div className="flex flex-col gap-2.5">
             <Button 
-              className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
+              className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
               onClick={resumePendingOrder}
             >
               RESUME TASK
