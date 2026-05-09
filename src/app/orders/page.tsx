@@ -25,13 +25,13 @@ const MOCK_MARKET_ORDERS = [
   { id: "#124684887", amount: 100, profit: 6, bonus: 5 },
   { id: "#124684888", amount: 500, profit: 6, bonus: 5 },
   { id: "#124684889", amount: 1000, profit: 6, bonus: 5 },
-  { id: "#124684890", amount: 5000, profit: 8, bonus: 10 },
+  { id: "#124684890", amount: 5000, profit: 6, bonus: 5 },
   { id: "#124684891", amount: 200, profit: 6, bonus: 5 },
   { id: "#124684892", amount: 1500, profit: 6, bonus: 5 },
   { id: "#124684893", amount: 300, profit: 6, bonus: 5 },
-  { id: "#124684894", amount: 10000, profit: 9, bonus: 20 },
-  { id: "#124684895", amount: 25000, profit: 10, bonus: 50 },
-  { id: "#124684896", amount: 100000, profit: 12, bonus: 100 },
+  { id: "#124684894", amount: 10000, profit: 6, bonus: 5 },
+  { id: "#124684895", amount: 25000, profit: 6, bonus: 5 },
+  { id: "#124684896", amount: 100000, profit: 6, bonus: 5 },
 ];
 
 export default function Orders() {
@@ -148,7 +148,7 @@ export default function Orders() {
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-black text-primary uppercase tracking-tight">Active Market</span>
               <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
-              <span className="text-[11px] font-bold text-gray-400">PROFIT: 6-12%</span>
+              <span className="text-[11px] font-bold text-gray-400">FIXED: 6% + ₹5</span>
             </div>
             <p className="text-[8px] text-gray-400 uppercase tracking-widest font-bold">Guaranteed P2P Settlements</p>
           </div>
@@ -184,7 +184,7 @@ export default function Orders() {
             <TabsList className="grid w-full grid-cols-2 bg-gray-100/50 p-1.5 h-12 rounded-2xl border border-gray-100">
               <TabsTrigger value="upi" className="text-[10px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md">
                 <BadgeIndianRupee size={14} className="mr-2" />
-                UPI Market
+                UPI+
               </TabsTrigger>
               <TabsTrigger value="usdt" className="text-[10px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md">
                 <CircleDollarSign size={14} className="mr-2" />
