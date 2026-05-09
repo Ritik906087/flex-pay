@@ -1,13 +1,14 @@
 
 "use client"
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   TrendingUp, Wallet, ShieldCheck, 
   IndianRupee, User, Users,
   Hash, Eye, ArrowUpRight, 
-  CheckCircle2, Search, History, CheckCircle, Ban, Copy, Menu, Clock, Maximize2
+  CheckCircle2, Search, History, CheckCircle, Ban, Copy, Menu, Clock, Maximize2,
+  ZoomIn, ZoomOut, RotateCw, Download, ExternalLink, X, ChevronRight, ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,13 @@ export default function AdminPanel() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [stats, setStats] = useState({ todayVolume: 0, todayCount: 0, totalVolume: 0, totalCount: 0 });
+
+  // Image Manipulation State
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const existingOrders = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
@@ -135,6 +143,7 @@ export default function AdminPanel() {
     localStorage.setItem('flexpay_orders', JSON.stringify(updated));
     setOrders(updated);
     setSelectedOrder(null);
+    setIsPreviewOpen(false);
     toast({ 
       title: newStatus === 'success' ? "Order Approved" : "Order Rejected",
       variant: newStatus === 'success' ? "default" : "destructive"
@@ -162,6 +171,29 @@ export default function AdminPanel() {
   }, [orders, searchQuery]);
 
   const pendingApprovalsCount = orders.filter(o => o.status === 'in-review').length;
+
+  // Image Dragging Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragStart.current.x,
+      y: e.clientY - dragStart.current.y
+    });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  const resetImage = () => {
+    setZoom(1);
+    setRotation(0);
+    setPosition({ x: 0, y: 0 });
+  };
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
@@ -384,7 +416,7 @@ export default function AdminPanel() {
         </main>
       </div>
 
-      {/* Verification Dialog - Optimized Desktop Size */}
+      {/* Verification Dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-4xl w-[95%] max-h-[90vh] bg-white border-0 rounded-[3rem] p-0 overflow-hidden shadow-2xl flex flex-col">
           <div className="flex-1 overflow-y-auto no-scrollbar p-10">
@@ -401,36 +433,33 @@ export default function AdminPanel() {
             </DialogHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Left Column - Evidence */}
               <div className="space-y-4">
-                <div className="aspect-[4/5] bg-slate-50 rounded-[2.5rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 relative group overflow-hidden">
+                <div 
+                  className="aspect-[4/5] bg-slate-50 rounded-[2.5rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 relative group overflow-hidden cursor-zoom-in"
+                  onClick={() => {
+                    resetImage();
+                    setIsPreviewOpen(true);
+                  }}
+                >
                   <div className="flex flex-col items-center gap-4 text-center px-6">
                     <Maximize2 size={48} className="opacity-20" />
-                    <p className="text-[11px] font-black uppercase tracking-widest opacity-40">Verification Evidence</p>
-                  </div>
-                  {/* Overlay for hover preview */}
-                  <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <Button 
-                      className="bg-white text-slate-900 hover:bg-white/90 rounded-2xl h-12 px-6 font-black text-[10px] uppercase tracking-widest"
-                      onClick={() => setIsPreviewOpen(true)}
-                    >
-                      View Full Image
-                    </Button>
+                    <p className="text-[11px] font-black uppercase tracking-widest opacity-40">Click to Audit Proof</p>
                   </div>
                 </div>
                 <Button 
                   variant="outline" 
                   className="w-full h-12 rounded-2xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
-                  onClick={() => setIsPreviewOpen(true)}
+                  onClick={() => {
+                    resetImage();
+                    setIsPreviewOpen(true);
+                  }}
                 >
                   <Maximize2 size={16} className="mr-2" />
-                  View Full Image
+                  Audit Full Proof
                 </Button>
               </div>
 
-              {/* Right Column - Audit Trails */}
               <div className="space-y-6 flex flex-col h-full">
-                {/* Receiver Info */}
                 <div className="space-y-3">
                   <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Receiver Terminal</h5>
                   <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 flex items-center gap-4">
@@ -446,7 +475,6 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Buyer Info */}
                 <div className="space-y-3">
                   <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Buyer Payment Method</h5>
                   <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 flex items-center gap-4">
@@ -462,7 +490,6 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Transaction Metadata */}
                 <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 space-y-4">
                   <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction UTR</span>
@@ -482,7 +509,6 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="mt-auto grid grid-cols-2 gap-4">
                   <Button 
                     variant="outline" 
@@ -506,25 +532,121 @@ export default function AdminPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Full Image Preview Modal - Balanced Size */}
+      {/* Professional Full-Screen Evidence Preview Terminal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-[500px] w-[95%] max-h-[85vh] bg-slate-950 border-0 p-0 flex flex-col rounded-[2rem] overflow-hidden shadow-2xl">
-          <DialogHeader className="p-5 bg-slate-900 flex flex-row items-center justify-between">
-            <DialogTitle className="text-white text-[12px] font-black uppercase tracking-widest">Evidence Proof</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 bg-slate-900 relative p-8 flex items-center justify-center overflow-y-auto no-scrollbar">
-             <div className="flex flex-col items-center gap-4 text-center opacity-30 text-white py-10">
-               <Maximize2 size={80} />
-               <p className="text-sm font-black uppercase tracking-[0.3em]">Sandbox Preview Restricted</p>
-             </div>
+        <DialogContent className="max-w-[98vw] w-[98vw] h-[98vh] max-h-[98vh] bg-black/95 border-0 p-0 flex flex-col rounded-3xl overflow-hidden shadow-2xl z-[100]">
+          {/* Header Controls */}
+          <div className="h-16 px-8 flex items-center justify-between bg-black/40 backdrop-blur-xl border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => setIsPreviewOpen(false)}>
+                <X size={24} />
+              </Button>
+              <div className="hidden md:block">
+                <DialogTitle className="text-white text-[12px] font-black uppercase tracking-widest">Evidence Terminal (Audit Mode)</DialogTitle>
+                <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest">{selectedOrder?.id} • {selectedOrder?.utr}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.2))}>
+                <ZoomOut size={18} />
+              </Button>
+              <div className="w-16 text-center text-[10px] font-black text-white/80">{Math.round(zoom * 100)}%</div>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10" onClick={() => setZoom(prev => Math.min(5, prev + 0.2))}>
+                <ZoomIn size={18} />
+              </Button>
+              <div className="w-px h-6 bg-white/10 mx-1" />
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10" onClick={() => setRotation(prev => prev + 90)}>
+                <RotateCw size={18} />
+              </Button>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10" onClick={resetImage}>
+                <History size={18} />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-3">
+               <Button variant="ghost" className="text-white hover:bg-white/10 h-10 px-4 text-[10px] font-black uppercase tracking-widest">
+                <Download size={16} className="mr-2" />
+                Original
+              </Button>
+              <Button className="bg-white text-black hover:bg-white/90 h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest" onClick={() => setIsPreviewOpen(false)}>
+                Done
+              </Button>
+            </div>
           </div>
-          <div className="p-5 bg-slate-900 border-t border-white/5 flex justify-center">
-            <Button 
-              className="bg-white text-slate-900 hover:bg-white/90 rounded-2xl h-11 px-10 font-black text-[10px] uppercase tracking-widest w-full"
-              onClick={() => setIsPreviewOpen(false)}
+
+          {/* Main Viewer Area */}
+          <div 
+            className="flex-1 relative overflow-hidden flex items-center justify-center bg-[#050505]"
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            <div 
+              className={cn(
+                "relative transition-transform duration-200 ease-out cursor-grab active:cursor-grabbing",
+                isDragging && "duration-0"
+              )}
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${zoom}) rotate(${rotation}deg)`,
+              }}
+              onMouseDown={handleMouseDown}
             >
-              Close Preview
-            </Button>
+              {/* Actual Screenshot Holder */}
+              <div className="w-[380px] h-[780px] bg-slate-900 rounded-[3rem] shadow-2xl border-[12px] border-slate-800 flex items-center justify-center overflow-hidden">
+                 <div className="flex flex-col items-center gap-4 text-center opacity-20 text-white">
+                   <ShieldCheck size={120} />
+                   <p className="text-xl font-black uppercase tracking-[0.4em]">Encrypted Proof</p>
+                   <p className="text-[10px] font-bold uppercase tracking-widest max-w-[200px]">Node data accessible for production terminals only</p>
+                 </div>
+              </div>
+            </div>
+
+            {/* Float Info Box */}
+            <div className="absolute left-10 bottom-10 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] max-w-sm hidden xl:block animate-in slide-in-from-left duration-500">
+               <span className="text-[9px] font-black text-white/40 uppercase tracking-widest block mb-2">Transaction Details</span>
+               <div className="space-y-3">
+                 <div className="flex justify-between">
+                   <span className="text-[10px] font-bold text-white/60">Amount</span>
+                   <span className="text-[14px] font-black text-white">₹{selectedOrder?.amount?.toLocaleString()}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-[10px] font-bold text-white/60">UTR Hash</span>
+                   <span className="text-[10px] font-black text-primary tracking-widest">{selectedOrder?.utr}</span>
+                 </div>
+               </div>
+            </div>
+          </div>
+
+          {/* Action Footer */}
+          <div className="h-24 px-10 bg-black/60 backdrop-blur-2xl border-t border-white/10 flex items-center justify-between shrink-0">
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-white/40">
+                  <User size={24} />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-white uppercase tracking-tight">{selectedOrder?.userName}</p>
+                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{selectedOrder?.userMobile}</p>
+                </div>
+             </div>
+
+             <div className="flex gap-4">
+               <Button 
+                  variant="outline" 
+                  className="h-14 px-10 rounded-2xl border-red-500/20 text-red-500 bg-red-500/5 hover:bg-red-500/10 font-black text-[11px] uppercase tracking-widest"
+                  onClick={() => updateOrderStatus(selectedOrder?.id, 'rejected')}
+                >
+                  <Ban size={18} className="mr-3" />
+                  REJECT ORDER
+                </Button>
+                <Button 
+                  className="h-14 px-12 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-widest shadow-xl shadow-green-900/20"
+                  onClick={() => updateOrderStatus(selectedOrder?.id, 'success')}
+                >
+                  <CheckCircle2 size={20} className="mr-3" />
+                  VERIFY & APPROVE
+                </Button>
+             </div>
           </div>
         </DialogContent>
       </Dialog>
