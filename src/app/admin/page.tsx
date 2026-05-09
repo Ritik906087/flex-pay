@@ -30,14 +30,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { MOCK_USERS } from "@/lib/mock-admin-data";
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { P2PEngine, P2POrder } from "@/lib/p2p-engine";
 import Image from "next/image";
-
-const APP_LOGOS = {
-  Paytm: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(5).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDUpLnBuZyIsImlhdCI6MTc3NTE0ODYzMiwiZXhwIjoxODA2Njg0NjMyfQ.QXSbgSLV3ULTcV3ss9Co9ZMe1oj3tb9bR_OP8xY-Nds",
-  PhonePe: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(4).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDQpLnBuZyIsImlhdCI6MTc3NTE0ODYyMSwiZXhwIjoxODA2Njg0NjIxfQ.b_cMHhiCw52krGt2edtt1k5C1Keo8uGJwYIWpe6vZVo",
-  MobiKwik: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDEpLnBuZyIsImlhdCI6MTc3NTE0ODU3MywiZXhwIjoxODA2Njg0NTczfQ.m8Z7gn5FV-0ss58kTEUZ833u8Wv_bFun3YZeZtyIa9s",
-  Freecharge: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(3).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDMpLnBuZyIsImlhdCI6MTc3NTE0ODYwOSwiZXhwIjoxODA2Njg0NjA5fQ.pus8pOlgEXCFb2pjIzNsVtU9DxnIxEeaVaeR3TuIQPc"
-};
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -48,363 +42,95 @@ export default function AdminPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
-  const [orders, setOrders] = useState<any[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orders, setOrders] = useState<P2POrder[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<P2POrder | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [stats, setStats] = useState({ todayVolume: 0, todayCount: 0, totalVolume: 0, totalCount: 0 });
-
-  // Image Manipulation State
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const existingOrders = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-    if (existingOrders.length === 0) {
-      const now = Date.now();
-      const demoOrders = [
-        { 
-          id: "#ORD55201", 
-          amount: 5000, 
-          profitPercent: 6, 
-          bonus: 5, 
-          status: 'in-review', 
-          utr: '884210992341', 
-          timestamp: now - 120000,
-          userName: "Aryan Sharma",
-          userMobile: "9876543210",
-          buyerMethod: { appName: "PhonePe", upi: "aryan@ybl", logo: APP_LOGOS.PhonePe },
-          receiver: { appName: "MobiKwik", upi: "flexpay@mbk", logo: APP_LOGOS.MobiKwik }
-        },
-        { 
-          id: "#ORD55202", 
-          amount: 1500, 
-          profitPercent: 6, 
-          bonus: 5, 
-          status: 'in-review', 
-          utr: '772109448211', 
-          timestamp: now - 300000,
-          userName: "Priya Patel",
-          userMobile: "9988776655",
-          buyerMethod: { appName: "Paytm", upi: "priya@paytm", logo: APP_LOGOS.Paytm },
-          receiver: { appName: "Freecharge", upi: "flexpay@free", logo: APP_LOGOS.Freecharge }
-        },
-        { 
-          id: "#ORD55203", 
-          amount: 12000, 
-          profitPercent: 6, 
-          bonus: 5, 
-          status: 'success', 
-          utr: '992104423188', 
-          timestamp: now - 3600000,
-          userName: "Vikram Singh",
-          userMobile: "9123456789",
-          buyerMethod: { appName: "MobiKwik", upi: "vikram@mbk", logo: APP_LOGOS.MobiKwik },
-          receiver: { appName: "Paytm", upi: "flexpay@paytm", logo: APP_LOGOS.Paytm }
-        }
-      ];
-      localStorage.setItem('flexpay_orders', JSON.stringify(demoOrders));
-    }
-    
     loadData();
     const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
+    window.addEventListener('p2p_order_update', loadData);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('p2p_order_update', loadData);
+    };
   }, []);
-
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab) setActiveTab(tab);
-  }, [searchParams]);
 
   const loadData = () => {
     const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
     setOrders(history);
-
-    const todayStart = new Date().setHours(0, 0, 0, 0);
-    const todayOrders = history.filter((o: any) => o.timestamp >= todayStart);
-    
-    setStats({
-      todayVolume: todayOrders.reduce((acc: number, o: any) => acc + o.amount, 0),
-      todayCount: todayOrders.length,
-      totalVolume: history.reduce((acc: number, o: any) => acc + o.amount, 0),
-      totalCount: history.length
-    });
   };
 
-  const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied", description: `${label} copied to clipboard.` });
-  };
-
-  const updateOrderStatus = (id: string, newStatus: 'success' | 'rejected') => {
-    const updated = orders.map(o => o.id === id ? { ...o, status: newStatus } : o);
-    localStorage.setItem('flexpay_orders', JSON.stringify(updated));
-    setOrders(updated);
+  const updateStatus = (orderId: string, status: 'approve' | 'reject') => {
+    if (status === 'approve') {
+      P2PEngine.approveOrder(orderId);
+      toast({ title: "Order Approved", description: "Seller balance finalized." });
+    } else {
+      P2PEngine.cancelOrder(orderId, "Admin Rejected");
+      toast({ variant: "destructive", title: "Order Rejected", description: "Seller balance refunded." });
+    }
     setSelectedOrder(null);
     setIsPreviewOpen(false);
-    toast({ 
-      title: newStatus === 'success' ? "Order Approved" : "Order Rejected",
-      variant: newStatus === 'success' ? "default" : "destructive"
-    });
   };
 
-  const filteredUsers = useMemo(() => {
-    return MOCK_USERS.filter(u => 
-      u.uid.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      u.mobile.includes(searchQuery) ||
-      u.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
-
-  const filteredOrders = useMemo(() => {
-    return orders.filter(o => {
-      const query = searchQuery.toLowerCase();
-      return (
-        o.id.toLowerCase().includes(query) ||
-        (o.utr && o.utr.toLowerCase().includes(query)) ||
-        o.amount.toString().includes(query) ||
-        (o.userName && o.userName.toLowerCase().includes(query))
-      );
-    });
-  }, [orders, searchQuery]);
-
-  const pendingApprovalsCount = orders.filter(o => o.status === 'in-review').length;
-
-  // Image Dragging Handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setPosition({
-      x: e.clientX - dragStart.current.x,
-      y: e.clientY - dragStart.current.y
-    });
-  };
-
-  const handleMouseUp = () => setIsDragging(false);
-
-  const resetImage = () => {
-    setZoom(1);
-    setRotation(0);
-    setPosition({ x: 0, y: 0 });
-  };
+  const pendingOrders = orders.filter(o => o.status === 'in-review');
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       <AdminSidebar 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
-        pendingCount={pendingApprovalsCount} 
+        pendingCount={pendingOrders.length} 
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
-      <div className={cn(
-        "flex-1 transition-all duration-300",
-        isSidebarOpen ? "ml-72" : "ml-0"
-      )}>
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-40">
-          <div className="flex items-center gap-5">
-            {!isSidebarOpen && (
-              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-slate-600 mr-2">
-                <Menu size={20} />
-              </Button>
-            )}
-            <h2 className="text-[14px] font-black text-slate-900 uppercase tracking-tight">
-              {activeTab === "dashboard" ? "System Dashboard" : 
-               activeTab === "users" ? "User Management" : 
-               activeTab === "approvals" ? "Order Approvals" : "Network Logs"}
-            </h2>
-            <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 text-[8px] h-5 px-2 uppercase tracking-widest font-black">
-              Production Node
-            </Badge>
+      <div className={cn("flex-1 transition-all duration-300", isSidebarOpen ? "ml-72" : "ml-0")}>
+        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-40">
+           <div className="flex items-center gap-5">
+            {!isSidebarOpen && <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)}><Menu size={20} /></Button>}
+            <h2 className="text-[14px] font-black text-slate-900 uppercase">P2P Audit Terminal</h2>
           </div>
-
-          <div className="flex items-center gap-8">
-            <div className="relative group">
+          <div className="relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <Input 
-                placeholder="Global Search..." 
-                className="w-80 h-11 pl-10 bg-slate-50 border-transparent rounded-2xl text-[11px] font-bold focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all shadow-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+              <Input placeholder="Search Audit Logs..." className="w-80 h-11 pl-10 bg-slate-50 border-transparent rounded-2xl text-[11px] font-bold" />
           </div>
         </header>
 
-        <main className="p-10 pb-20 max-w-[1600px] mx-auto">
-          {activeTab === "dashboard" && (
-            <div className="space-y-10 animate-in fade-in duration-500">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { label: "Today Volume", value: `₹${stats.todayVolume.toLocaleString()}`, sub: `${stats.todayCount} Node Success`, icon: IndianRupee, color: "text-primary", bg: "bg-primary/5" },
-                  { label: "Active Nodes", value: MOCK_USERS.length.toString(), sub: "99.9% Uptime", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-                  { label: "Pending Verification", value: pendingApprovalsCount.toString(), sub: "Awaiting review", icon: CheckCircle2, color: "text-amber-600", bg: "bg-amber-50" },
-                  { label: "Net Pool", value: `₹${stats.totalVolume.toLocaleString()}`, sub: "Total network liquidity", icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
-                ].map((item, i) => (
-                  <Card key={i} className="border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all rounded-[2rem] overflow-hidden">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{item.label}</CardTitle>
-                      <div className={cn("p-3 rounded-2xl", item.bg, item.color)}>
-                        <item.icon size={18} />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-black text-slate-900 tracking-tight">{item.value}</div>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase mt-2 flex items-center gap-1.5">
-                        <TrendingUp size={12} className="text-green-500" />
-                        {item.sub}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === "users" && (
-            <div className="space-y-10 animate-in fade-in duration-500">
-              <div className="flex justify-between items-center">
-                <div className="relative group max-w-xl w-full">
-                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <Input 
-                    placeholder="Search by Identity or Mobile..." 
-                    className="h-16 pl-14 bg-white border-slate-200 rounded-3xl text-[13px] font-bold shadow-sm focus:ring-8 focus:ring-primary/5 transition-all"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white">
-                <CardContent className="p-0">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-slate-50/50 border-b border-slate-100">
-                        <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Identity</th>
-                        <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
-                        <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Balance</th>
-                        <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                        <th className="px-10 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {filteredUsers.map((user) => (
-                        <tr key={user.uid} className="group hover:bg-slate-50/50 transition-all">
-                          <td className="px-10 py-8">
-                            <div className="flex items-center gap-5">
-                              <div className="w-14 h-14 rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 group-hover:bg-primary/5 transition-all">
-                                <User size={26} />
-                              </div>
-                              <div>
-                                <p className="text-[14px] font-black text-slate-900 uppercase tracking-tight">{user.name}</p>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Reg. {user.joinedAt}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-10 py-8">
-                            <p className="text-[13px] font-black text-slate-900 tracking-tight">{user.mobile}</p>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <Hash size={10} className="text-primary" />
-                              <p className="text-[10px] font-bold text-primary tracking-widest">{user.uid}</p>
-                            </div>
-                          </td>
-                          <td className="px-10 py-8">
-                            <p className="text-[16px] font-black text-slate-900">₹{user.balance.toLocaleString()}</p>
-                          </td>
-                          <td className="px-10 py-8">
-                            <Badge className={cn(
-                              "text-[8px] h-6 px-3 uppercase tracking-widest border-0 shadow-sm",
-                              user.status === 'active' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                            )}>
-                              {user.status}
-                            </Badge>
-                          </td>
-                          <td className="px-10 py-8 text-right">
-                            <Button 
-                              variant="outline" 
-                              className="h-12 px-8 rounded-2xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm"
-                              onClick={() => router.push(`/admin/users/${user.uid}`)}
-                            >
-                              Manage Node
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
+        <main className="p-10 max-w-[1600px] mx-auto">
           {activeTab === "approvals" && (
             <div className="space-y-10 animate-in fade-in duration-500">
-              <div className="flex justify-between items-center">
-                <div className="relative group max-w-xl w-full">
-                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <Input 
-                    placeholder="Search by UTR, ID, or Mobile..." 
-                    className="h-16 pl-14 bg-white border-slate-200 rounded-3xl text-[13px] font-bold shadow-sm focus:ring-8 focus:ring-primary/5 transition-all"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Badge className="h-16 px-8 bg-amber-50 text-amber-600 border-amber-200 uppercase font-black text-[12px] rounded-3xl">
-                  {filteredOrders.filter(o => o.status === 'in-review').length} Review Nodes Active
-                </Badge>
-              </div>
-
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                {filteredOrders.filter(o => o.status === 'in-review').length === 0 ? (
-                  <div className="xl:col-span-2 py-40 flex flex-col items-center justify-center opacity-20 text-slate-300">
+                {pendingOrders.length === 0 ? (
+                  <div className="xl:col-span-2 py-40 flex flex-col items-center justify-center opacity-20">
                     <CheckCircle size={80} />
-                    <p className="text-[16px] font-black uppercase mt-6 tracking-widest">Review Terminal Clear</p>
+                    <p className="text-[16px] font-black uppercase mt-6 tracking-widest">Audit Clear</p>
                   </div>
                 ) : (
-                  filteredOrders.filter(o => o.status === 'in-review').map((order) => (
-                    <Card key={order.id} className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden group hover:shadow-2xl transition-all bg-white">
-                      <div className="p-10">
-                        <div className="flex justify-between items-start mb-8">
-                          <div className="flex gap-5">
-                            <div className="w-16 h-16 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-600 border border-amber-100">
-                              <History size={28} />
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Trade ID</span>
-                              <h4 className="text-[18px] font-black text-slate-900">{order.id}</h4>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Value</span>
-                            <p className="text-3xl font-black text-slate-900">₹{order.amount.toLocaleString()}</p>
-                          </div>
+                  pendingOrders.map((order) => (
+                    <Card key={order.id} className="border-slate-200 shadow-sm rounded-[2rem] bg-white overflow-hidden">
+                      <div className="p-8">
+                        <div className="flex justify-between items-start mb-6">
+                           <div>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction ID</span>
+                              <h4 className="text-[16px] font-black text-slate-900">{order.id}</h4>
+                           </div>
+                           <Badge className="bg-amber-50 text-amber-600 border-amber-200">IN REVIEW</Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                           <div className="bg-slate-50 p-4 rounded-2xl">
+                              <span className="text-[8px] font-black text-slate-400 uppercase">Amount</span>
+                              <p className="text-xl font-black text-slate-900">₹{order.amount}</p>
+                           </div>
+                           <div className="bg-slate-50 p-4 rounded-2xl">
+                              <span className="text-[8px] font-black text-slate-400 uppercase">UTR</span>
+                              <p className="text-[12px] font-black text-primary truncate">{order.utr}</p>
+                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6 mb-10">
-                          <div className="bg-slate-50 p-6 rounded-[1.5rem] border border-slate-100">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Hash (UTR)</span>
-                            <code className="text-[14px] font-black text-slate-900 tracking-wider">{order.utr || "N/A"}</code>
-                          </div>
-                          <div className="bg-slate-50 p-6 rounded-[1.5rem] border border-slate-100">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">User</span>
-                            <p className="text-[12px] font-black text-slate-900 uppercase">{order.userName || "Aryan Sharma"}</p>
-                          </div>
-                        </div>
-
-                        <Button 
-                          className="w-full h-16 rounded-[1.5rem] font-black text-[12px] uppercase tracking-widest shadow-xl shadow-primary/5"
-                          onClick={() => setSelectedOrder(order)}
-                        >
-                          <Eye size={18} className="mr-3" />
-                          Inspect Proof
+                        <Button className="w-full h-14 rounded-2xl font-black uppercase text-[10px]" onClick={() => setSelectedOrder(order)}>
+                          <Eye size={16} className="mr-2" /> INSPECT PROOF
                         </Button>
                       </div>
                     </Card>
@@ -418,264 +144,37 @@ export default function AdminPanel() {
 
       {/* Verification Dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-4xl w-[95%] max-h-[90vh] bg-white border-0 rounded-[3rem] p-0 overflow-hidden shadow-2xl flex flex-col">
-          <div className="flex-1 overflow-y-auto no-scrollbar p-10">
-            <DialogHeader className="mb-8">
-              <div className="flex justify-between items-center">
-                <div>
-                  <DialogTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">Proof Verification</DialogTitle>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{selectedOrder?.id} • Node Process</p>
-                </div>
-                <Badge className="bg-primary text-white text-[16px] h-10 px-6 font-black rounded-2xl">
-                  ₹{selectedOrder?.amount?.toLocaleString()}
-                </Badge>
-              </div>
-            </DialogHeader>
+        <DialogContent className="max-w-4xl w-[95%] bg-white rounded-[3rem] p-0 overflow-hidden">
+          <div className="p-10 space-y-8">
+            <div className="flex justify-between items-center">
+              <DialogTitle className="text-xl font-black uppercase">P2P Verification Suite</DialogTitle>
+              <Badge className="h-10 px-6 text-lg font-black bg-primary">₹{selectedOrder?.amount}</Badge>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-4">
-                <div 
-                  className="aspect-[4/5] bg-slate-50 rounded-[2.5rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 relative group overflow-hidden cursor-zoom-in"
-                  onClick={() => {
-                    resetImage();
-                    setIsPreviewOpen(true);
-                  }}
-                >
-                  <div className="flex flex-col items-center gap-4 text-center px-6">
-                    <Maximize2 size={48} className="opacity-20" />
-                    <p className="text-[11px] font-black uppercase tracking-widest opacity-40">Click to Audit Proof</p>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  className="w-full h-12 rounded-2xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
-                  onClick={() => {
-                    resetImage();
-                    setIsPreviewOpen(true);
-                  }}
-                >
-                  <Maximize2 size={16} className="mr-2" />
-                  Audit Full Proof
-                </Button>
+              <div className="aspect-[4/5] bg-slate-50 rounded-[2.5rem] border-4 border-dashed border-slate-200 flex items-center justify-center text-slate-300">
+                <Maximize2 size={48} />
               </div>
 
-              <div className="space-y-6 flex flex-col h-full">
-                <div className="space-y-3">
-                  <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Receiver Terminal</h5>
-                  <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 flex items-center gap-4">
-                    <div className="w-12 h-12 relative rounded-xl overflow-hidden bg-white border border-slate-200 p-1.5 shadow-sm">
-                      {selectedOrder?.receiver?.logo && (
-                        <Image src={selectedOrder.receiver.logo} alt="Receiver" fill className="object-contain" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-[13px] font-black text-slate-900 uppercase tracking-tight">{selectedOrder?.receiver?.appName || "Merchant Node"}</p>
-                      <p className="text-[10px] font-bold text-primary tracking-widest">{selectedOrder?.receiver?.upi || "flexpay@upi"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Buyer Payment Method</h5>
-                  <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 flex items-center gap-4">
-                    <div className="w-12 h-12 relative rounded-xl overflow-hidden bg-white border border-slate-200 p-1.5 shadow-sm">
-                      {selectedOrder?.buyerMethod?.logo && (
-                        <Image src={selectedOrder.buyerMethod.logo} alt="Buyer" fill className="object-contain" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-[13px] font-black text-slate-900 uppercase tracking-tight">{selectedOrder?.buyerMethod?.appName || "Payment App"}</p>
-                      <p className="text-[10px] font-bold text-slate-500 tracking-widest">{selectedOrder?.buyerMethod?.upi || "user@upi"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction UTR</span>
-                    <div className="flex items-center gap-2">
-                      <p className="text-[14px] font-black text-slate-900 tracking-widest">{selectedOrder?.utr}</p>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => handleCopy(selectedOrder?.utr, "UTR")}>
-                        <Copy size={12} />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Process Time</span>
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <Clock size={12} />
-                      <p className="text-[11px] font-black uppercase tracking-widest">{new Date(selectedOrder?.timestamp).toLocaleTimeString()}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-auto grid grid-cols-2 gap-4">
-                  <Button 
-                    variant="outline" 
-                    className="h-16 rounded-2xl border-red-100 text-red-500 font-black text-[11px] uppercase tracking-widest hover:bg-red-50"
-                    onClick={() => updateOrderStatus(selectedOrder?.id, 'rejected')}
-                  >
-                    <Ban size={20} className="mr-3" />
-                    Reject
-                  </Button>
-                  <Button 
-                    className="h-16 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-widest shadow-xl shadow-green-100"
-                    onClick={() => updateOrderStatus(selectedOrder?.id, 'success')}
-                  >
-                    <CheckCircle2 size={22} className="mr-3" />
-                    Verify & Approve
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Professional Evidence Preview Terminal - WHITE THEME */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-5xl w-[95%] h-[85vh] max-h-[85vh] bg-white border-0 p-0 flex flex-col rounded-[2.5rem] overflow-hidden shadow-2xl z-[100]">
-          {/* Header Controls */}
-          <div className="h-16 px-8 flex items-center justify-between bg-slate-50 border-b border-slate-200 shrink-0">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-900 hover:bg-slate-200" onClick={() => setIsPreviewOpen(false)}>
-                <X size={24} />
-              </Button>
-              <div className="hidden md:block">
-                <DialogTitle className="text-slate-900 text-[12px] font-black uppercase tracking-widest">Evidence Terminal (Audit Mode)</DialogTitle>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{selectedOrder?.id} • {selectedOrder?.utr}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-white h-10 w-10 shadow-sm transition-all" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.2))}>
-                <ZoomOut size={18} />
-              </Button>
-              <div className="w-16 text-center text-[10px] font-black text-slate-900">{Math.round(zoom * 100)}%</div>
-              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-white h-10 w-10 shadow-sm transition-all" onClick={() => setZoom(prev => Math.min(5, prev + 0.2))}>
-                <ZoomIn size={18} />
-              </Button>
-              <div className="w-px h-6 bg-slate-200 mx-1" />
-              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-white h-10 w-10 shadow-sm transition-all" onClick={() => setRotation(prev => prev + 90)}>
-                <RotateCw size={18} />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-white h-10 w-10 shadow-sm transition-all" onClick={resetImage}>
-                <History size={18} />
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-3">
-               <Button variant="ghost" className="text-slate-600 hover:bg-slate-200 h-10 px-4 text-[10px] font-black uppercase tracking-widest">
-                <Download size={16} className="mr-2" />
-                Original
-              </Button>
-              <Button className="bg-primary text-white hover:bg-primary/90 h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest" onClick={() => setIsPreviewOpen(false)}>
-                Done
-              </Button>
-            </div>
-          </div>
-
-          {/* Main Viewer Area */}
-          <div 
-            className="flex-1 relative overflow-hidden flex items-center justify-center bg-slate-100/50"
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            {/* Audit Floating Details (Floating Cards) */}
-            <div className="absolute top-10 left-10 z-10 space-y-4 animate-in slide-in-from-left duration-500">
-               {/* Transaction Brief */}
-               <div className="bg-white/80 backdrop-blur-xl border border-slate-200 p-5 rounded-[1.5rem] w-64 shadow-xl">
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Transaction Value</span>
-                  <p className="text-2xl font-black text-slate-900">₹{selectedOrder?.amount?.toLocaleString()}</p>
-                  <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">UTR HASH</span>
-                    <span className="text-[10px] font-black text-primary tracking-widest">{selectedOrder?.utr}</span>
-                  </div>
-               </div>
-
-               {/* Participant Info - Specific Buyer/Receiver UPI */}
-               <div className="bg-white/80 backdrop-blur-xl border border-slate-200 p-5 rounded-[1.5rem] w-64 shadow-xl space-y-4">
+              <div className="space-y-6">
+                <div className="bg-slate-50 p-6 rounded-[2rem] space-y-4">
                   <div>
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-2">Buyer Method</span>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-white border border-slate-100 p-1 shrink-0">
-                         {selectedOrder?.buyerMethod?.logo && <Image src={selectedOrder.buyerMethod.logo} alt="Buyer" fill className="object-contain" />}
-                      </div>
-                      <div className="truncate">
-                        <p className="text-[11px] font-black text-slate-900 uppercase truncate">{selectedOrder?.buyerMethod?.appName}</p>
-                        <p className="text-[9px] font-bold text-slate-400 truncate">{selectedOrder?.buyerMethod?.upi}</p>
-                      </div>
-                    </div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase block">Seller Node</span>
+                    <p className="font-black text-slate-900">{selectedOrder?.sellerName}</p>
+                    <code className="text-[10px] text-primary">{selectedOrder?.sellerUpi}</code>
                   </div>
-
-                  <div className="h-px bg-slate-100" />
-
                   <div>
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-2">Receiver Terminal</span>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-white border border-slate-100 p-1 shrink-0">
-                         {selectedOrder?.receiver?.logo && <Image src={selectedOrder.receiver.logo} alt="Receiver" fill className="object-contain" />}
-                      </div>
-                      <div className="truncate">
-                        <p className="text-[11px] font-black text-slate-900 uppercase truncate">{selectedOrder?.receiver?.appName}</p>
-                        <p className="text-[9px] font-bold text-primary truncate">{selectedOrder?.receiver?.upi}</p>
-                      </div>
-                    </div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase block">UTR Provided</span>
+                    <p className="font-black text-slate-900 tracking-widest">{selectedOrder?.utr}</p>
                   </div>
-               </div>
-            </div>
+                </div>
 
-            <div 
-              className={cn(
-                "relative transition-transform duration-200 ease-out cursor-grab active:cursor-grabbing",
-                isDragging && "duration-0"
-              )}
-              style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${zoom}) rotate(${rotation}deg)`,
-              }}
-              onMouseDown={handleMouseDown}
-            >
-              {/* Actual Screenshot Holder */}
-              <div className="w-[340px] h-[700px] bg-white rounded-[2.5rem] shadow-2xl border-[10px] border-slate-200 flex items-center justify-center overflow-hidden">
-                 <div className="flex flex-col items-center gap-4 text-center opacity-20 text-slate-900">
-                   <ShieldCheck size={100} />
-                   <p className="text-lg font-black uppercase tracking-[0.4em]">Audit Evidence</p>
-                   <p className="text-[9px] font-bold uppercase tracking-widest max-w-[180px]">Authorized audit terminals only</p>
-                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button variant="outline" className="h-16 rounded-2xl border-red-100 text-red-500 font-black uppercase" onClick={() => updateStatus(selectedOrder!.id, 'reject')}>REJECT</Button>
+                  <Button className="h-16 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black uppercase" onClick={() => updateStatus(selectedOrder!.id, 'approve')}>APPROVE</Button>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Action Footer */}
-          <div className="h-24 px-10 bg-white border-t border-slate-200 flex items-center justify-between shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
-             <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-300">
-                  <User size={24} />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-slate-900 uppercase tracking-tight">{selectedOrder?.userName}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedOrder?.userMobile}</p>
-                </div>
-             </div>
-
-             <div className="flex gap-4">
-               <Button 
-                  variant="outline" 
-                  className="h-14 px-10 rounded-2xl border-red-100 text-red-500 bg-red-50/50 hover:bg-red-50 font-black text-[11px] uppercase tracking-widest"
-                  onClick={() => updateOrderStatus(selectedOrder?.id, 'rejected')}
-                >
-                  <Ban size={18} className="mr-3" />
-                  REJECT ORDER
-                </Button>
-                <Button 
-                  className="h-14 px-12 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-widest shadow-xl shadow-green-100"
-                  onClick={() => updateOrderStatus(selectedOrder?.id, 'success')}
-                >
-                  <CheckCircle2 size={20} className="mr-3" />
-                  VERIFY & APPROVE
-                </Button>
-             </div>
           </div>
         </DialogContent>
       </Dialog>
