@@ -3,7 +3,10 @@
 
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/bottom-nav";
-import { Info, AlertCircle, ArrowRight, Wallet, BadgeIndianRupee, CircleDollarSign } from "lucide-react";
+import { 
+  Info, AlertCircle, ArrowRight, Wallet, BadgeIndianRupee, 
+  CircleDollarSign, Plus, CheckCircle2, ChevronRight 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -15,6 +18,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 const MOCK_MARKET_ORDERS = [
   { id: "#124684887", amount: 100, profit: 6, bonus: 5 },
@@ -30,6 +35,10 @@ export default function Orders() {
   const router = useRouter();
   const [pendingOrder, setPendingOrder] = useState<any>(null);
   const [showPendingDialog, setShowPendingDialog] = useState(false);
+  const [showLinkRequiredDialog, setShowLinkRequiredDialog] = useState(false);
+  const [showAccountSelectionDialog, setShowAccountSelectionDialog] = useState(false);
+  const [selectedMarketOrder, setSelectedMarketOrder] = useState<any>(null);
+  const [compatibleAccounts, setCompatibleAccounts] = useState<any[]>([]);
   const [usdtAmount, setUsdtAmount] = useState<string>("");
 
   const USDT_RATE = 110;
@@ -41,26 +50,41 @@ export default function Orders() {
   const checkAndSetPending = () => {
     const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
     const pending = history.find((o: any) => o.status === 'pending-payment');
-    if (pending) {
-      setPendingOrder(pending);
-    } else {
-      setPendingOrder(null);
-    }
+    setPendingOrder(pending || null);
     return pending;
   };
 
-  const startOrder = (marketOrder: any) => {
+  const handleBuyClick = (marketOrder: any) => {
+    // 1. Check for pending orders
     const pending = checkAndSetPending();
     if (pending) {
       setShowPendingDialog(true);
       return;
     }
 
+    // 2. Check for MobiKwik/Freecharge accounts
+    const linkedAccounts = JSON.parse(localStorage.getItem('flexpay_linked_accounts') || '[]');
+    const compatible = linkedAccounts.filter((acc: any) => 
+      acc.appName === "MobiKwik" || acc.appName === "Freecharge"
+    );
+
+    setSelectedMarketOrder(marketOrder);
+    
+    if (compatible.length === 0) {
+      setShowLinkRequiredDialog(true);
+    } else {
+      setCompatibleAccounts(compatible);
+      setShowAccountSelectionDialog(true);
+    }
+  };
+
+  const confirmPurchase = () => {
+    if (!selectedMarketOrder) return;
     const params = new URLSearchParams({
-      id: marketOrder.id,
-      amount: marketOrder.amount.toString(),
-      profit: marketOrder.profit.toString(),
-      bonus: marketOrder.bonus.toString()
+      id: selectedMarketOrder.id,
+      amount: selectedMarketOrder.amount.toString(),
+      profit: selectedMarketOrder.profit.toString(),
+      bonus: selectedMarketOrder.bonus.toString()
     });
     router.push(`/orders/checkout?${params.toString()}`);
   };
@@ -165,7 +189,7 @@ export default function Orders() {
                     <Button 
                       size="sm"
                       className="h-8 px-5 rounded-xl font-black text-[9px] uppercase tracking-wider shadow-lg shadow-primary/10"
-                      onClick={() => startOrder(order)}
+                      onClick={() => handleBuyClick(order)}
                     >
                       BUY
                     </Button>
@@ -224,6 +248,67 @@ export default function Orders() {
           </Tabs>
         </div>
       </div>
+
+      {/* Account Selection Dialog (Shown if compatible accounts exist) */}
+      <Dialog open={showAccountSelectionDialog} onOpenChange={setShowAccountSelectionDialog}>
+        <DialogContent className="max-w-[85%] rounded-[1.8rem] border-0 p-6 shadow-2xl">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-center text-[13px] font-black uppercase tracking-tight text-gray-900">Confirm Order</DialogTitle>
+            <DialogDescription className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">
+              Available compatible accounts
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-2.5 max-h-[200px] overflow-y-auto no-scrollbar mb-6">
+            {compatibleAccounts.map((acc, i) => (
+              <div key={i} className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 relative rounded-lg overflow-hidden border border-gray-100 bg-white">
+                    <Image src={acc.logo} alt={acc.appName} fill className="object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-gray-900 uppercase">{acc.appName}</p>
+                    <p className="text-[7px] font-bold text-gray-400 tracking-tight">{acc.upi}</p>
+                  </div>
+                </div>
+                <CheckCircle2 size={14} className="text-green-500" />
+              </div>
+            ))}
+          </div>
+
+          <Button 
+            className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
+            onClick={confirmPurchase}
+          >
+            CONFIRM BUY
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Link Required Dialog (Shown if NO MobiKwik/Freecharge found) */}
+      <Dialog open={showLinkRequiredDialog} onOpenChange={setShowLinkRequiredDialog}>
+        <DialogContent className="max-w-[85%] rounded-[1.8rem] border-0 p-6 shadow-2xl">
+          <DialogHeader className="mb-4">
+            <div className="mx-auto w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 mb-3">
+              <AlertCircle size={24} />
+            </div>
+            <DialogTitle className="text-center text-[13px] font-black uppercase tracking-tight text-red-600">Action Required</DialogTitle>
+          </DialogHeader>
+
+          <div className="text-center mb-6">
+            <p className="text-[10px] font-black text-red-600 uppercase tracking-wide leading-relaxed">
+              Please first link MobiKwik/Freecharge account before purchasing tasks.
+            </p>
+          </div>
+
+          <Button 
+            className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
+            onClick={() => router.push('/profile/link-account')}
+          >
+            GET UPI
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Pending Order Dialog */}
       <Dialog open={showPendingDialog} onOpenChange={setShowPendingDialog}>
