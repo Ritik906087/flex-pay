@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react";
@@ -5,11 +6,9 @@ import { BottomNav } from "@/components/bottom-nav";
 import { 
   Headphones, LogOut, 
   CreditCard, Users, ChevronRight, 
-  Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy
+  Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -39,22 +38,14 @@ export default function Profile() {
     });
   };
 
-  const avatarUrl = PlaceHolderImages.find(img => img.id === 'avatar-user')?.imageUrl || "https://picsum.photos/seed/useravatar/200/200";
-
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
       {/* Profile Header */}
       <div className="bg-white px-6 pt-10 pb-6 border-b border-gray-100">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-gray-50 p-0.5 shadow-sm">
-              <Image 
-                src={avatarUrl} 
-                alt="Avatar" 
-                width={56} 
-                height={56}
-                className="rounded-[0.7rem] object-cover"
-              />
+            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center border-2 border-gray-100 p-0.5 shadow-sm">
+              <User size={28} className="text-gray-300" strokeWidth={1.5} />
             </div>
             <button className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border border-gray-100 text-primary shadow-lg active:scale-95 transition-transform">
               <Camera size={10} />
@@ -175,3 +166,4 @@ export default function Profile() {
     </div>
   );
 }
+
