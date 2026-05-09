@@ -10,15 +10,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const PAYMENT_APPS = [
-  { id: "paytm", name: "Paytm", color: "bg-blue-500" },
-  { id: "phonepe", name: "PhonePe", color: "bg-purple-600" },
-  { id: "mobikwik", name: "MobiKwik", color: "bg-blue-400" },
-  { id: "freecharge", name: "Freecharge", color: "bg-orange-500" },
-  { id: "airtel", name: "Airtel Pay", color: "bg-red-600" },
-  { id: "slice", name: "Slice", color: "bg-indigo-700" },
-  { id: "indusind", name: "IndusInd", color: "bg-red-800" },
+  { 
+    id: "paytm", 
+    name: "Paytm", 
+    logo: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(5).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDUpLnBuZyIsImlhdCI6MTc3NTE0ODYzMiwiZXhwIjoxODA2Njg0NjMyfQ.QXSbgSLV3ULTcV3ss9Co9ZMe1oj3tb9bR_OP8xY-Nds" 
+  },
+  { 
+    id: "phonepe", 
+    name: "PhonePe", 
+    logo: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(4).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDQpLnBuZyIsImlhdCI6MTc3NTE0ODYyMSwiZXhwIjoxODA2Njg0NjIxfQ.b_cMHhiCw52krGt2edtt1k5C1Keo8uGJwYIWpe6vZVo" 
+  },
+  { 
+    id: "mobikwik", 
+    name: "MobiKwik", 
+    logo: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(1).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDEpLnBuZyIsImlhdCI6MTc3NTE0ODU3MywiZXhwIjoxODA2Njg0NTczfQ.m8Z7gn5FV-0ss58kTEUZ833u8Wv_bFun3YZeZtyIa9s" 
+  },
+  { 
+    id: "airtel", 
+    name: "Airtel Pay", 
+    logo: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(2).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDIpLnBuZyIsImlhdCI6MTc3NTE0ODU5OSwiZXhwIjoxODA2Njg0NTk5fQ.yDb5CBUsF_MCejlDIzrQVjg6IMylJbAzEmHFaozfNjE" 
+  },
+  { 
+    id: "freecharge", 
+    name: "Freecharge", 
+    logo: "https://gfpzygqegzakluihhkkr.supabase.co/storage/v1/object/sign/Lg%20pay/download%20(3).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9jMWRjNDIxNy1iODI0LTQ4ZjEtODQ3ZS04OWU1NWI3YzdhMjEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMZyBwYXkvZG93bmxvYWQgKDMpLnBuZyIsImlhdCI6MTc3NTE0ODYwOSwiZXhwIjoxODA2Njg0NjA5fQ.pus8pOlgEXCFb2pjIzNsVtU9DxnIxEeaVaeR3TuIQPc" 
+  },
 ];
 
 export default function LinkAccount() {
@@ -64,7 +83,6 @@ export default function LinkAccount() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Header */}
       <div className="bg-white px-5 pt-8 pb-3 border-b border-gray-100 sticky top-0 z-20">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="p-1 -ml-1 active:scale-90 transition-transform">
@@ -83,15 +101,15 @@ export default function LinkAccount() {
             <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-gray-200 border border-gray-100 shadow-sm mb-4">
               <CreditCard size={32} />
             </div>
-            <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest mb-1.5">No Linked UPI</h3>
+            <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest mb-1.5">No Linked Account</h3>
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tight max-w-[200px] mb-8">
-              Please link your UPI account to start receiving payments.
+              Please link your account to start receiving payments.
             </p>
             <Button 
               onClick={() => setStep("selection")}
               className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
             >
-              GET YOUR UPI
+              LINK ACCOUNT
             </Button>
           </div>
         )}
@@ -107,8 +125,8 @@ export default function LinkAccount() {
                   className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:bg-gray-50 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-[10px]", app.color)}>
-                      {app.name[0]}
+                    <div className="w-9 h-9 relative rounded-xl overflow-hidden border border-gray-50">
+                      <Image src={app.logo} alt={app.name} fill className="object-cover" />
                     </div>
                     <span className="text-[10px] font-black text-gray-700 uppercase">{app.name}</span>
                   </div>
@@ -119,11 +137,11 @@ export default function LinkAccount() {
           </div>
         )}
 
-        {step === "form" && (
+        {step === "form" && selectedApp && (
           <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm", selectedApp.color)}>
-                {selectedApp.name[0]}
+              <div className="w-10 h-10 relative rounded-xl overflow-hidden border border-gray-50">
+                <Image src={selectedApp.logo} alt={selectedApp.name} fill className="object-cover" />
               </div>
               <div>
                 <h4 className="text-[11px] font-black text-gray-900 uppercase">{selectedApp.name}</h4>
@@ -176,7 +194,7 @@ export default function LinkAccount() {
             <div className="bg-amber-50 p-3.5 rounded-xl border border-amber-100 flex gap-3">
               <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
               <p className="text-[7.5px] font-bold text-amber-700 uppercase leading-snug tracking-tight">
-                Ensure the UPI ID belongs to you. Mismatch will cause withdrawal failure and account suspension.
+                Ensure the details belong to you. Mismatch will cause withdrawal failure and account suspension.
               </p>
             </div>
 
@@ -191,12 +209,11 @@ export default function LinkAccount() {
 
         {step === "linked" && linkedAccount && (
           <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-            {/* Linked Display Card */}
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg", linkedAccount.color)}>
-                    {linkedAccount.name[0]}
+                  <div className="w-12 h-12 relative rounded-2xl overflow-hidden border border-gray-50">
+                    <Image src={linkedAccount.logo} alt={linkedAccount.name} fill className="object-cover" />
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-gray-900 uppercase">{linkedAccount.name}</h3>
@@ -228,11 +245,9 @@ export default function LinkAccount() {
                 </div>
               </div>
 
-              {/* Decorative elements */}
               <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-primary/5 rounded-full blur-2xl"></div>
             </div>
 
-            {/* Actions */}
             <div className="flex flex-col gap-3">
               <Button 
                 onClick={handleStopSell}
@@ -254,7 +269,7 @@ export default function LinkAccount() {
                 variant="ghost"
                 className="w-full h-12 rounded-xl font-bold text-[9px] text-gray-400 uppercase tracking-widest hover:bg-white border border-transparent hover:border-gray-100"
               >
-                CHANGE UPI ACCOUNT
+                CHANGE ACCOUNT
               </Button>
             </div>
           </div>
