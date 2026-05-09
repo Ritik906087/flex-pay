@@ -1,35 +1,60 @@
+
 "use client"
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Smartphone, Lock, ArrowRight, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Smartphone, Lock, ArrowRight, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
 export default function Login() {
   const router = useRouter();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mobile, setMobile] = useState("");
+  const [pin, setPin] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mobile.length < 10) {
+      toast({ variant: "destructive", title: "Invalid Mobile", description: "Please enter a valid 10-digit number." });
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Mapping Mobile + PIN to Supabase Auth using a virtual email
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: `${mobile}@flexpay.app`,
+        password: pin,
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Logged in successfully." });
       router.push("/");
-    }, 1200);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message || "Invalid credentials. Please check your mobile and pin."
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
-      {/* Top Section - Minimalist */}
       <div className="flex flex-col items-center pt-8 pb-2 px-8 text-center">
         <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.3em]">Secure Access</p>
         <div className="w-5 h-0.5 bg-primary/20 rounded-full mt-1.5"></div>
       </div>
 
-      {/* Auth Form - Compact & Single Page */}
       <div className="flex-1 px-8 flex flex-col justify-center max-w-sm mx-auto w-full">
         <form onSubmit={handleLogin} className="space-y-3">
           <div className="space-y-1">
@@ -41,6 +66,8 @@ export default function Login() {
               <Input 
                 type="tel" 
                 placeholder="Enter mobile number" 
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
                 className="bg-gray-50 border-gray-100 rounded-xl h-11 pl-10 text-[13px] font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all"
                 required
               />
@@ -56,6 +83,8 @@ export default function Login() {
               <Input 
                 type={showPassword ? "text" : "password"} 
                 placeholder="6-digit pin" 
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
                 className="bg-gray-50 border-gray-100 rounded-xl h-11 pl-10 pr-10 text-[13px] font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all tracking-[0.3em] placeholder:tracking-normal"
                 required
               />
@@ -78,8 +107,17 @@ export default function Login() {
               className="w-full h-11 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/10 bg-primary hover:bg-primary/95 active:scale-[0.98] transition-all"
               disabled={loading}
             >
-              {loading ? "Verifying..." : "Login"}
-              {!loading && <ArrowRight className="ml-2" size={14} />}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  Login
+                  <ArrowRight className="ml-2" size={14} />
+                </>
+              )}
             </Button>
 
             <Link href="/register" className="block">
@@ -96,7 +134,6 @@ export default function Login() {
         </form>
       </div>
 
-      {/* Bottom Spacer to prevent scrolling */}
       <div className="pb-8"></div>
     </div>
   );
