@@ -1,11 +1,12 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { LayoutWrapper } from "@/components/layout-wrapper";
 
 export const metadata: Metadata = {
   title: 'FlexPay - Premium Payment Network',
   description: 'Clean and Modern P2P Task App',
-  manifest: '/manifest.json',
 };
 
 export const viewport: Viewport = {
@@ -29,13 +30,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className="font-body antialiased bg-[#E5E7EB] flex items-center justify-center min-h-screen">
-        <div className="relative w-full max-w-[430px] h-[100dvh] bg-background overflow-hidden flex flex-col shadow-2xl md:rounded-[3rem] md:border-[12px] md:border-white overflow-hidden">
-          <main className="flex-1 overflow-y-auto no-scrollbar pb-16">
-            {children}
-          </main>
-          <Toaster />
-        </div>
+      <body className="font-body antialiased bg-[#E5E7EB] min-h-screen">
+        <LayoutWrapper>
+          {children}
+        </LayoutWrapper>
+        <Toaster />
       </body>
     </html>
   );
