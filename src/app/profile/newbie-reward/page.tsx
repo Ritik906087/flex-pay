@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react";
@@ -33,7 +34,7 @@ export default function NewbieReward() {
     {
       id: "welcome",
       title: "Welcome Bonus",
-      description: "Successfully registered on FlexPay",
+      description: "Successfully registered",
       reward: 20,
       status: "completed",
       icon: Star
@@ -41,31 +42,31 @@ export default function NewbieReward() {
     {
       id: "link-wallet",
       title: "Link Wallet",
-      description: "Link MobiKwik or Freecharge account",
+      description: "Add UPI withdrawal terminal",
       reward: 30,
       status: "pending",
       icon: Wallet
     },
     {
       id: "join-channel",
-      title: "Join Channel",
-      description: "Join our official Telegram for updates",
+      title: "Join Telegram",
+      description: "Official community channel",
       reward: 50,
       status: "pending",
       icon: MessageCircle
     },
     {
       id: "watch-tutorial",
-      title: "Watch Tutorial",
-      description: "Watch full video on how to earn",
+      title: "Watch Guide",
+      description: "Learn how to earn profit",
       reward: 50,
       status: "pending",
       icon: Youtube
     },
     {
       id: "milestone-1k",
-      title: "Buy ₹1,000 Milestone",
-      description: "Buy ₹1,000 amount value of orders",
+      title: "Trade ₹1K",
+      description: "Complete initial buy goal",
       reward: 50,
       status: "pending",
       icon: ShoppingBag
@@ -77,17 +78,15 @@ export default function NewbieReward() {
     setTasks(prev => prev.map(task => 
       task.id === id ? { ...task, status: task.status === "completed" ? "pending" : "completed" } : task
     ));
-    if (window.navigator.vibrate) window.navigator.vibrate(50);
   };
 
   const handleClaimAll = () => {
     setAllClaimed(true);
     localStorage.setItem('flexpay_newbie_claimed', 'true');
     
-    // Simulate adding to wallet by creating a successful "bonus" order record
     const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
     const bonusOrder = {
-      id: "#BONUS-NEWBIE",
+      id: "#JACKPOT",
       amount: 0,
       profitPercent: 0,
       bonus: 200,
@@ -96,10 +95,10 @@ export default function NewbieReward() {
     };
     localStorage.setItem('flexpay_orders', JSON.stringify([bonusOrder, ...history]));
 
-    if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+    if (window.navigator.vibrate) window.navigator.vibrate([50, 50]);
     toast({
-      title: "Jackpot Claimed! 🎉",
-      description: "₹200 bonus has been added to your main balance.",
+      title: "Success! 🎉",
+      description: "₹200 added to your wallet.",
     });
   };
 
@@ -109,40 +108,34 @@ export default function NewbieReward() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Header */}
       <div className="bg-white px-5 pt-8 pb-3 border-b border-gray-100 sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-1.5 -ml-1.5 active:scale-90 transition-transform">
-            <ChevronLeft size={20} className="text-gray-900" />
-          </button>
+          <button onClick={() => router.back()} className="p-1 -ml-1"><ChevronLeft size={20}/></button>
           <div>
             <h1 className="text-sm font-black text-gray-900 uppercase tracking-tight">Mission Center</h1>
-            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Complete all for ₹{totalReward}</p>
+            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Single page progress</p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 px-5 pt-5 pb-10 overflow-y-auto no-scrollbar">
-        {/* Banner with Consolidated Claim */}
-        <div className="bg-primary rounded-[2.2rem] p-7 text-white shadow-xl shadow-primary/20 relative overflow-hidden mb-8">
+      <div className="flex-1 px-4 pt-4 pb-8">
+        {/* Compact Banner */}
+        <div className="bg-primary rounded-[1.8rem] p-5 text-white shadow-lg relative overflow-hidden mb-5">
           <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={16} className="text-amber-300" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Newbie Jackpot</span>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Sparkles size={12} className="text-amber-300" />
+              <span className="text-[8px] font-black uppercase tracking-widest">Newbie Reward</span>
             </div>
-            <h2 className="text-3xl font-black mb-1">₹{totalReward} Reward</h2>
-            <p className="text-[10px] font-medium opacity-80 leading-relaxed uppercase tracking-tight max-w-[200px]">
-              Complete all tasks below to unlock your cash bonus
-            </p>
+            <h2 className="text-2xl font-black">₹{totalReward} Cash</h2>
             
-            <div className="mt-6 bg-white/10 rounded-2xl p-4 backdrop-blur-md border border-white/10">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[8px] font-bold uppercase tracking-wider">Overall Mission Progress</span>
-                <span className="text-[10px] font-black">{completedCount}/{tasks.length} Done</span>
+            <div className="mt-4 bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-[7px] font-bold uppercase">Mission Progress</span>
+                <span className="text-[9px] font-black">{completedCount}/{tasks.length}</span>
               </div>
-              <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-amber-400 transition-all duration-700 ease-out" 
+                  className="h-full bg-amber-400 transition-all duration-500" 
                   style={{ width: `${(completedCount / tasks.length) * 100}%` }}
                 />
               </div>
@@ -150,78 +143,61 @@ export default function NewbieReward() {
               {isAllDone && !allClaimed && (
                 <Button 
                   onClick={handleClaimAll}
-                  className="w-full mt-4 bg-white text-primary hover:bg-gray-50 h-11 rounded-xl font-black text-[10px] uppercase tracking-[0.15em] shadow-xl animate-bounce"
+                  className="w-full mt-3 bg-white text-primary h-9 rounded-lg font-black text-[9px] uppercase tracking-wider"
                 >
-                  CLAIM ₹{totalReward} BONUS
-                  <ArrowRight size={14} className="ml-2" />
+                  CLAIM NOW
                 </Button>
               )}
-
               {allClaimed && (
-                <div className="w-full mt-4 bg-green-500/30 text-white h-11 rounded-xl font-black text-[10px] uppercase tracking-[0.15em] flex items-center justify-center gap-2 border border-white/20">
-                  <CheckCircle2 size={14} />
-                  REWARD CLAIMED
-                </div>
+                <div className="mt-3 text-center py-2 bg-green-500/20 rounded-lg text-[8px] font-black uppercase">Reward Claimed</div>
               )}
             </div>
           </div>
-          <Gift size={150} className="absolute -bottom-10 -right-10 opacity-10 -rotate-12" />
+          <Gift size={100} className="absolute -bottom-6 -right-6 opacity-10 rotate-12" />
         </div>
 
-        {/* Task List */}
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Newbie Missions</h3>
-          
-          <div className="flex flex-col gap-3">
-            {tasks.map((task) => {
-              const Icon = task.icon;
-              const isDone = task.status === "completed";
-              return (
-                <button 
-                  key={task.id} 
-                  disabled={allClaimed}
-                  onClick={() => toggleTaskStatus(task.id)}
-                  className={cn(
-                    "bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group transition-all text-left",
-                    isDone ? "bg-white" : "active:bg-gray-50"
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-11 h-11 rounded-xl flex items-center justify-center transition-all border shadow-sm",
-                      isDone ? "bg-green-50 border-green-100 text-green-500" : "bg-gray-50 border-gray-100 text-gray-400"
-                    )}>
-                      {isDone ? <CheckCircle2 size={20} /> : <Icon size={20} />}
-                    </div>
-                    <div>
-                      <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-tight">{task.title}</h4>
-                      <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tight mt-0.5">{task.description}</p>
-                    </div>
+        {/* Compact Task List */}
+        <div className="flex flex-col gap-2">
+          {tasks.map((task) => {
+            const Icon = task.icon;
+            const isDone = task.status === "completed";
+            return (
+              <button 
+                key={task.id} 
+                disabled={allClaimed}
+                onClick={() => toggleTaskStatus(task.id)}
+                className={cn(
+                  "bg-white p-3 rounded-xl border border-gray-50 flex items-center justify-between transition-all",
+                  isDone ? "opacity-100" : "opacity-90"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+                    isDone ? "bg-green-50 text-green-500" : "bg-gray-50 text-gray-400"
+                  )}>
+                    {isDone ? <CheckCircle2 size={16} /> : <Icon size={16} />}
                   </div>
-
-                  <div className="flex flex-col items-end">
-                    {isDone ? (
-                      <div className="bg-green-50 text-green-500 px-3 py-1.5 rounded-lg border border-green-100">
-                        <span className="text-[8px] font-black uppercase tracking-widest">COMPLETED</span>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-100">
-                        <span className="text-[8px] font-black uppercase tracking-widest">PENDING</span>
-                      </div>
-                    )}
+                  <div className="text-left">
+                    <h4 className="text-[10px] font-black text-gray-900 uppercase">{task.title}</h4>
+                    <p className="text-[7px] text-gray-400 font-bold uppercase tracking-tight">{task.description}</p>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                </div>
+                <div className={cn(
+                  "text-[7px] font-black px-2 py-1 rounded-md",
+                  isDone ? "bg-green-50 text-green-600" : "bg-gray-50 text-gray-300"
+                )}>
+                  {isDone ? "DONE" : "₹" + task.reward}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Security Note */}
-        <div className="mt-10 bg-amber-50 rounded-2xl p-4 border border-amber-100 flex gap-3">
-          <ShieldCheck className="text-amber-500 shrink-0" size={16} />
-          <p className="text-[8px] font-bold text-amber-700 leading-relaxed uppercase tracking-tight">
-            Accounts must be linked with valid credentials. All rewards are credited to the commission balance 
-            once the total mission goal of ₹200 is reached and claimed.
+        <div className="mt-6 bg-amber-50/50 p-3 rounded-xl border border-amber-100 flex gap-2">
+          <ShieldCheck size={14} className="text-amber-500 shrink-0" />
+          <p className="text-[7px] font-bold text-amber-700 uppercase leading-snug tracking-tight">
+            Verify all tasks with real data to prevent withdrawal issues. Rewards are final once claimed.
           </p>
         </div>
       </div>
