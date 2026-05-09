@@ -25,7 +25,7 @@ export default function Profile() {
     if (saved) {
       const orders = JSON.parse(saved);
       const successOrders = orders.filter((o: any) => o.status === 'success');
-      const extra = successOrders.reduce((acc: number, o: any) => acc + (o.amount * o.profitPercent / 100 + o.bonus), 0);
+      const extra = successOrders.reduce((acc: number, o: any) => acc + (o.amount * (o.profitPercent || 0) / 100 + (o.bonus || 0)), 0);
       setBalance(12500 + extra);
     }
   }, []);
@@ -100,64 +100,74 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Main Sections - Single Unified Group */}
+      {/* Main Sections */}
       <div className="px-5 mt-5 flex flex-col gap-4 pb-32">
         <div className="bg-white rounded-[1rem] border border-gray-100 overflow-hidden shadow-sm">
           <Link href="/profile/history">
-            <button className="w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
+            <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                  <ShoppingCart size={14} />
+                <div className="w-6.5 h-6.5 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                  <ShoppingCart size={15} />
                 </div>
-                <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">Buy History</span>
+                <span className="text-[9.5px] font-black text-gray-700 uppercase tracking-tight">Buy History</span>
               </div>
-              <ChevronRight size={12} className="text-gray-300" />
+              <ChevronRight size={13} className="text-gray-300" />
             </button>
           </Link>
           
-          <button className="w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
+          <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-lg bg-green-50 flex items-center justify-center text-green-500">
-                <TrendingUp size={14} />
+              <div className="w-6.5 h-6.5 rounded-lg bg-green-50 flex items-center justify-center text-green-500">
+                <TrendingUp size={15} />
               </div>
-              <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">Sell History</span>
+              <span className="text-[9.5px] font-black text-gray-700 uppercase tracking-tight">Sell History</span>
             </div>
-            <ChevronRight size={12} className="text-gray-300" />
+            <ChevronRight size={13} className="text-gray-300" />
           </button>
 
           <Link href="/profile/link-account">
-            <button className="w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
+            <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
-                  <CreditCard size={14} />
+                <div className="w-6.5 h-6.5 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
+                  <CreditCard size={15} />
                 </div>
-                <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">Linked Account</span>
+                <span className="text-[9.5px] font-black text-gray-700 uppercase tracking-tight">Linked Account</span>
               </div>
-              <ChevronRight size={12} className="text-gray-300" />
+              <ChevronRight size={13} className="text-gray-300" />
             </button>
           </Link>
 
-          {[
-            { icon: Users, label: "My Team", color: "text-indigo-500", bg: "bg-indigo-50" },
-            { icon: Headphones, label: "Support", color: "text-gray-400", bg: "bg-gray-50" },
-            { icon: LogOut, label: "Logout", color: "text-red-400", bg: "bg-red-50/50" },
-          ].map((item, i, arr) => (
-            <button 
-              key={i} 
-              className={cn(
-                "w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50",
-                i !== arr.length - 1 && "border-b border-gray-50"
-              )}
-            >
+          <Link href="/profile/team">
+            <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
               <div className="flex items-center gap-3">
-                <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", item.bg, item.color)}>
-                  <item.icon size={14} />
+                <div className="w-6.5 h-6.5 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                  <Users size={15} />
                 </div>
-                <span className="text-[9px] font-black text-gray-700 uppercase tracking-tight">{item.label}</span>
+                <span className="text-[9.5px] font-black text-gray-700 uppercase tracking-tight">My Team</span>
               </div>
-              <ChevronRight size={12} className="text-gray-300" />
+              <ChevronRight size={13} className="text-gray-300" />
             </button>
-          ))}
+          </Link>
+
+          <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-gray-50 border-b border-gray-50">
+            <div className="flex items-center gap-3">
+              <div className="w-6.5 h-6.5 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+                <Headphones size={15} />
+              </div>
+              <span className="text-[9.5px] font-black text-gray-700 uppercase tracking-tight">Support</span>
+            </div>
+            <ChevronRight size={13} className="text-gray-300" />
+          </button>
+
+          <button className="w-full px-4 py-3.5 flex items-center justify-between transition-all active:bg-red-50">
+            <div className="flex items-center gap-3">
+              <div className="w-6.5 h-6.5 rounded-lg bg-red-50 flex items-center justify-center text-red-400">
+                <LogOut size={15} />
+              </div>
+              <span className="text-[9.5px] font-black text-red-500 uppercase tracking-tight">Logout</span>
+            </div>
+            <ChevronRight size={13} className="text-gray-300" />
+          </button>
         </div>
       </div>
 
