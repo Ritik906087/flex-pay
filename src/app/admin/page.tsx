@@ -8,7 +8,7 @@ import {
   IndianRupee, User, Users,
   Hash, Eye, ArrowUpRight, 
   CheckCircle2, Search, History, CheckCircle, Ban, Copy, Menu, Clock, Maximize2,
-  ZoomIn, ZoomOut, RotateCw, Download, ExternalLink, X, ChevronRight, ChevronLeft
+  ZoomIn, ZoomOut, RotateCw, Download, ExternalLink, X, ChevronRight, ChevronLeft, CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -582,6 +582,50 @@ export default function AdminPanel() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           >
+            {/* Audit Floating Details (Floating Cards) */}
+            <div className="absolute top-10 left-10 z-10 space-y-4 animate-in slide-in-from-left duration-500">
+               {/* Transaction Brief */}
+               <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-5 rounded-[1.5rem] w-64 shadow-2xl">
+                  <span className="text-[8px] font-black text-white/40 uppercase tracking-widest block mb-1">Transaction Value</span>
+                  <p className="text-2xl font-black text-white">₹{selectedOrder?.amount?.toLocaleString()}</p>
+                  <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
+                    <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">UTR HASH</span>
+                    <span className="text-[10px] font-black text-primary tracking-widest">{selectedOrder?.utr}</span>
+                  </div>
+               </div>
+
+               {/* Participant Info */}
+               <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-5 rounded-[1.5rem] w-64 shadow-2xl space-y-4">
+                  <div>
+                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest block mb-2">Buyer Method</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-white border border-white/10 p-1 shrink-0">
+                         {selectedOrder?.buyerMethod?.logo && <Image src={selectedOrder.buyerMethod.logo} alt="Buyer" fill className="object-contain" />}
+                      </div>
+                      <div className="truncate">
+                        <p className="text-[11px] font-black text-white uppercase truncate">{selectedOrder?.buyerMethod?.appName}</p>
+                        <p className="text-[9px] font-bold text-white/40 truncate">{selectedOrder?.buyerMethod?.upi}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-white/5" />
+
+                  <div>
+                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest block mb-2">Receiver Terminal</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-white border border-white/10 p-1 shrink-0">
+                         {selectedOrder?.receiver?.logo && <Image src={selectedOrder.receiver.logo} alt="Receiver" fill className="object-contain" />}
+                      </div>
+                      <div className="truncate">
+                        <p className="text-[11px] font-black text-white uppercase truncate">{selectedOrder?.receiver?.appName}</p>
+                        <p className="text-[9px] font-bold text-primary truncate">{selectedOrder?.receiver?.upi}</p>
+                      </div>
+                    </div>
+                  </div>
+               </div>
+            </div>
+
             <div 
               className={cn(
                 "relative transition-transform duration-200 ease-out cursor-grab active:cursor-grabbing",
@@ -596,25 +640,10 @@ export default function AdminPanel() {
               <div className="w-[340px] h-[700px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[10px] border-slate-800 flex items-center justify-center overflow-hidden">
                  <div className="flex flex-col items-center gap-4 text-center opacity-20 text-white">
                    <ShieldCheck size={100} />
-                   <p className="text-lg font-black uppercase tracking-[0.4em]">Encrypted Proof</p>
-                   <p className="text-[9px] font-bold uppercase tracking-widest max-w-[180px]">Node data accessible for production terminals only</p>
+                   <p className="text-lg font-black uppercase tracking-[0.4em]">Audit Evidence</p>
+                   <p className="text-[9px] font-bold uppercase tracking-widest max-w-[180px]">Encrypted data visual for authorized audit terminals only</p>
                  </div>
               </div>
-            </div>
-
-            {/* Float Info Box */}
-            <div className="absolute left-10 bottom-10 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] max-w-sm hidden xl:block animate-in slide-in-from-left duration-500">
-               <span className="text-[9px] font-black text-white/40 uppercase tracking-widest block mb-2">Transaction Details</span>
-               <div className="space-y-3">
-                 <div className="flex justify-between">
-                   <span className="text-[10px] font-bold text-white/60">Amount</span>
-                   <span className="text-[14px] font-black text-white">₹{selectedOrder?.amount?.toLocaleString()}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="text-[10px] font-bold text-white/60">UTR Hash</span>
-                   <span className="text-[10px] font-black text-primary tracking-widest">{selectedOrder?.utr}</span>
-                 </div>
-               </div>
             </div>
           </div>
 
