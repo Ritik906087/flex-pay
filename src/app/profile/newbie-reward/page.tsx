@@ -22,7 +22,12 @@ interface RewardTask {
 export default function NewbieReward() {
   const router = useRouter();
   const { toast } = useToast();
-  const [allClaimed, setAllClaimed] = useState(false);
+  const [allClaimed, setAllClaimed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('flexpay_newbie_claimed') === 'true';
+    }
+    return false;
+  });
   
   const [tasks, setTasks] = useState<RewardTask[]>([
     {
@@ -77,6 +82,20 @@ export default function NewbieReward() {
 
   const handleClaimAll = () => {
     setAllClaimed(true);
+    localStorage.setItem('flexpay_newbie_claimed', 'true');
+    
+    // Simulate adding to wallet by creating a successful "bonus" order record
+    const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
+    const bonusOrder = {
+      id: "#BONUS-NEWBIE",
+      amount: 0,
+      profitPercent: 0,
+      bonus: 200,
+      status: 'success',
+      timestamp: Date.now()
+    };
+    localStorage.setItem('flexpay_orders', JSON.stringify([bonusOrder, ...history]));
+
     if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
     toast({
       title: "Jackpot Claimed! 🎉",
@@ -177,13 +196,6 @@ export default function NewbieReward() {
                     <div>
                       <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-tight">{task.title}</h4>
                       <p className="text-[8px] text-gray-400 font-bold uppercase tracking-tight mt-0.5">{task.description}</p>
-                      <div className="flex items-center gap-1.5 mt-2">
-                        <span className={cn(
-                          "text-[10px] font-black transition-colors",
-                          isDone ? "text-green-600" : "text-primary"
-                        )}>+₹{task.reward}</span>
-                        <span className="text-[7px] font-bold text-gray-300 uppercase tracking-widest">Bonus Pool</span>
-                      </div>
                     </div>
                   </div>
 
