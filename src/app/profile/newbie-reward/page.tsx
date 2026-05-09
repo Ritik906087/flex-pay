@@ -58,8 +58,8 @@ export default function NewbieReward() {
     },
     {
       id: "milestone-1k",
-      title: "1k Milestone",
-      description: "Successfully buy total ₹1,000 orders",
+      title: "Buy ₹1,000 Milestone",
+      description: "Buy ₹1,000 amount value of orders",
       reward: 50,
       status: "pending",
       icon: ShoppingBag
