@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, CreditCard, User, 
-  Smartphone, Hash, ShieldCheck, AlertCircle, RefreshCw, StopCircle, ChevronRight
+  Smartphone, Hash, ShieldCheck, AlertCircle, RefreshCw, StopCircle, ChevronRight, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,54 +83,66 @@ export default function LinkAccount() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
+      {/* Compact Header */}
       <div className="bg-white px-5 pt-8 pb-3 border-b border-gray-100 sticky top-0 z-20">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="p-1 -ml-1 active:scale-90 transition-transform">
-            <ChevronLeft size={20} className="text-gray-900" />
-          </button>
-          <div>
-            <h1 className="text-sm font-black text-gray-900 uppercase tracking-tight">Linked Account</h1>
-            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Withdrawal & Sales</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => router.back()} className="p-1 -ml-1 active:scale-90 transition-transform">
+              <ChevronLeft size={18} className="text-gray-900" />
+            </button>
+            <div>
+              <h1 className="text-[12px] font-black text-gray-900 uppercase tracking-tight">Linked Account</h1>
+              <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest">Withdrawal & Sales</p>
+            </div>
           </div>
+          {step === "linked" && (
+            <button 
+              onClick={() => setStep("selection")}
+              className="flex items-center gap-1 bg-primary/5 px-2.5 py-1 rounded-lg text-primary active:scale-95 transition-all"
+            >
+              <Plus size={10} strokeWidth={3} />
+              <span className="text-[8px] font-black uppercase">Add New</span>
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="flex-1 px-5 py-6">
+      <div className="flex-1 px-5 py-4">
         {step === "initial" && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-gray-200 border border-gray-100 shadow-sm mb-4">
-              <CreditCard size={32} />
+            <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center text-gray-200 border border-gray-100 shadow-sm mb-4">
+              <CreditCard size={28} />
             </div>
-            <h3 className="text-[11px] font-black text-gray-900 uppercase tracking-widest mb-1.5">No Linked Account</h3>
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tight max-w-[200px] mb-8">
+            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-1">No Linked Account</h3>
+            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight max-w-[180px] mb-6">
               Please link your account to start receiving payments.
             </p>
             <Button 
               onClick={() => setStep("selection")}
-              className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
+              className="h-10 px-8 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-primary/10"
             >
-              LINK ACCOUNT
+              GET YOUR UPI
             </Button>
           </div>
         )}
 
         {step === "selection" && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Select Payment App</h3>
-            <div className="flex flex-col gap-2">
+          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <h3 className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Select Payment App</h3>
+            <div className="flex flex-col gap-1.5">
               {PAYMENT_APPS.map((app) => (
                 <button
                   key={app.id}
                   onClick={() => { setSelectedApp(app); setStep("form"); }}
-                  className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:bg-gray-50 transition-all"
+                  className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between active:bg-gray-50 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 relative rounded-xl overflow-hidden border border-gray-50">
+                    <div className="w-8 h-8 relative rounded-lg overflow-hidden border border-gray-50">
                       <Image src={app.logo} alt={app.name} fill className="object-cover" />
                     </div>
-                    <span className="text-[10px] font-black text-gray-700 uppercase">{app.name}</span>
+                    <span className="text-[9px] font-black text-gray-700 uppercase">{app.name}</span>
                   </div>
-                  <ChevronRight size={14} className="text-gray-300" />
+                  <ChevronRight size={12} className="text-gray-300" />
                 </button>
               ))}
             </div>
@@ -138,25 +150,25 @@ export default function LinkAccount() {
         )}
 
         {step === "form" && selectedApp && (
-          <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
-              <div className="w-10 h-10 relative rounded-xl overflow-hidden border border-gray-50">
+          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="w-9 h-9 relative rounded-xl overflow-hidden border border-gray-50">
                 <Image src={selectedApp.logo} alt={selectedApp.name} fill className="object-cover" />
               </div>
               <div>
-                <h4 className="text-[11px] font-black text-gray-900 uppercase">{selectedApp.name}</h4>
-                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Link your credentials</p>
+                <h4 className="text-[10px] font-black text-gray-900 uppercase">{selectedApp.name}</h4>
+                <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest">Link your credentials</p>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <div className="space-y-1">
-                <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">Account Holder Name</label>
+                <label className="text-[7px] font-bold text-gray-400 uppercase tracking-widest ml-1">Account Holder Name</label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
                   <Input 
                     placeholder="Enter full name" 
-                    className="h-11 bg-white border-gray-100 rounded-xl pl-10 text-[11px] font-bold placeholder:font-medium"
+                    className="h-10 bg-white border-gray-100 rounded-xl pl-9 text-[10px] font-bold placeholder:font-medium"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
@@ -164,13 +176,13 @@ export default function LinkAccount() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mobile Number</label>
+                <label className="text-[7px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mobile Number</label>
                 <div className="relative">
-                  <Smartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                  <Smartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
                   <Input 
                     type="tel"
                     placeholder="Enter phone number" 
-                    className="h-11 bg-white border-gray-100 rounded-xl pl-10 text-[11px] font-bold placeholder:font-medium"
+                    className="h-10 bg-white border-gray-100 rounded-xl pl-9 text-[10px] font-bold placeholder:font-medium"
                     value={formData.mobile}
                     onChange={(e) => setFormData({...formData, mobile: e.target.value})}
                   />
@@ -178,12 +190,12 @@ export default function LinkAccount() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-1">UPI Address (VPA)</label>
+                <label className="text-[7px] font-bold text-gray-400 uppercase tracking-widest ml-1">UPI Address (VPA)</label>
                 <div className="relative">
-                  <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                  <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
                   <Input 
                     placeholder="example@upi" 
-                    className="h-11 bg-white border-gray-100 rounded-xl pl-10 text-[11px] font-bold placeholder:font-medium"
+                    className="h-10 bg-white border-gray-100 rounded-xl pl-9 text-[10px] font-bold placeholder:font-medium"
                     value={formData.upi}
                     onChange={(e) => setFormData({...formData, upi: e.target.value})}
                   />
@@ -191,15 +203,15 @@ export default function LinkAccount() {
               </div>
             </div>
 
-            <div className="bg-amber-50 p-3.5 rounded-xl border border-amber-100 flex gap-3">
-              <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-              <p className="text-[7.5px] font-bold text-amber-700 uppercase leading-snug tracking-tight">
-                Ensure the details belong to you. Mismatch will cause withdrawal failure and account suspension.
+            <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 flex gap-2.5">
+              <AlertCircle size={12} className="text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-[7px] font-bold text-amber-700 uppercase leading-snug tracking-tight">
+                Ensure details belong to you. Mismatch will cause withdrawal failure and suspension.
               </p>
             </div>
 
             <Button 
-              className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20"
+              className="w-full h-11 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-primary/10"
               onClick={handleLink}
             >
               GET MY ACCOUNT
@@ -208,68 +220,68 @@ export default function LinkAccount() {
         )}
 
         {step === "linked" && linkedAccount && (
-          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm relative overflow-hidden">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 relative rounded-2xl overflow-hidden border border-gray-50">
+          <div className="space-y-5 animate-in fade-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-[1.5rem] border border-gray-100 p-5 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 relative rounded-xl overflow-hidden border border-gray-50">
                     <Image src={linkedAccount.logo} alt={linkedAccount.name} fill className="object-cover" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-gray-900 uppercase">{linkedAccount.name}</h3>
-                    <div className="flex items-center gap-1.5">
-                      <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", isOnline ? "bg-green-500" : "bg-gray-400")}></div>
-                      <span className={cn("text-[9px] font-black uppercase tracking-widest", isOnline ? "text-green-500" : "text-gray-400")}>
+                    <h3 className="text-[11px] font-black text-gray-900 uppercase">{linkedAccount.name}</h3>
+                    <div className="flex items-center gap-1">
+                      <div className={cn("w-1 h-1 rounded-full animate-pulse", isOnline ? "bg-green-500" : "bg-gray-400")}></div>
+                      <span className={cn("text-[8px] font-black uppercase tracking-widest", isOnline ? "text-green-500" : "text-gray-400")}>
                         {isOnline ? "Online" : "Offline"}
                       </span>
                     </div>
                   </div>
                 </div>
-                <ShieldCheck size={28} className="text-primary opacity-20" />
+                <ShieldCheck size={24} className="text-primary opacity-20" />
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <div>
-                  <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Holder Name</span>
-                  <p className="text-xs font-black text-gray-900 uppercase">{linkedAccount.name}</p>
+                  <span className="text-[7px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Holder Name</span>
+                  <p className="text-[10px] font-black text-gray-900 uppercase">{linkedAccount.name}</p>
                 </div>
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">UPI ID</span>
-                    <p className="text-[11px] font-black text-primary tracking-tight">{linkedAccount.upi}</p>
+                    <span className="text-[7px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">UPI ID</span>
+                    <p className="text-[10px] font-black text-primary tracking-tight">{linkedAccount.upi}</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Mobile</span>
-                    <p className="text-[11px] font-black text-gray-900">{linkedAccount.mobile}</p>
+                    <span className="text-[7px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Mobile</span>
+                    <p className="text-[10px] font-black text-gray-900">{linkedAccount.mobile}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-primary/5 rounded-full blur-2xl"></div>
+              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-primary/5 rounded-full blur-2xl"></div>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               <Button 
                 onClick={handleStopSell}
                 variant={isOnline ? "outline" : "default"}
                 className={cn(
-                  "w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all",
-                  isOnline ? "border-red-100 bg-red-50 text-red-500 hover:bg-red-100" : "bg-green-500 hover:bg-green-600 shadow-green-100"
+                  "w-full h-12 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all",
+                  isOnline ? "border-red-50 bg-red-50 text-red-500 hover:bg-red-100" : "bg-green-500 hover:bg-green-600 shadow-green-100"
                 )}
               >
                 {isOnline ? (
-                  <><StopCircle size={16} className="mr-2" /> STOP SELL</>
+                  <><StopCircle size={14} className="mr-2" /> STOP SELL</>
                 ) : (
-                  <><RefreshCw size={16} className="mr-2" /> START SELL</>
+                  <><RefreshCw size={14} className="mr-2" /> START SELL</>
                 )}
               </Button>
               
               <Button 
                 onClick={handleChangeUpi}
                 variant="ghost"
-                className="w-full h-12 rounded-xl font-bold text-[9px] text-gray-400 uppercase tracking-widest hover:bg-white border border-transparent hover:border-gray-100"
+                className="w-full h-10 rounded-xl font-bold text-[8px] text-gray-400 uppercase tracking-widest hover:bg-white border border-transparent hover:border-gray-100"
               >
-                CHANGE ACCOUNT
+                CHANGE UPI
               </Button>
             </div>
           </div>
