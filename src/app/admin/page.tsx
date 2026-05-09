@@ -76,7 +76,7 @@ export default function AdminPanel() {
           userName: "Aryan Sharma",
           userMobile: "9876543210",
           buyerMethod: { appName: "PhonePe", upi: "aryan@ybl", logo: APP_LOGOS.PhonePe },
-          receiver: { appName: "MobiKwik", upi: "flexpay@upi", logo: APP_LOGOS.MobiKwik }
+          receiver: { appName: "MobiKwik", upi: "flexpay@mbk", logo: APP_LOGOS.MobiKwik }
         },
         { 
           id: "#ORD55202", 
@@ -89,7 +89,7 @@ export default function AdminPanel() {
           userName: "Priya Patel",
           userMobile: "9988776655",
           buyerMethod: { appName: "Paytm", upi: "priya@paytm", logo: APP_LOGOS.Paytm },
-          receiver: { appName: "PhonePe", upi: "flexpay@upi", logo: APP_LOGOS.PhonePe }
+          receiver: { appName: "Freecharge", upi: "flexpay@free", logo: APP_LOGOS.Freecharge }
         },
         { 
           id: "#ORD55203", 
@@ -102,7 +102,7 @@ export default function AdminPanel() {
           userName: "Vikram Singh",
           userMobile: "9123456789",
           buyerMethod: { appName: "MobiKwik", upi: "vikram@mbk", logo: APP_LOGOS.MobiKwik },
-          receiver: { appName: "Paytm", upi: "flexpay@upi", logo: APP_LOGOS.Paytm }
+          receiver: { appName: "Paytm", upi: "flexpay@paytm", logo: APP_LOGOS.Paytm }
         }
       ];
       localStorage.setItem('flexpay_orders', JSON.stringify(demoOrders));
@@ -532,44 +532,44 @@ export default function AdminPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Professional Evidence Preview Terminal */}
+      {/* Professional Evidence Preview Terminal - WHITE THEME */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-5xl w-[95%] h-[85vh] max-h-[85vh] bg-black/95 border-0 p-0 flex flex-col rounded-[2.5rem] overflow-hidden shadow-2xl z-[100]">
+        <DialogContent className="max-w-5xl w-[95%] h-[85vh] max-h-[85vh] bg-white border-0 p-0 flex flex-col rounded-[2.5rem] overflow-hidden shadow-2xl z-[100]">
           {/* Header Controls */}
-          <div className="h-16 px-8 flex items-center justify-between bg-black/40 backdrop-blur-xl border-b border-white/10 shrink-0">
+          <div className="h-16 px-8 flex items-center justify-between bg-slate-50 border-b border-slate-200 shrink-0">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => setIsPreviewOpen(false)}>
+              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-900 hover:bg-slate-200" onClick={() => setIsPreviewOpen(false)}>
                 <X size={24} />
               </Button>
               <div className="hidden md:block">
-                <DialogTitle className="text-white text-[12px] font-black uppercase tracking-widest">Evidence Terminal (Audit Mode)</DialogTitle>
-                <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest">{selectedOrder?.id} • {selectedOrder?.utr}</p>
+                <DialogTitle className="text-slate-900 text-[12px] font-black uppercase tracking-widest">Evidence Terminal (Audit Mode)</DialogTitle>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{selectedOrder?.id} • {selectedOrder?.utr}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.2))}>
+            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-white h-10 w-10 shadow-sm transition-all" onClick={() => setZoom(prev => Math.max(0.5, prev - 0.2))}>
                 <ZoomOut size={18} />
               </Button>
-              <div className="w-16 text-center text-[10px] font-black text-white/80">{Math.round(zoom * 100)}%</div>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10" onClick={() => setZoom(prev => Math.min(5, prev + 0.2))}>
+              <div className="w-16 text-center text-[10px] font-black text-slate-900">{Math.round(zoom * 100)}%</div>
+              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-white h-10 w-10 shadow-sm transition-all" onClick={() => setZoom(prev => Math.min(5, prev + 0.2))}>
                 <ZoomIn size={18} />
               </Button>
-              <div className="w-px h-6 bg-white/10 mx-1" />
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10" onClick={() => setRotation(prev => prev + 90)}>
+              <div className="w-px h-6 bg-slate-200 mx-1" />
+              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-white h-10 w-10 shadow-sm transition-all" onClick={() => setRotation(prev => prev + 90)}>
                 <RotateCw size={18} />
               </Button>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10" onClick={resetImage}>
+              <Button variant="ghost" size="icon" className="text-slate-600 hover:bg-white h-10 w-10 shadow-sm transition-all" onClick={resetImage}>
                 <History size={18} />
               </Button>
             </div>
 
             <div className="flex items-center gap-3">
-               <Button variant="ghost" className="text-white hover:bg-white/10 h-10 px-4 text-[10px] font-black uppercase tracking-widest">
+               <Button variant="ghost" className="text-slate-600 hover:bg-slate-200 h-10 px-4 text-[10px] font-black uppercase tracking-widest">
                 <Download size={16} className="mr-2" />
                 Original
               </Button>
-              <Button className="bg-white text-black hover:bg-white/90 h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest" onClick={() => setIsPreviewOpen(false)}>
+              <Button className="bg-primary text-white hover:bg-primary/90 h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest" onClick={() => setIsPreviewOpen(false)}>
                 Done
               </Button>
             </div>
@@ -577,7 +577,7 @@ export default function AdminPanel() {
 
           {/* Main Viewer Area */}
           <div 
-            className="flex-1 relative overflow-hidden flex items-center justify-center bg-[#050505]"
+            className="flex-1 relative overflow-hidden flex items-center justify-center bg-slate-100/50"
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
@@ -585,40 +585,40 @@ export default function AdminPanel() {
             {/* Audit Floating Details (Floating Cards) */}
             <div className="absolute top-10 left-10 z-10 space-y-4 animate-in slide-in-from-left duration-500">
                {/* Transaction Brief */}
-               <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-5 rounded-[1.5rem] w-64 shadow-2xl">
-                  <span className="text-[8px] font-black text-white/40 uppercase tracking-widest block mb-1">Transaction Value</span>
-                  <p className="text-2xl font-black text-white">₹{selectedOrder?.amount?.toLocaleString()}</p>
-                  <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
-                    <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">UTR HASH</span>
+               <div className="bg-white/80 backdrop-blur-xl border border-slate-200 p-5 rounded-[1.5rem] w-64 shadow-xl">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Transaction Value</span>
+                  <p className="text-2xl font-black text-slate-900">₹{selectedOrder?.amount?.toLocaleString()}</p>
+                  <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">UTR HASH</span>
                     <span className="text-[10px] font-black text-primary tracking-widest">{selectedOrder?.utr}</span>
                   </div>
                </div>
 
-               {/* Participant Info */}
-               <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-5 rounded-[1.5rem] w-64 shadow-2xl space-y-4">
+               {/* Participant Info - Specific Buyer/Receiver UPI */}
+               <div className="bg-white/80 backdrop-blur-xl border border-slate-200 p-5 rounded-[1.5rem] w-64 shadow-xl space-y-4">
                   <div>
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest block mb-2">Buyer Method</span>
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-2">Buyer Method</span>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-white border border-white/10 p-1 shrink-0">
+                      <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-white border border-slate-100 p-1 shrink-0">
                          {selectedOrder?.buyerMethod?.logo && <Image src={selectedOrder.buyerMethod.logo} alt="Buyer" fill className="object-contain" />}
                       </div>
                       <div className="truncate">
-                        <p className="text-[11px] font-black text-white uppercase truncate">{selectedOrder?.buyerMethod?.appName}</p>
-                        <p className="text-[9px] font-bold text-white/40 truncate">{selectedOrder?.buyerMethod?.upi}</p>
+                        <p className="text-[11px] font-black text-slate-900 uppercase truncate">{selectedOrder?.buyerMethod?.appName}</p>
+                        <p className="text-[9px] font-bold text-slate-400 truncate">{selectedOrder?.buyerMethod?.upi}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="h-px bg-white/5" />
+                  <div className="h-px bg-slate-100" />
 
                   <div>
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest block mb-2">Receiver Terminal</span>
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-2">Receiver Terminal</span>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-white border border-white/10 p-1 shrink-0">
+                      <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-white border border-slate-100 p-1 shrink-0">
                          {selectedOrder?.receiver?.logo && <Image src={selectedOrder.receiver.logo} alt="Receiver" fill className="object-contain" />}
                       </div>
                       <div className="truncate">
-                        <p className="text-[11px] font-black text-white uppercase truncate">{selectedOrder?.receiver?.appName}</p>
+                        <p className="text-[11px] font-black text-slate-900 uppercase truncate">{selectedOrder?.receiver?.appName}</p>
                         <p className="text-[9px] font-bold text-primary truncate">{selectedOrder?.receiver?.upi}</p>
                       </div>
                     </div>
@@ -637,39 +637,39 @@ export default function AdminPanel() {
               onMouseDown={handleMouseDown}
             >
               {/* Actual Screenshot Holder */}
-              <div className="w-[340px] h-[700px] bg-slate-900 rounded-[2.5rem] shadow-2xl border-[10px] border-slate-800 flex items-center justify-center overflow-hidden">
-                 <div className="flex flex-col items-center gap-4 text-center opacity-20 text-white">
+              <div className="w-[340px] h-[700px] bg-white rounded-[2.5rem] shadow-2xl border-[10px] border-slate-200 flex items-center justify-center overflow-hidden">
+                 <div className="flex flex-col items-center gap-4 text-center opacity-20 text-slate-900">
                    <ShieldCheck size={100} />
                    <p className="text-lg font-black uppercase tracking-[0.4em]">Audit Evidence</p>
-                   <p className="text-[9px] font-bold uppercase tracking-widest max-w-[180px]">Encrypted data visual for authorized audit terminals only</p>
+                   <p className="text-[9px] font-bold uppercase tracking-widest max-w-[180px]">Authorized audit terminals only</p>
                  </div>
               </div>
             </div>
           </div>
 
           {/* Action Footer */}
-          <div className="h-24 px-10 bg-black/60 backdrop-blur-2xl border-t border-white/10 flex items-center justify-between shrink-0">
+          <div className="h-24 px-10 bg-white border-t border-slate-200 flex items-center justify-between shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-white/40">
+                <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-300">
                   <User size={24} />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-white uppercase tracking-tight">{selectedOrder?.userName}</p>
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{selectedOrder?.userMobile}</p>
+                  <p className="text-sm font-black text-slate-900 uppercase tracking-tight">{selectedOrder?.userName}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedOrder?.userMobile}</p>
                 </div>
              </div>
 
              <div className="flex gap-4">
                <Button 
                   variant="outline" 
-                  className="h-14 px-10 rounded-2xl border-red-500/20 text-red-500 bg-red-500/5 hover:bg-red-500/10 font-black text-[11px] uppercase tracking-widest"
+                  className="h-14 px-10 rounded-2xl border-red-100 text-red-500 bg-red-50/50 hover:bg-red-50 font-black text-[11px] uppercase tracking-widest"
                   onClick={() => updateOrderStatus(selectedOrder?.id, 'rejected')}
                 >
                   <Ban size={18} className="mr-3" />
                   REJECT ORDER
                 </Button>
                 <Button 
-                  className="h-14 px-12 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-widest shadow-xl shadow-green-900/20"
+                  className="h-14 px-12 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-widest shadow-xl shadow-green-100"
                   onClick={() => updateOrderStatus(selectedOrder?.id, 'success')}
                 >
                   <CheckCircle2 size={20} className="mr-3" />
