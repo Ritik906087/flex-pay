@@ -45,8 +45,8 @@ export default function Orders() {
   const [usdtAmount, setUsdtAmount] = useState<string>("");
   
   // Filter state
-  const [minAmount, setMinAmount] = useState<string>("");
-  const [maxAmount, setMaxAmount] = useState<string>("");
+  const [minAmount, setMinAmount] = useState<string>("100");
+  const [maxAmount, setMaxAmount] = useState<string>("1000000");
 
   const USDT_RATE = 110;
 
@@ -64,7 +64,7 @@ export default function Orders() {
   const filteredOrders = useMemo(() => {
     return MOCK_MARKET_ORDERS.filter(order => {
       const min = minAmount ? parseInt(minAmount) : 0;
-      const max = maxAmount ? parseInt(maxAmount) : 100000000;
+      const max = maxAmount ? parseInt(maxAmount) : 1000000;
       return order.amount >= min && order.amount <= max;
     });
   }, [minAmount, maxAmount]);
@@ -141,21 +141,21 @@ export default function Orders() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
-      {/* Super Compact Header */}
-      <div className="bg-white px-5 pt-6 pb-2 border-b border-gray-100 sticky top-0 z-20">
-        <div className="flex justify-between items-center mb-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-[12px] font-black text-primary uppercase tracking-tight">Active Market</span>
-            <span className="bg-green-100 text-green-600 text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase">Live</span>
+      <Tabs defaultValue="upi" className="w-full">
+        {/* Super Compact Header */}
+        <div className="bg-white px-5 pt-6 pb-2 border-b border-gray-100 sticky top-0 z-20">
+          <div className="flex justify-between items-center mb-1.5 px-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] font-black text-primary uppercase tracking-tight">Active Market</span>
+              <span className="bg-green-100 text-green-600 text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase">Live</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] font-bold text-gray-400 uppercase">Fixed:</span>
+              <span className="text-[9px] font-black text-gray-900 uppercase">6% + ₹5</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-[9px] font-bold text-gray-400 uppercase">Fixed:</span>
-            <span className="text-[9px] font-black text-gray-900 uppercase">6% + ₹5</span>
-          </div>
-        </div>
 
-        <Tabs defaultValue="upi" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-100/50 p-1 h-9 rounded-xl border border-gray-50">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-100/50 p-1 h-9 rounded-xl border border-gray-50 mb-2">
             <TabsTrigger value="upi" className="text-[9px] font-black uppercase tracking-widest rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <BadgeIndianRupee size={12} className="mr-1.5" />
               UPI+
@@ -165,21 +165,16 @@ export default function Orders() {
               USDT
             </TabsTrigger>
           </TabsList>
-        </Tabs>
-      </div>
 
-      <div className="flex-1 overflow-y-auto pb-24 px-5">
-        <Tabs defaultValue="upi" className="w-full">
-          {/* Internal Content for Tabs */}
-          <TabsContent value="upi" className="mt-2 space-y-2.5">
-            {/* Compact Filter Row */}
+          {/* Filter Row is only relevant for UPI+ list */}
+          <TabsContent value="upi" className="m-0">
             <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm flex items-center gap-2">
               <div className="flex-1 flex gap-2">
                 <div className="flex-1 relative">
                   <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[7px] font-black text-gray-300">MIN</span>
                   <Input 
                     type="number" 
-                    placeholder="₹100" 
+                    placeholder="100" 
                     className="h-8 bg-gray-50/50 border-gray-100 rounded-lg text-[10px] font-black pl-7 pr-1 focus:bg-white transition-colors"
                     value={minAmount}
                     onChange={(e) => setMinAmount(e.target.value)}
@@ -189,7 +184,7 @@ export default function Orders() {
                   <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[7px] font-black text-gray-300">MAX</span>
                   <Input 
                     type="number" 
-                    placeholder="₹10Cr" 
+                    placeholder="10L" 
                     className="h-8 bg-gray-50/50 border-gray-100 rounded-lg text-[10px] font-black pl-7 pr-1 focus:bg-white transition-colors"
                     value={maxAmount}
                     onChange={(e) => setMaxAmount(e.target.value)}
@@ -197,7 +192,11 @@ export default function Orders() {
                 </div>
               </div>
             </div>
+          </TabsContent>
+        </div>
 
+        <div className="flex-1 overflow-y-auto pb-24 px-5">
+          <TabsContent value="upi" className="mt-2 space-y-2.5">
             {pendingOrder && (
               <button 
                 onClick={() => setShowPendingDialog(true)}
@@ -213,7 +212,6 @@ export default function Orders() {
               </button>
             )}
 
-            {/* Order List */}
             <div className="flex flex-col gap-2">
               {filteredOrders.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 opacity-20">
@@ -282,9 +280,19 @@ export default function Orders() {
                 CONFIRM PURCHASE
               </Button>
             </div>
+
+            <div className="mt-6 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+              <div className="flex items-center gap-2 mb-2">
+                <Info size={14} className="text-blue-500" />
+                <h4 className="text-[9px] font-black text-blue-900 uppercase tracking-widest">Why USDT?</h4>
+              </div>
+              <p className="text-[8px] font-bold text-blue-800/70 uppercase leading-relaxed tracking-tight">
+                USDT orders are processed instantly via TRC20 network. Buy assets with zero transaction fees and get fixed 8% returns.
+              </p>
+            </div>
           </TabsContent>
-        </Tabs>
-      </div>
+        </div>
+      </Tabs>
 
       {/* Account Selection Drawer */}
       <Dialog open={showAccountSelectionDialog} onOpenChange={setShowAccountSelectionDialog}>
