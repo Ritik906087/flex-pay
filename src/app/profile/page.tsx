@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/bottom-nav";
 import { 
-  Settings, Headphones, LogOut, 
-  CreditCard, Gift, Users, ChevronRight, 
+  Headphones, LogOut, 
+  CreditCard, Users, ChevronRight, 
   Camera, Wallet, BadgeCheck, ShoppingCart, TrendingUp, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -139,14 +139,13 @@ export default function Profile() {
           </Link>
 
           {[
-            { icon: Gift, label: "Rewards Wallet", color: "text-purple-500", bg: "bg-purple-50" },
             { icon: Users, label: "My Team", color: "text-indigo-500", bg: "bg-indigo-50" },
-          ].map((item, i) => (
+          ].map((item, i, arr) => (
             <button 
               key={i} 
               className={cn(
                 "w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50",
-                i !== 1 && "border-b border-gray-50"
+                i !== arr.length - 1 && "border-b border-gray-50"
               )}
             >
               <div className="flex items-center gap-3">
@@ -163,15 +162,14 @@ export default function Profile() {
         {/* Support Group */}
         <div className="bg-white rounded-[1rem] border border-gray-100 overflow-hidden shadow-sm">
           {[
-            { icon: Settings, label: "Settings", color: "text-gray-400" },
             { icon: Headphones, label: "Support", color: "text-gray-400" },
             { icon: LogOut, label: "Logout", color: "text-red-400" },
-          ].map((item, i) => (
+          ].map((item, i, arr) => (
             <button 
               key={i} 
               className={cn(
                 "w-full px-4 py-3 flex items-center justify-between transition-all active:bg-gray-50",
-                i !== 2 && "border-b border-gray-50"
+                i !== arr.length - 1 && "border-b border-gray-50"
               )}
             >
               <div className="flex items-center gap-3">
