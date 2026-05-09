@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, CreditCard, User, 
-  Smartphone, Hash, ShieldCheck, AlertCircle, RefreshCw, StopCircle, ChevronRight, Plus
+  Smartphone, Hash, ShieldCheck, AlertCircle, RefreshCw, StopCircle, ChevronRight, Plus, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,45 +40,101 @@ const PAYMENT_APPS = [
   },
 ];
 
+interface Account {
+  id: string;
+  name: string;
+  mobile: string;
+  upi: string;
+  logo: string;
+  appName: string;
+  isOnline: boolean;
+  linkedAt: number;
+}
+
 export default function LinkAccount() {
   const router = useRouter();
   const { toast } = useToast();
   const [step, setStep] = useState<"initial" | "selection" | "form" | "linked">("initial");
   const [selectedApp, setSelectedApp] = useState<any>(null);
   const [formData, setFormData] = useState({ name: "", mobile: "", upi: "" });
-  const [linkedAccount, setLinkedAccount] = useState<any>(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('flexpay_linked_account');
+    const saved = localStorage.getItem('flexpay_linked_accounts');
     if (saved) {
-      setLinkedAccount(JSON.parse(saved));
-      setStep("linked");
+      const parsed = JSON.parse(saved);
+      setAccounts(parsed);
+      if (parsed.length > 0) setStep("linked");
     }
   }, []);
+
+  const saveAccounts = (newAccounts: Account[]) => {
+    setAccounts(newAccounts);
+    localStorage.setItem('flexpay_linked_accounts', JSON.stringify(newAccounts));
+    if (newAccounts.length === 0) setStep("initial");
+  };
 
   const handleLink = () => {
     if (!formData.name || !formData.mobile || !formData.upi) {
       toast({ variant: "destructive", title: "Error", description: "All fields are required" });
       return;
     }
-    const account = { ...selectedApp, ...formData };
-    localStorage.setItem('flexpay_linked_account', JSON.stringify(account));
-    setLinkedAccount(account);
+
+    // Duplicate check
+    const isDuplicate = accounts.some(acc => acc.upi.toLowerCase() === formData.upi.toLowerCase() && acc.id !== editingId);
+    if (isDuplicate) {
+      toast({ variant: "destructive", title: "Duplicate UPI", description: "Already linked, please change your UPI" });
+      return;
+    }
+
+    if (editingId) {
+      const updated = accounts.map(acc => 
+        acc.id === editingId ? { ...acc, ...formData } : acc
+      );
+      saveAccounts(updated);
+      setEditingId(null);
+      toast({ title: "Success", description: "Account updated successfully" });
+    } else {
+      const newAccount: Account = {
+        id: Math.random().toString(36).substr(2, 9),
+        ...formData,
+        appName: selectedApp.name,
+        logo: selectedApp.logo,
+        isOnline: true,
+        linkedAt: Date.now()
+      };
+      saveAccounts([...accounts, newAccount]);
+      toast({ title: "Success", description: "Account linked successfully" });
+    }
+
+    setFormData({ name: "", mobile: "", upi: "" });
     setStep("linked");
-    toast({ title: "Success", description: "Account linked successfully" });
   };
 
-  const handleStopSell = () => {
-    setIsOnline(!isOnline);
+  const toggleStatus = (id: string) => {
+    const updated = accounts.map(acc => 
+      acc.id === id ? { ...acc, isOnline: !acc.isOnline } : acc
+    );
+    saveAccounts(updated);
+    const acc = updated.find(a => a.id === id);
     toast({ 
-      title: isOnline ? "Stopped Selling" : "Started Selling", 
-      description: isOnline ? "Your account is now offline." : "Your account is now online."
+      title: acc?.isOnline ? "Started Selling" : "Stopped Selling", 
+      description: acc?.isOnline ? "Account is now online." : "Account is now offline."
     });
   };
 
-  const handleChangeUpi = () => {
-    setStep("selection");
+  const handleEdit = (account: Account) => {
+    setEditingId(account.id);
+    setFormData({ name: account.name, mobile: account.mobile, upi: account.upi });
+    setSelectedApp(PAYMENT_APPS.find(a => a.name === account.appName));
+    setStep("form");
+  };
+
+  const handleDelete = (id: string) => {
+    const updated = accounts.filter(acc => acc.id !== id);
+    saveAccounts(updated);
+    toast({ title: "Removed", description: "Account removed successfully" });
   };
 
   return (
@@ -91,13 +147,17 @@ export default function LinkAccount() {
               <ChevronLeft size={18} className="text-gray-900" />
             </button>
             <div>
-              <h1 className="text-[12px] font-black text-gray-900 uppercase tracking-tight">Linked Account</h1>
+              <h1 className="text-[12px] font-black text-gray-900 uppercase tracking-tight">Linked Accounts</h1>
               <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest">Withdrawal & Sales</p>
             </div>
           </div>
           {step === "linked" && (
             <button 
-              onClick={() => setStep("selection")}
+              onClick={() => {
+                setEditingId(null);
+                setFormData({ name: "", mobile: "", upi: "" });
+                setStep("selection");
+              }}
               className="flex items-center gap-1 bg-primary/5 px-2.5 py-1 rounded-lg text-primary active:scale-95 transition-all"
             >
               <Plus size={10} strokeWidth={3} />
@@ -214,76 +274,76 @@ export default function LinkAccount() {
               className="w-full h-11 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-primary/10"
               onClick={handleLink}
             >
-              GET MY ACCOUNT
+              {editingId ? "UPDATE ACCOUNT" : "GET MY ACCOUNT"}
             </Button>
           </div>
         )}
 
-        {step === "linked" && linkedAccount && (
-          <div className="space-y-5 animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-white rounded-[1.5rem] border border-gray-100 p-5 shadow-sm relative overflow-hidden">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 relative rounded-xl overflow-hidden border border-gray-50">
-                    <Image src={linkedAccount.logo} alt={linkedAccount.name} fill className="object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="text-[11px] font-black text-gray-900 uppercase">{linkedAccount.name}</h3>
-                    <div className="flex items-center gap-1">
-                      <div className={cn("w-1 h-1 rounded-full animate-pulse", isOnline ? "bg-green-500" : "bg-gray-400")}></div>
-                      <span className={cn("text-[8px] font-black uppercase tracking-widest", isOnline ? "text-green-500" : "text-gray-400")}>
-                        {isOnline ? "Online" : "Offline"}
-                      </span>
+        {step === "linked" && accounts.length > 0 && (
+          <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300">
+            {accounts.map((acc) => (
+              <div key={acc.id} className="bg-white rounded-[1.2rem] border border-gray-100 p-4 shadow-sm relative overflow-hidden">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 relative rounded-lg overflow-hidden border border-gray-50">
+                      <Image src={acc.logo} alt={acc.appName} fill className="object-cover" />
+                    </div>
+                    <div>
+                      <h3 className="text-[10px] font-black text-gray-900 uppercase">{acc.appName}</h3>
+                      <div className="flex items-center gap-1">
+                        <div className={cn("w-1 h-1 rounded-full", acc.isOnline ? "bg-green-500 animate-pulse" : "bg-gray-400")}></div>
+                        <span className={cn("text-[7px] font-black uppercase tracking-widest", acc.isOnline ? "text-green-500" : "text-gray-400")}>
+                          {acc.isOnline ? "Online" : "Offline"}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                  <button onClick={() => handleDelete(acc.id)} className="p-1.5 text-gray-300 hover:text-red-500 active:scale-90 transition-all">
+                    <Trash2 size={12} />
+                  </button>
                 </div>
-                <ShieldCheck size={24} className="text-primary opacity-20" />
-              </div>
 
-              <div className="space-y-3.5">
-                <div>
-                  <span className="text-[7px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Holder Name</span>
-                  <p className="text-[10px] font-black text-gray-900 uppercase">{linkedAccount.name}</p>
-                </div>
-                <div className="flex justify-between items-center">
+                <div className="grid grid-cols-2 gap-y-2 mb-4">
                   <div>
-                    <span className="text-[7px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">UPI ID</span>
-                    <p className="text-[10px] font-black text-primary tracking-tight">{linkedAccount.upi}</p>
+                    <span className="text-[6px] font-bold text-gray-400 uppercase tracking-widest block">Holder</span>
+                    <p className="text-[9px] font-black text-gray-900 uppercase truncate pr-2">{acc.name}</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-[7px] font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Mobile</span>
-                    <p className="text-[10px] font-black text-gray-900">{linkedAccount.mobile}</p>
+                    <span className="text-[6px] font-bold text-gray-400 uppercase tracking-widest block">Mobile</span>
+                    <p className="text-[9px] font-black text-gray-900">{acc.mobile}</p>
+                  </div>
+                  <div className="col-span-2 mt-1">
+                    <span className="text-[6px] font-bold text-gray-400 uppercase tracking-widest block">UPI ID</span>
+                    <p className="text-[9px] font-black text-primary tracking-tight">{acc.upi}</p>
                   </div>
                 </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => toggleStatus(acc.id)}
+                    variant="outline"
+                    className={cn(
+                      "flex-1 h-8 rounded-lg font-black text-[7px] uppercase tracking-wider transition-all",
+                      acc.isOnline ? "border-red-50 bg-red-50 text-red-500" : "bg-green-500 text-white border-0"
+                    )}
+                  >
+                    {acc.isOnline ? (
+                      <><StopCircle size={10} className="mr-1.5" /> STOP SELL</>
+                    ) : (
+                      <><RefreshCw size={10} className="mr-1.5" /> START SELL</>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => handleEdit(acc)}
+                    variant="ghost"
+                    className="flex-1 h-8 rounded-lg font-bold text-[7px] text-gray-400 uppercase tracking-wider border border-gray-100 bg-gray-50/50"
+                  >
+                    CHANGE UPI
+                  </Button>
+                </div>
               </div>
-
-              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-primary/5 rounded-full blur-2xl"></div>
-            </div>
-
-            <div className="flex flex-col gap-2.5">
-              <Button 
-                onClick={handleStopSell}
-                variant={isOnline ? "outline" : "default"}
-                className={cn(
-                  "w-full h-12 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all",
-                  isOnline ? "border-red-50 bg-red-50 text-red-500 hover:bg-red-100" : "bg-green-500 hover:bg-green-600 shadow-green-100"
-                )}
-              >
-                {isOnline ? (
-                  <><StopCircle size={14} className="mr-2" /> STOP SELL</>
-                ) : (
-                  <><RefreshCw size={14} className="mr-2" /> START SELL</>
-                )}
-              </Button>
-              
-              <Button 
-                onClick={handleChangeUpi}
-                variant="ghost"
-                className="w-full h-10 rounded-xl font-bold text-[8px] text-gray-400 uppercase tracking-widest hover:bg-white border border-transparent hover:border-gray-100"
-              >
-                CHANGE UPI
-              </Button>
-            </div>
+            ))}
           </div>
         )}
       </div>
