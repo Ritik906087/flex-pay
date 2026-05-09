@@ -9,7 +9,8 @@ import {
   Copy, Ban, IndianRupee, Smartphone, User, 
   Hash, Eye, ExternalLink, ArrowUpRight, 
   ArrowDownRight, MoreVertical, CreditCard,
-  History, Settings, LogOut, CheckCircle, Plus, UserPlus
+  History, Settings, LogOut, CheckCircle, Plus, UserPlus,
+  Trash2, Filter
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -125,46 +126,50 @@ export default function AdminPanel() {
       return (
         o.id.toLowerCase().includes(query) ||
         (o.utr && o.utr.toLowerCase().includes(query)) ||
+        (o.txid && o.txid.toLowerCase().includes(query)) ||
         o.amount.toString().includes(query)
       );
     });
   }, [orders, searchQuery]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
-      {/* Sidebar Navigation (Desktop) */}
-      <div className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200 flex-col z-50">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+    <div className="flex min-h-screen bg-[#F8FAFC]">
+      {/* --- PERMANENT SIDEBAR NAVIGATION --- */}
+      <aside className="w-72 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50">
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20">
               <ShieldCheck size={22} />
             </div>
             <div>
-              <h1 className="text-sm font-black text-slate-900 tracking-tight uppercase">Admin Panel</h1>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">v2.5 PRO</p>
+              <h1 className="text-[13px] font-black text-slate-900 tracking-tight uppercase">Admin Terminal</h1>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">System Control</p>
             </div>
           </div>
 
           <nav className="space-y-1.5">
             {[
-              { id: "dashboard", label: "Overview", icon: LayoutDashboard },
+              { id: "dashboard", label: "System Overview", icon: LayoutDashboard },
               { id: "users", label: "User Directory", icon: Users },
               { id: "approvals", label: "Review Queue", icon: CheckCircle2, badge: orders.filter(o => o.status === 'in-review').length },
-              { id: "history", label: "Transactions", icon: History },
-              { id: "settings", label: "System Config", icon: Settings },
+              { id: "history", label: "Trade Logs", icon: History },
+              { id: "settings", label: "Configurations", icon: Settings },
             ].map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
                 className={cn(
-                  "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200",
+                  "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-200 group",
                   activeTab === item.id 
-                    ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                    ? "bg-primary text-white shadow-xl shadow-primary/20" 
                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon size={18} />
+                  <item.icon size={18} className={cn(
+                    "transition-colors",
+                    activeTab === item.id ? "text-white" : "text-slate-400 group-hover:text-primary"
+                  )} />
                   <span className="text-[11px] font-black uppercase tracking-wider">{item.label}</span>
                 </div>
                 {item.badge ? (
@@ -180,74 +185,82 @@ export default function AdminPanel() {
           </nav>
         </div>
 
-        <div className="mt-auto p-6 border-t border-slate-100">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl h-12" onClick={() => router.push('/')}>
+        <div className="mt-auto p-8 border-t border-slate-100">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-12" 
+            onClick={() => router.push('/')}
+          >
             <LogOut size={18} />
             <span className="text-[11px] font-black uppercase tracking-wider">Exit Terminal</span>
           </Button>
         </div>
-      </div>
+      </aside>
 
-      {/* Main Content Area */}
-      <div className="lg:pl-64 flex-1">
-        {/* Top Header */}
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40">
-          <div className="flex items-center gap-4">
-            <h2 className="text-sm font-black text-slate-900 uppercase tracking-tight">
+      {/* --- MAIN CONTENT AREA --- */}
+      <div className="flex-1 ml-72">
+        {/* Top Header Bar */}
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-40">
+          <div className="flex items-center gap-5">
+            <h2 className="text-[14px] font-black text-slate-900 uppercase tracking-tight">
               {activeTab === "dashboard" ? "System Dashboard" : 
                activeTab === "users" ? "User Management" : 
-               activeTab === "approvals" ? "Order Approvals" : "Terminal Logs"}
+               activeTab === "approvals" ? "Order Approvals" : "Network Logs"}
             </h2>
-            <div className="h-5 w-px bg-slate-200"></div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-            </p>
+            <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 text-[8px] h-5 px-2 uppercase tracking-widest font-black">
+              Production Node
+            </Badge>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="relative group hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+          <div className="flex items-center gap-8">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
               <Input 
-                placeholder="Global terminal search..." 
-                className="w-64 h-10 pl-9 bg-slate-50 border-transparent rounded-xl text-[11px] font-bold focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all"
+                placeholder="Global Terminal Search..." 
+                className="w-80 h-11 pl-10 bg-slate-50 border-transparent rounded-2xl text-[11px] font-bold focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all shadow-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className="text-[10px] font-black text-slate-900">Administrator</p>
-                <Badge variant="outline" className="text-[7px] h-4 bg-green-50 text-green-600 border-green-200 uppercase tracking-tighter">Server Online</Badge>
+                <p className="text-[10px] font-black text-slate-900">Root Admin</p>
+                <div className="flex items-center gap-1 justify-end">
+                  <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-[8px] font-bold text-green-600 uppercase tracking-tighter">Live</span>
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+              <div className="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
                 <User size={20} />
               </div>
             </div>
           </div>
         </header>
 
-        <main className="p-8 pb-12">
-          {/* --- TAB 1: DASHBOARD --- */}
+        <main className="p-10 pb-20 max-w-[1600px] mx-auto">
+          {/* --- DASHBOARD VIEW --- */}
           {activeTab === "dashboard" && (
-            <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="space-y-10 animate-in fade-in duration-500">
+              {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: "Today Volume", value: `₹${stats.todayVolume.toLocaleString()}`, sub: `+${stats.todayCount} transactions`, icon: IndianRupee, color: "text-primary" },
-                  { label: "Network Users", value: "1,248", sub: "24 new nodes", icon: Users, color: "text-blue-600" },
-                  { label: "Pending Review", value: orders.filter(o => o.status === 'in-review').length.toString(), sub: "Awaiting check", icon: CheckCircle2, color: "text-amber-600" },
-                  { label: "Total Asset Pool", value: `₹${stats.totalVolume.toLocaleString()}`, sub: "Across all nodes", icon: Wallet, color: "text-green-600" },
+                  { label: "Today Volume", value: `₹${stats.todayVolume.toLocaleString()}`, sub: `${stats.todayCount} Node Success`, icon: IndianRupee, color: "text-primary", bg: "bg-primary/5" },
+                  { label: "Active Nodes", value: "1,248", sub: "99.9% Uptime", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+                  { label: "Pending Verification", value: orders.filter(o => o.status === 'in-review').length.toString(), sub: "Awaiting review", icon: CheckCircle2, color: "text-amber-600", bg: "bg-amber-50" },
+                  { label: "Net Pool", value: `₹${stats.totalVolume.toLocaleString()}`, sub: "Total network liquidity", icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
                 ].map((item, i) => (
-                  <Card key={i} className="border-slate-200 shadow-sm hover:shadow-md transition-all rounded-3xl">
+                  <Card key={i} className="border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all rounded-[2rem] overflow-hidden">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400">{item.label}</CardTitle>
-                      <div className={cn("p-2 rounded-xl bg-slate-50", item.color)}>
-                        <item.icon size={16} />
+                      <CardTitle className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{item.label}</CardTitle>
+                      <div className={cn("p-3 rounded-2xl", item.bg, item.color)}>
+                        <item.icon size={18} />
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-black text-slate-900">{item.value}</div>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase mt-1 flex items-center gap-1">
-                        <TrendingUp size={10} className="text-green-500" />
+                      <div className="text-3xl font-black text-slate-900 tracking-tight">{item.value}</div>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase mt-2 flex items-center gap-1.5">
+                        <TrendingUp size={12} className="text-green-500" />
                         {item.sub}
                       </p>
                     </CardContent>
@@ -255,47 +268,47 @@ export default function AdminPanel() {
                 ))}
               </div>
 
+              {/* Main Content Sections */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="lg:col-span-2 border-slate-200 shadow-sm rounded-[2rem] overflow-hidden">
-                  <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-8 py-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="text-sm font-black uppercase tracking-tight">Real-time Traffic</CardTitle>
-                        <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-0.5">Live node purchase stream</CardDescription>
-                      </div>
-                      <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase">Export CSV</Button>
+                {/* Activity Feed */}
+                <Card className="lg:col-span-2 border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden">
+                  <CardHeader className="px-8 py-6 border-b border-slate-100 flex flex-row items-center justify-between bg-slate-50/30">
+                    <div>
+                      <CardTitle className="text-[14px] font-black uppercase tracking-tight">Real-time Terminal Activity</CardTitle>
+                      <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-1">Live incoming trade nodes</CardDescription>
                     </div>
+                    <Button variant="outline" size="sm" className="h-9 px-5 rounded-xl text-[9px] font-black uppercase tracking-widest border-slate-200">Export Logs</Button>
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="divide-y divide-slate-100">
                       {orders.length === 0 ? (
-                        <div className="py-20 flex flex-col items-center justify-center opacity-20">
-                          <History size={40} />
-                          <p className="text-[10px] font-black uppercase mt-3 tracking-widest">No terminal activity</p>
+                        <div className="py-32 flex flex-col items-center justify-center opacity-20">
+                          <History size={48} />
+                          <p className="text-[12px] font-black uppercase mt-4 tracking-widest">No terminal traffic detected</p>
                         </div>
                       ) : (
-                        orders.slice(0, 8).map((order) => (
-                          <div key={order.id} className="px-8 py-5 flex items-center justify-between group hover:bg-slate-50/80 transition-all">
-                            <div className="flex items-center gap-4">
+                        orders.slice(0, 10).map((order) => (
+                          <div key={order.id} className="px-8 py-6 flex items-center justify-between group hover:bg-slate-50/50 transition-all">
+                            <div className="flex items-center gap-5">
                               <div className={cn(
-                                "w-11 h-11 rounded-2xl flex items-center justify-center border",
+                                "w-12 h-12 rounded-2xl flex items-center justify-center border shadow-sm transition-all",
                                 order.status === 'success' ? "bg-green-50 border-green-100 text-green-600" :
                                 order.status === 'in-review' ? "bg-amber-50 border-amber-100 text-amber-600" :
                                 "bg-slate-50 border-slate-100 text-slate-400"
                               )}>
-                                <IndianRupee size={18} />
+                                <IndianRupee size={20} />
                               </div>
                               <div>
-                                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{order.id}</h4>
-                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                                  {new Date(order.timestamp).toLocaleTimeString()} • Node Terminal
+                                <h4 className="text-[13px] font-black text-slate-900 uppercase tracking-tight">{order.id}</h4>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                  {new Date(order.timestamp).toLocaleString()} • Global Node
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-black text-slate-900">₹{order.amount.toLocaleString()}</p>
+                              <p className="text-lg font-black text-slate-900">₹{order.amount.toLocaleString()}</p>
                               <Badge className={cn(
-                                "text-[7px] h-4 uppercase tracking-tighter border-0",
+                                "text-[8px] h-5 px-2.5 uppercase tracking-tighter border-0 mt-1 shadow-sm",
                                 order.status === 'success' ? "bg-green-50 text-green-600" :
                                 order.status === 'in-review' ? "bg-amber-50 text-amber-600" :
                                 "bg-slate-100 text-slate-400"
@@ -310,55 +323,54 @@ export default function AdminPanel() {
                   </CardContent>
                 </Card>
 
-                <div className="space-y-6">
-                  <Card className="border-slate-200 shadow-sm rounded-[2rem] bg-slate-900 text-white overflow-hidden relative">
-                    <CardHeader className="relative z-10">
-                      <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-60">System Health</CardTitle>
+                {/* Right Sidebar Widgets */}
+                <div className="space-y-8">
+                  <Card className="border-slate-200 shadow-xl rounded-[2.5rem] bg-slate-900 text-white overflow-hidden relative">
+                    <CardHeader className="relative z-10 p-8">
+                      <CardTitle className="text-[11px] font-black uppercase tracking-widest opacity-50">Node Health Terminal</CardTitle>
                     </CardHeader>
-                    <CardContent className="relative z-10 pb-8">
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white border border-white/10 backdrop-blur-md">
-                          <ShieldCheck size={24} />
+                    <CardContent className="relative z-10 px-8 pb-10">
+                      <div className="flex items-center gap-5 mb-8">
+                        <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white border border-white/10 backdrop-blur-xl shadow-2xl">
+                          <ShieldCheck size={28} />
                         </div>
                         <div>
-                          <p className="text-lg font-black tracking-tight">Terminal Secured</p>
-                          <p className="text-[9px] font-bold text-white/50 uppercase tracking-widest">AES-512 Node Sync</p>
+                          <p className="text-xl font-black tracking-tight">Encryption Active</p>
+                          <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">AES-512 End-to-End</p>
                         </div>
                       </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest">
-                          <span className="opacity-50">API Load</span>
-                          <span className="text-green-400 flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div> Nominal</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest">
-                          <span className="opacity-50">Active Nodes</span>
-                          <span>99.98% Up</span>
-                        </div>
+                      <div className="space-y-4">
+                        {[
+                          { label: "Server Load", status: "Nominal", color: "text-green-400" },
+                          { label: "Active Nodes", status: "1,248 Nodes", color: "text-white" },
+                          { label: "Network Ping", status: "12ms", color: "text-white" },
+                        ].map((stat, i) => (
+                          <div key={i} className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest border-b border-white/5 pb-3">
+                            <span className="opacity-40">{stat.label}</span>
+                            <span className={stat.color}>{stat.status}</span>
+                          </div>
+                        ))}
                       </div>
                     </CardContent>
+                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-[80px]"></div>
                   </Card>
 
-                  <Card className="border-slate-200 shadow-sm rounded-[2rem]">
-                    <CardHeader>
-                      <CardTitle className="text-sm font-black uppercase tracking-tight">Instant Terminal</CardTitle>
+                  <Card className="border-slate-200 shadow-sm rounded-[2.5rem] p-4">
+                    <CardHeader className="px-4 pt-4 pb-6">
+                      <CardTitle className="text-[13px] font-black uppercase tracking-tight">Quick Terminal Actions</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-3">
-                      <Button variant="outline" className="h-16 flex-col gap-1.5 rounded-2xl border-slate-100 hover:bg-slate-50 transition-all">
-                        <Plus size={16} className="text-primary" />
-                        <span className="text-[8px] font-black uppercase tracking-widest">New User</span>
-                      </Button>
-                      <Button variant="outline" className="h-16 flex-col gap-1.5 rounded-2xl border-slate-100 hover:bg-slate-50 transition-all">
-                        <Smartphone size={16} className="text-primary" />
-                        <span className="text-[8px] font-black uppercase tracking-widest">Sync</span>
-                      </Button>
-                      <Button variant="outline" className="h-16 flex-col gap-1.5 rounded-2xl border-slate-100 hover:bg-slate-50 transition-all">
-                        <CreditCard size={16} className="text-primary" />
-                        <span className="text-[8px] font-black uppercase tracking-widest">Payouts</span>
-                      </Button>
-                      <Button variant="outline" className="h-16 flex-col gap-1.5 rounded-2xl border-slate-100 hover:bg-slate-50 transition-all">
-                        <Ban size={16} className="text-red-500" />
-                        <span className="text-[8px] font-black uppercase tracking-widest text-red-500">Lock</span>
-                      </Button>
+                    <CardContent className="grid grid-cols-2 gap-4">
+                      {[
+                        { label: "Register Node", icon: UserPlus, color: "text-primary" },
+                        { label: "Sync API", icon: Smartphone, color: "text-blue-500" },
+                        { label: "Node Payouts", icon: CreditCard, color: "text-amber-500" },
+                        { label: "Global Lock", icon: Ban, color: "text-red-500" },
+                      ].map((action, i) => (
+                        <Button key={i} variant="outline" className="h-24 flex-col gap-3 rounded-3xl border-slate-100 hover:border-primary/20 hover:bg-primary/5 transition-all shadow-sm">
+                          <action.icon size={20} className={action.color} />
+                          <span className="text-[9px] font-black uppercase tracking-widest">{action.label}</span>
+                        </Button>
+                      ))}
                     </CardContent>
                   </Card>
                 </div>
@@ -366,76 +378,82 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* --- TAB 2: USER DIRECTORY --- */}
+          {/* --- USERS VIEW --- */}
           {activeTab === "users" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-500">
               <div className="flex justify-between items-center">
-                <div className="relative group max-w-md w-full">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <div className="relative group max-w-xl w-full">
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <Input 
-                    placeholder="Search UID, Mobile, or Name..." 
-                    className="h-14 pl-12 bg-white border-slate-200 rounded-2xl text-[12px] font-bold shadow-sm focus:ring-4 focus:ring-primary/5 transition-all"
+                    placeholder="Search UID, Mobile, or Member Name..." 
+                    className="h-16 pl-14 bg-white border-slate-200 rounded-3xl text-[13px] font-bold shadow-sm focus:ring-8 focus:ring-primary/5 transition-all"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <Button className="h-14 px-8 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/10">
-                  <UserPlus size={18} className="mr-2" />
-                  Manual Registration
+                <Button className="h-16 px-10 rounded-3xl font-black text-[12px] uppercase tracking-widest shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-all">
+                  <UserPlus size={20} className="mr-3" />
+                  Manual Node Registration
                 </Button>
               </div>
 
-              <Card className="border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden">
+              <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-slate-50/80 border-b border-slate-100">
-                        <tr>
-                          <th className="px-8 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Member Identity</th>
-                          <th className="px-8 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Contact / UID</th>
-                          <th className="px-8 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Asset Balance</th>
-                          <th className="px-8 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                          <th className="px-8 py-5 text-right text-[9px] font-black text-slate-400 uppercase tracking-widest">Action</th>
+                      <thead>
+                        <tr className="bg-slate-50/50 border-b border-slate-100">
+                          <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Member Identity</th>
+                          <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact / UID</th>
+                          <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Liquid Balance</th>
+                          <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Node Status</th>
+                          <th className="px-10 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Administrative Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
                         {filteredUsers.map((user) => (
                           <tr key={user.uid} className="group hover:bg-slate-50/50 transition-all">
-                            <td className="px-8 py-6">
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
-                                  <User size={22} />
+                            <td className="px-10 py-8">
+                              <div className="flex items-center gap-5">
+                                <div className="w-14 h-14 rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
+                                  <User size={26} />
                                 </div>
                                 <div>
-                                  <p className="text-[12px] font-black text-slate-900 uppercase tracking-tight">{user.name}</p>
-                                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Joined {user.joinedAt}</p>
+                                  <p className="text-[14px] font-black text-slate-900 uppercase tracking-tight">{user.name}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Reg. {user.joinedAt}</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-8 py-6">
-                              <div className="space-y-0.5">
-                                <p className="text-[11px] font-black text-slate-900 tracking-tight">{user.mobile}</p>
-                                <p className="text-[9px] font-bold text-primary tracking-widest">{user.uid}</p>
+                            <td className="px-10 py-8">
+                              <div className="space-y-1">
+                                <p className="text-[13px] font-black text-slate-900 tracking-tight">{user.mobile}</p>
+                                <div className="flex items-center gap-1.5">
+                                  <Hash size={10} className="text-primary" />
+                                  <p className="text-[10px] font-bold text-primary tracking-widest">{user.uid}</p>
+                                </div>
                               </div>
                             </td>
-                            <td className="px-8 py-6">
-                              <p className="text-[13px] font-black text-slate-900">₹{user.balance.toLocaleString()}</p>
+                            <td className="px-10 py-8">
+                              <div className="flex items-center gap-2">
+                                <p className="text-[16px] font-black text-slate-900">₹{user.balance.toLocaleString()}</p>
+                                <ArrowUpRight size={14} className="text-green-500" />
+                              </div>
                             </td>
-                            <td className="px-8 py-6">
+                            <td className="px-10 py-8">
                               <Badge className={cn(
-                                "text-[7px] h-5 px-2 uppercase tracking-widest border-0",
+                                "text-[8px] h-6 px-3 uppercase tracking-widest border-0 shadow-sm",
                                 user.status === 'active' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                               )}>
                                 {user.status}
                               </Badge>
                             </td>
-                            <td className="px-8 py-6 text-right">
+                            <td className="px-10 py-8 text-right">
                               <Button 
                                 variant="outline" 
-                                className="h-10 px-5 rounded-xl border-slate-200 text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all"
+                                className="h-12 px-8 rounded-2xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm"
                                 onClick={() => setSelectedUser(user)}
                               >
-                                View Details
+                                View Detailed Node
                               </Button>
                             </td>
                           </tr>
@@ -448,90 +466,96 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* --- TAB 3: APPROVALS --- */}
+          {/* --- APPROVALS VIEW --- */}
           {activeTab === "approvals" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-5 duration-500">
               <div className="flex justify-between items-center">
-                <div className="relative group max-w-md w-full">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <div className="relative group max-w-xl w-full">
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <Input 
-                    placeholder="Filter by UTR, Amount, Mobile..." 
-                    className="h-14 pl-12 bg-white border-slate-200 rounded-2xl text-[12px] font-bold shadow-sm focus:ring-4 focus:ring-primary/5 transition-all"
+                    placeholder="Global Filter by UTR, Amount, UID..." 
+                    className="h-16 pl-14 bg-white border-slate-200 rounded-3xl text-[13px] font-bold shadow-sm focus:ring-8 focus:ring-primary/5 transition-all"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <div>
-                  <Badge className="h-8 px-4 bg-amber-50 text-amber-600 border-amber-200 uppercase font-black text-[10px]">
-                    {filteredOrders.filter(o => o.status === 'in-review').length} Awaiting Inspection
+                <div className="flex gap-4">
+                  <Button variant="outline" className="h-16 px-8 rounded-3xl font-black text-[11px] uppercase tracking-widest border-slate-200">
+                    <Filter size={18} className="mr-2" />
+                    Advanced Filters
+                  </Button>
+                  <Badge className="h-16 px-8 bg-amber-50 text-amber-600 border-amber-200 uppercase font-black text-[12px] rounded-3xl shadow-sm">
+                    {filteredOrders.filter(o => o.status === 'in-review').length} Verification Nodes Active
                   </Badge>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {filteredOrders.filter(o => o.status === 'in-review').length === 0 ? (
-                  <div className="lg:col-span-2 py-32 flex flex-col items-center justify-center opacity-20">
-                    <CheckCircle size={60} />
-                    <p className="text-[12px] font-black uppercase mt-4 tracking-[0.2em]">Review Queue Empty</p>
+                  <div className="xl:col-span-2 py-40 flex flex-col items-center justify-center opacity-20">
+                    <CheckCircle size={80} />
+                    <p className="text-[16px] font-black uppercase mt-6 tracking-[0.3em]">Review Terminal Clear</p>
                   </div>
                 ) : (
                   filteredOrders.filter(o => o.status === 'in-review').map((order) => (
-                    <Card key={order.id} className="border-slate-200 shadow-sm rounded-[2rem] overflow-hidden group hover:shadow-xl hover:shadow-primary/5 transition-all">
-                      <div className="p-8">
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="flex gap-4">
-                            <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-100 shadow-sm">
-                              <History size={24} />
+                    <Card key={order.id} className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden group hover:shadow-2xl hover:shadow-primary/10 transition-all bg-white">
+                      <div className="p-10">
+                        <div className="flex justify-between items-start mb-8">
+                          <div className="flex gap-5">
+                            <div className="w-16 h-16 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-600 border border-amber-100 shadow-inner">
+                              <History size={28} />
                             </div>
                             <div>
-                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-0.5">Terminal Order</span>
-                              <h4 className="text-[14px] font-black text-slate-900 tracking-tight">{order.id}</h4>
-                              <p className="text-[9px] font-bold text-primary mt-1 flex items-center gap-1.5 uppercase">
-                                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></div>
-                                Verification Required
-                              </p>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] block mb-1">Trade Instance</span>
+                              <h4 className="text-[18px] font-black text-slate-900 tracking-tight">{order.id}</h4>
+                              <div className="flex items-center gap-2 mt-2">
+                                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                                <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Awaiting Proof Verification</span>
+                              </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Asset Value</span>
-                            <p className="text-2xl font-black text-slate-900">₹{order.amount.toLocaleString()}</p>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] block mb-1">Asset Value</span>
+                            <p className="text-3xl font-black text-slate-900">₹{order.amount.toLocaleString()}</p>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 mb-8">
-                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Submitted UTR</span>
+                        <div className="grid grid-cols-2 gap-6 mb-10">
+                          <div className="bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 shadow-inner">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Claimed Hash (UTR/TXID)</span>
                             <div className="flex items-center justify-between">
-                              <code className="text-[12px] font-black text-slate-900 tracking-widest">{order.utr || order.txid || "N/A"}</code>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 text-primary hover:bg-primary/10" onClick={() => handleCopy(order.utr || order.txid || "", "UTR")}>
-                                <Copy size={12} />
+                              <code className="text-[14px] font-black text-slate-900 tracking-[0.15em]">{order.utr || order.txid || "N/A"}</code>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleCopy(order.utr || order.txid || "", "Hash")}>
+                                <Copy size={14} />
                               </Button>
                             </div>
                           </div>
-                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Network Node</span>
-                            <div className="flex items-center gap-2">
-                              <Smartphone size={12} className="text-slate-400" />
-                              <span className="text-[10px] font-black text-slate-900 uppercase">9876543210</span>
+                          <div className="bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 shadow-inner">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Node Member Contact</span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm">
+                                <Smartphone size={14} />
+                              </div>
+                              <span className="text-[12px] font-black text-slate-900 tracking-wider">9876543210</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex gap-4">
                           <Button 
                             variant="outline"
-                            className="flex-1 h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest border-slate-200 text-slate-600 hover:bg-slate-50"
+                            className="flex-1 h-16 rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
                             onClick={() => setSelectedOrder(order)}
                           >
-                            <Eye size={16} className="mr-2" />
+                            <Eye size={18} className="mr-3" />
                             Inspect Proof
                           </Button>
                           <Button 
-                            className="flex-[2] h-14 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl shadow-green-200"
+                            className="flex-[2] h-16 rounded-[1.5rem] bg-green-500 hover:bg-green-600 text-white font-black text-[12px] uppercase tracking-[0.2em] shadow-2xl shadow-green-200 border-0"
                             onClick={() => updateOrderStatus(order.id, 'success')}
                           >
-                            <CheckCircle2 size={18} className="mr-2" />
-                            Approve Now
+                            <CheckCircle2 size={22} className="mr-3" />
+                            Approve Node
                           </Button>
                         </div>
                       </div>
@@ -544,130 +568,145 @@ export default function AdminPanel() {
         </main>
       </div>
 
-      {/* --- MODAL: USER DETAILS --- */}
+      {/* --- MODAL: USER DETAILS (MODERN SLIDE-IN STYLE) --- */}
       <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-        <DialogContent className="max-w-4xl bg-white border-0 rounded-[3rem] p-0 overflow-hidden shadow-2xl">
+        <DialogContent className="max-w-6xl bg-white border-0 rounded-[4rem] p-0 overflow-hidden shadow-2xl">
           <div className="flex h-[85vh]">
-            {/* Sidebar info */}
-            <div className="w-80 bg-slate-50 border-r border-slate-100 p-10 flex flex-col">
-              <div className="flex flex-col items-center text-center mb-10">
-                <div className="w-24 h-24 rounded-3xl bg-white border border-slate-100 flex items-center justify-center text-slate-300 shadow-sm mb-4">
-                  <User size={48} />
+            {/* Sidebar Profile Info */}
+            <div className="w-[400px] bg-slate-50 border-r border-slate-100 p-12 flex flex-col shadow-inner">
+              <div className="flex flex-col items-center text-center mb-12">
+                <div className="w-32 h-32 rounded-[2.5rem] bg-white border-4 border-white flex items-center justify-center text-slate-200 shadow-2xl mb-6 group relative overflow-hidden">
+                  <User size={64} className="group-hover:scale-110 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{selectedUser?.name}</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">UID: {selectedUser?.uid}</p>
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">{selectedUser?.name}</h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <Hash size={12} className="text-primary" />
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{selectedUser?.uid}</p>
+                </div>
                 <Badge className={cn(
-                  "h-6 px-4 mt-3 text-[8px] font-black uppercase tracking-widest border-0",
-                  selectedUser?.status === 'active' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                  "h-8 px-6 text-[10px] font-black uppercase tracking-widest border-0 shadow-lg",
+                  selectedUser?.status === 'active' ? "bg-green-500 text-white" : "bg-red-500 text-white"
                 )}>
-                  Terminal {selectedUser?.status}
+                  Node {selectedUser?.status}
                 </Badge>
               </div>
 
-              <div className="space-y-6">
-                <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-2">Main Node Balance</span>
-                  <div className="flex items-center gap-2">
-                    <p className="text-2xl font-black text-primary">₹{selectedUser?.balance?.toLocaleString()}</p>
-                    <ArrowUpRight size={14} className="text-green-500" />
+              <div className="space-y-8">
+                <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] block mb-3">Liquid Capital</span>
+                  <div className="flex items-center justify-between">
+                    <p className="text-4xl font-black text-primary tracking-tight">₹{selectedUser?.balance?.toLocaleString()}</p>
+                    <div className="w-10 h-10 bg-green-50 rounded-2xl flex items-center justify-center text-green-500 shadow-inner">
+                      <TrendingUp size={18} />
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <h5 className="text-[10px] font-black text-slate-900 uppercase tracking-widest px-1">Network Profile</h5>
+                <div className="space-y-4">
+                  <h5 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] px-2">Network Credentials</h5>
                   {[
-                    { label: "Mobile Node", value: selectedUser?.mobile, icon: Smartphone },
-                    { label: "Access ID", value: selectedUser?.uid, icon: Hash },
-                    { label: "Node Type", value: "Verified Merchant", icon: ShieldCheck },
+                    { label: "Phone Terminal", value: selectedUser?.mobile, icon: Smartphone },
+                    { label: "Identity Hash", value: selectedUser?.uid, icon: Hash },
+                    { label: "Verification", value: "Level 2 VIP", icon: ShieldCheck },
                   ].map((row, i) => (
-                    <div key={i} className="flex justify-between items-center px-1">
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <row.icon size={12} />
-                        <span className="text-[9px] font-bold uppercase tracking-widest">{row.label}</span>
+                    <div key={i} className="flex justify-between items-center px-4 py-4 bg-white/50 rounded-2xl border border-slate-100">
+                      <div className="flex items-center gap-3 text-slate-400">
+                        <row.icon size={16} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{row.label}</span>
                       </div>
-                      <span className="text-[10px] font-black text-slate-700">{row.value}</span>
+                      <span className="text-[11px] font-black text-slate-700">{row.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="mt-auto space-y-3">
-                <Button className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-[9px] uppercase tracking-widest">
-                  <Plus size={14} className="mr-2" />
-                  Edit Balance
+              <div className="mt-auto grid grid-cols-1 gap-4 pt-10">
+                <Button className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20">
+                  <Plus size={18} className="mr-3" />
+                  Adjust Balance
                 </Button>
-                <Button variant="outline" className="w-full h-12 rounded-xl border-red-100 text-red-500 hover:bg-red-50 font-black text-[9px] uppercase tracking-widest">
-                  <Ban size={14} className="mr-2" />
-                  Block Access
+                <Button variant="outline" className="w-full h-14 rounded-2xl border-red-100 text-red-500 hover:bg-red-50 font-black text-[11px] uppercase tracking-widest transition-all">
+                  <Ban size={18} className="mr-3" />
+                  Suspend Access
                 </Button>
               </div>
             </div>
 
-            {/* Main Details Area */}
-            <div className="flex-1 flex flex-col">
-              <div className="p-10 flex-1 overflow-y-auto">
+            {/* Detailed Analytics/History Area */}
+            <div className="flex-1 flex flex-col bg-white">
+              <div className="p-12 flex-1 overflow-y-auto no-scrollbar">
                 <Tabs defaultValue="linked" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 bg-slate-50 h-12 p-1 rounded-2xl mb-8">
-                    <TabsTrigger value="linked" className="rounded-xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                      <CreditCard size={14} className="mr-2" />
-                      Linked UPI
+                  <TabsList className="flex w-full bg-slate-50/50 h-16 p-2 rounded-[1.5rem] border border-slate-100 mb-10">
+                    <TabsTrigger value="linked" className="flex-1 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">
+                      <CreditCard size={18} className="mr-3" />
+                      Linked Terminal VPA
                     </TabsTrigger>
-                    <TabsTrigger value="history" className="rounded-xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                      <History size={14} className="mr-2" />
-                      Trade Logs
+                    <TabsTrigger value="history" className="flex-1 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">
+                      <History size={18} className="mr-3" />
+                      Trade Log History
                     </TabsTrigger>
-                    <TabsTrigger value="payouts" className="rounded-xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                      <TrendingUp size={14} className="mr-2" />
-                      Payouts
+                    <TabsTrigger value="node-payouts" className="flex-1 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-primary transition-all">
+                      <TrendingUp size={18} className="mr-3" />
+                      Node Payouts
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="linked">
-                    <div className="grid grid-cols-2 gap-4">
+                  <TabsContent value="linked" className="mt-0 space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
                       {selectedUser?.linkedAccounts?.map((acc: any, i: number) => (
-                        <div key={i} className="bg-white border border-slate-100 p-6 rounded-[2rem] flex items-center justify-between shadow-sm hover:border-primary/20 transition-all">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 relative rounded-2xl overflow-hidden border border-slate-50">
-                              <Image src={acc.logo} alt={acc.appName} fill className="object-cover" />
+                        <Card key={i} className="border-slate-100 p-8 rounded-[2.5rem] flex items-center justify-between shadow-xl shadow-slate-100/50 hover:border-primary/20 hover:-translate-y-1 transition-all group bg-white">
+                          <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 relative rounded-2xl overflow-hidden border border-slate-100 shadow-inner p-2 bg-slate-50">
+                              <Image src={acc.logo} alt={acc.appName} fill className="object-contain p-2" />
                             </div>
                             <div>
-                              <p className="text-[12px] font-black text-slate-900 uppercase">{acc.appName}</p>
-                              <p className="text-[10px] font-bold text-slate-400 tracking-tight">{acc.upi}</p>
-                              <p className="text-[9px] font-bold text-primary uppercase mt-1">Verified Terminal</p>
+                              <p className="text-[14px] font-black text-slate-900 uppercase tracking-tight">{acc.appName}</p>
+                              <code className="text-[11px] font-bold text-slate-400 tracking-wider block mt-1">{acc.upi}</code>
+                              <div className="flex items-center gap-1.5 mt-2">
+                                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                <span className="text-[9px] font-black text-green-600 uppercase tracking-widest">Verified Hub</span>
+                              </div>
                             </div>
                           </div>
-                          <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-300 hover:text-primary" onClick={() => handleCopy(acc.upi, "UPI ID")}>
-                            <Copy size={16} />
+                          <Button variant="ghost" size="icon" className="h-12 w-12 text-slate-300 hover:text-primary hover:bg-primary/5 rounded-2xl transition-all" onClick={() => handleCopy(acc.upi, "UPI ID")}>
+                            <Copy size={18} />
                           </Button>
-                        </div>
+                        </Card>
                       ))}
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="history">
-                    <div className="space-y-4">
-                      <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                  <TabsContent value="history" className="mt-0 space-y-6">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="relative flex-1 group">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                         <Input 
-                          placeholder="Search trade logs by ID, UTR, or Value..." 
-                          className="h-11 pl-12 bg-slate-50 border-slate-100 rounded-xl text-[11px] font-bold"
+                          placeholder="Search trade logs by Hash, Value, or Status..." 
+                          className="h-14 pl-14 bg-slate-50 border-slate-100 rounded-2xl text-[12px] font-bold transition-all focus:bg-white focus:ring-4 focus:ring-primary/5 shadow-inner"
                           value={userSearchQuery}
                           onChange={(e) => setUserSearchQuery(e.target.value)}
                         />
                       </div>
-                      <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                        <div className="flex flex-col items-center justify-center py-20 opacity-20">
-                          <History size={40} />
-                          <p className="text-[10px] font-black uppercase mt-4 tracking-widest">No recent trade records</p>
-                        </div>
-                      </div>
+                      <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-100 font-black text-[10px] uppercase tracking-widest">
+                        <Filter size={18} className="mr-2" />
+                        Sort Logs
+                      </Button>
                     </div>
+                    
+                    <Card className="border-slate-100 rounded-[2.5rem] p-10 bg-slate-50/30 border-dashed border-2">
+                      <div className="flex flex-col items-center justify-center py-20 opacity-20 text-slate-900">
+                        <History size={64} />
+                        <p className="text-[14px] font-black uppercase mt-6 tracking-[0.4em]">Node History Empty</p>
+                      </div>
+                    </Card>
                   </TabsContent>
                 </Tabs>
               </div>
-              <div className="p-10 border-t border-slate-100 flex justify-end">
-                <Button variant="ghost" className="h-12 px-8 rounded-xl font-black text-[11px] uppercase tracking-widest text-slate-400 hover:bg-slate-50" onClick={() => setSelectedUser(null)}>
-                  Dismiss Terminal View
+              
+              <div className="p-12 border-t border-slate-100 flex justify-end bg-slate-50/20">
+                <Button variant="ghost" className="h-14 px-10 rounded-2xl font-black text-[12px] uppercase tracking-widest text-slate-400 hover:bg-slate-100 transition-all" onClick={() => setSelectedUser(null)}>
+                  Exit Management View
                 </Button>
               </div>
             </div>
@@ -675,79 +714,82 @@ export default function AdminPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* --- MODAL: ORDER REVIEW --- */}
+      {/* --- MODAL: ORDER PROOF INSPECTION --- */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-md bg-white border-0 rounded-[3rem] p-0 overflow-hidden shadow-2xl">
-          <div className="p-10">
-            <DialogHeader className="mb-8">
+        <DialogContent className="max-w-xl bg-white border-0 rounded-[4rem] p-0 overflow-hidden shadow-2xl">
+          <div className="p-12">
+            <DialogHeader className="mb-10">
               <div className="flex justify-between items-center">
                 <div>
-                  <DialogTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">Proof Inspection</DialogTitle>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Order #{selectedOrder?.id}</p>
+                  <DialogTitle className="text-2xl font-black text-slate-900 uppercase tracking-tight">Proof Verification</DialogTitle>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Order Terminal: {selectedOrder?.id}</p>
                 </div>
-                <Badge className="bg-primary/10 text-primary border-0 text-[11px] h-8 px-4 uppercase font-black">₹{selectedOrder?.amount}</Badge>
+                <Badge className="bg-primary text-white border-0 text-[14px] h-10 px-6 uppercase font-black rounded-2xl shadow-xl shadow-primary/20">
+                  ₹{selectedOrder?.amount?.toLocaleString()}
+                </Badge>
               </div>
             </DialogHeader>
 
-            <div className="space-y-8">
-              {/* Screenshot Preview Area */}
-              <div className="aspect-[3/4] bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 group relative overflow-hidden">
-                <div className="flex flex-col items-center gap-3 opacity-40 group-hover:opacity-60 transition-all">
-                  <Eye size={48} />
-                  <p className="text-[10px] font-black uppercase tracking-widest">Click to enlarge proof</p>
+            <div className="space-y-10">
+              {/* Receipt Area */}
+              <div className="aspect-[4/5] bg-slate-100 rounded-[3rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 group relative overflow-hidden shadow-inner">
+                <div className="flex flex-col items-center gap-5 group-hover:scale-110 transition-all duration-500">
+                  <Eye size={64} className="opacity-40" />
+                  <p className="text-[12px] font-black uppercase tracking-[0.3em] opacity-40">Inspect Receipt</p>
                 </div>
-                <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                  <Button variant="secondary" size="sm" className="rounded-full bg-white text-slate-900 font-black text-[9px] uppercase tracking-widest h-9 px-6 shadow-xl">
-                    <ExternalLink size={14} className="mr-2" /> Open Statement
+                <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                  <Button variant="secondary" className="rounded-2xl bg-white text-slate-900 font-black text-[11px] uppercase tracking-widest h-14 px-10 shadow-2xl border-0">
+                    <ExternalLink size={18} className="mr-3" /> 
+                    View Source Media
                   </Button>
                 </div>
               </div>
 
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-5">
-                <div className="flex justify-between items-center">
+              {/* Order Context Card */}
+              <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
+                <div className="flex justify-between items-center pb-6 border-b border-slate-200/50">
                   <div>
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Customer UTR</span>
-                    <div className="flex items-center gap-3">
-                      <p className="text-lg font-black text-slate-900 tracking-[0.1em]">{selectedOrder?.utr || selectedOrder?.txid || "N/A"}</p>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleCopy(selectedOrder?.utr || selectedOrder?.txid || "", "UTR")}>
-                        <Copy size={14} />
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] block mb-2">Member Claimed UTR</span>
+                    <div className="flex items-center gap-4">
+                      <p className="text-xl font-black text-slate-900 tracking-[0.15em]">{selectedOrder?.utr || selectedOrder?.txid || "N/A"}</p>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-primary hover:bg-primary/5 rounded-xl" onClick={() => handleCopy(selectedOrder?.utr || selectedOrder?.txid || "", "Hash")}>
+                        <Copy size={16} />
                       </Button>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Queue Time</span>
-                    <p className="text-[11px] font-black text-slate-900">12m 45s</p>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] block mb-2">Wait Duration</span>
+                    <p className="text-[14px] font-black text-amber-600">12m 45s</p>
                   </div>
                 </div>
                 
-                <div className="h-px bg-slate-200"></div>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-primary shadow-sm">
-                    <CheckCircle2 size={20} />
+                <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-primary shadow-sm shadow-slate-100">
+                    <ShieldCheck size={24} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-900 uppercase">Verification Hub</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Receipt: flexpay@upi statement</p>
+                    <p className="text-[12px] font-black text-slate-900 uppercase">Automated Verification Hub</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Receipt Source: flexpay@upi statement logs</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              {/* Action Buttons */}
+              <div className="flex gap-6">
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-16 rounded-2xl border-red-100 bg-red-50/50 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all"
+                  className="flex-1 h-20 rounded-[2rem] border-red-100 bg-red-50/30 text-red-500 font-black text-[12px] uppercase tracking-[0.25em] hover:bg-red-50 transition-all border-2"
                   onClick={() => updateOrderStatus(selectedOrder?.id, 'rejected')}
                 >
-                  <Ban size={18} className="mr-2" />
+                  <Ban size={22} className="mr-3" />
                   Reject
                 </Button>
                 <Button 
-                  className="flex-[2] h-16 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl shadow-green-200"
+                  className="flex-[2] h-20 rounded-[2rem] bg-green-500 hover:bg-green-600 text-white font-black text-[13px] uppercase tracking-[0.25em] shadow-2xl shadow-green-200 border-0 transition-all active:scale-[0.98]"
                   onClick={() => updateOrderStatus(selectedOrder?.id, 'success')}
                 >
-                  <CheckCircle2 size={20} className="mr-2" />
-                  Approve Asset
+                  <CheckCircle2 size={26} className="mr-3" />
+                  Verify & Approve
                 </Button>
               </div>
             </div>
@@ -757,3 +799,4 @@ export default function AdminPanel() {
     </div>
   );
 }
+
