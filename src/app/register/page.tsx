@@ -24,6 +24,12 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Block Registration with Admin Mobile
+    if (mobile === "9060873927") {
+      toast({ variant: "destructive", title: "Access Denied", description: "This number is reserved for system administration." });
+      return;
+    }
+
     if (mobile.length < 10) {
       toast({ variant: "destructive", title: "Invalid Mobile", description: "Please enter a valid 10-digit number." });
       return;
@@ -41,7 +47,6 @@ export default function Register() {
 
     setLoading(true);
     try {
-      // Mapping Mobile + PIN to Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: `${mobile}@flexpay.app`,
         password: pin,

@@ -20,6 +20,19 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for hardcoded Admin Credentials
+    if (mobile === "9060873927" && pin === "Gulahan@9060") {
+      setLoading(true);
+      setTimeout(() => {
+        localStorage.setItem('is_admin', 'true');
+        toast({ title: "Admin Login", description: "Welcome to the Command Center." });
+        router.push("/admin");
+        setLoading(false);
+      }, 1000);
+      return;
+    }
+
     if (mobile.length < 10) {
       toast({ variant: "destructive", title: "Invalid Mobile", description: "Please enter a valid 10-digit number." });
       return;
@@ -27,7 +40,6 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Mapping Mobile + PIN to Supabase Auth using a virtual email
       const { data, error } = await supabase.auth.signInWithPassword({
         email: `${mobile}@flexpay.app`,
         password: pin,
@@ -35,6 +47,10 @@ export default function Login() {
 
       if (error) throw error;
 
+      localStorage.setItem('is_admin', 'false');
+      localStorage.setItem('flexpay_user_id', data.user.id);
+      localStorage.setItem('flexpay_user_mobile', mobile);
+      
       toast({ title: "Success", description: "Logged in successfully." });
       router.push("/");
     } catch (error: any) {
@@ -82,7 +98,7 @@ export default function Login() {
               </div>
               <Input 
                 type={showPassword ? "text" : "password"} 
-                placeholder="6-digit pin" 
+                placeholder="Secure pin" 
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
                 className="bg-gray-50 border-gray-100 rounded-xl h-11 pl-10 pr-10 text-[13px] font-bold placeholder:font-medium placeholder:text-gray-300 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all tracking-[0.3em] placeholder:tracking-normal"
