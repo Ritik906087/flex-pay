@@ -2,7 +2,7 @@
 "use client"
 
 import { 
-  LayoutDashboard, Users, CheckCircle2, History, Settings, LogOut, ShieldCheck 
+  LayoutDashboard, Users, CheckCircle2, History, Settings, LogOut, ShieldCheck, ChevronLeft, Menu 
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -12,9 +12,11 @@ interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   pendingCount?: number;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen, onToggle }: AdminSidebarProps) {
   const router = useRouter();
 
   const navItems = [
@@ -26,7 +28,6 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0 }: Admin
   ];
 
   const handleNavClick = (id: string) => {
-    // If we are on a detail page, navigate back to the main admin page with the tab
     if (window.location.pathname !== '/admin') {
       router.push(`/admin?tab=${id}`);
     } else {
@@ -35,16 +36,24 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0 }: Admin
   };
 
   return (
-    <aside className="w-72 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50">
+    <aside className={cn(
+      "bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out",
+      isOpen ? "translate-x-0 w-72" : "-translate-x-full w-72"
+    )}>
       <div className="p-8">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20">
-            <ShieldCheck size={22} />
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20">
+              <ShieldCheck size={22} />
+            </div>
+            <div>
+              <h1 className="text-[13px] font-black text-slate-900 tracking-tight uppercase">Terminal</h1>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Admin</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-[13px] font-black text-slate-900 tracking-tight uppercase">Admin Terminal</h1>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">System Control</p>
-          </div>
+          <Button variant="ghost" size="icon" onClick={onToggle} className="text-slate-400 hover:text-slate-900">
+            <ChevronLeft size={20} />
+          </Button>
         </div>
 
         <nav className="space-y-1.5">

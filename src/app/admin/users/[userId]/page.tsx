@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { 
   Smartphone, User, Hash, ShieldCheck, 
   TrendingUp, CreditCard, History, Plus, Ban, 
-  ChevronLeft, Copy, Search, Filter
+  ChevronLeft, Copy, Search, Filter, Menu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ export default function UserDetailPage() {
   const user = useMemo(() => MOCK_USERS.find(u => u.uid === userId), [userId]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [orders, setOrders] = useState<any[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
@@ -52,11 +53,24 @@ export default function UserDetailPage() {
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      <AdminSidebar activeTab="users" onTabChange={(tab) => router.push(`/admin?tab=${tab}`)} />
+      <AdminSidebar 
+        activeTab="users" 
+        onTabChange={(tab) => router.push(`/admin?tab=${tab}`)} 
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
-      <div className="flex-1 ml-72">
+      <div className={cn(
+        "flex-1 transition-all duration-300",
+        isSidebarOpen ? "ml-72" : "ml-0"
+      )}>
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-40">
           <div className="flex items-center gap-5">
+            {!isSidebarOpen && (
+              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-slate-600 mr-2">
+                <Menu size={20} />
+              </Button>
+            )}
             <button 
               onClick={() => router.push('/admin?tab=users')}
               className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-all"

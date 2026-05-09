@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { 
   TrendingUp, Wallet, ShieldCheck, 
   IndianRupee, Smartphone, User, Users,
-  Hash, Eye, ExternalLink, ArrowUpRight, 
-  CheckCircle2, Plus, UserPlus, Search, History, CheckCircle, Ban, Copy, Filter
+  Hash, Eye, ArrowUpRight, 
+  CheckCircle2, Plus, UserPlus, Search, History, CheckCircle, Ban, Copy, Menu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,8 +37,8 @@ export default function AdminPanel() {
   
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || "dashboard");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
-  // Orders and stats
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [stats, setStats] = useState({ todayVolume: 0, todayCount: 0, totalVolume: 0, totalCount: 0 });
@@ -49,7 +49,6 @@ export default function AdminPanel() {
     return () => clearInterval(interval);
   }, []);
 
-  // Update tab if URL changes
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab) setActiveTab(tab);
@@ -110,11 +109,25 @@ export default function AdminPanel() {
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} pendingCount={pendingApprovals} />
+      <AdminSidebar 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        pendingCount={pendingApprovals} 
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
-      <div className="flex-1 ml-72">
+      <div className={cn(
+        "flex-1 transition-all duration-300",
+        isSidebarOpen ? "ml-72" : "ml-0"
+      )}>
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-40">
           <div className="flex items-center gap-5">
+            {!isSidebarOpen && (
+              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-slate-600 mr-2">
+                <Menu size={20} />
+              </Button>
+            )}
             <h2 className="text-[14px] font-black text-slate-900 uppercase tracking-tight">
               {activeTab === "dashboard" ? "System Dashboard" : 
                activeTab === "users" ? "User Management" : 
