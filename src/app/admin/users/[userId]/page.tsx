@@ -117,22 +117,22 @@ export default function UserDetailPage() {
       
       // Get admin ID if available from Supabase session
       const { data: { user: adminAuthUser } } = await supabase.auth.getUser();
-      const adminId = adminAuthUser?.id || null; // Fallback to null for bypass login
+      const adminId = adminAuthUser?.id || null; 
 
-      // Use RPC for guaranteed balance and log atomic update
+      // Call the RPC with the correct parameter order from our new SQL
       const { error: rpcError } = await supabase.rpc('admin_adjust_balance_v2', {
         p_user_id: userId,
-        p_admin_id: adminId,
         p_amount: amount,
         p_type: adjustType,
-        p_reason: adjustReason
+        p_reason: adjustReason,
+        p_admin_id: adminId
       });
 
       if (rpcError) throw rpcError;
 
       toast({ 
         title: "Protocol Success", 
-        description: "Assets modified for node " + userId.slice(0, 8).toUpperCase()
+        description: `Assets ${adjustType === 'add' ? 'added' : adjustType === 'sub' ? 'deducted' : 'set'} successfully.`
       });
       
       setIsBalanceDialogOpen(false);
@@ -159,7 +159,14 @@ export default function UserDetailPage() {
   const combinedLogs = useMemo(() => {
     const all = [
       ...orders.map(o => ({ ...o, entryType: 'p2p' })),
-      ...adminLogs.map(l => ({ ...l, entryType: 'admin', id: "LOG-" + l.id.slice(0, 8), amount: l.amount, status: 'manual' }))
+      ...adminLogs.map(l => ({ 
+        ...l, 
+        entryType: 'admin', 
+        id: "LOG-" + l.id.slice(0, 8), 
+        amount: Number(l.amount), 
+        status: 'manual',
+        type: l.type // 'add', 'sub', 'set'
+      }))
     ];
     
     // Sort by date
@@ -367,7 +374,7 @@ export default function UserDetailPage() {
                                 "text-lg font-black",
                                 o.type === 'sub' ? "text-red-500" : o.type === 'add' ? "text-emerald-500" : "text-slate-900"
                               )}>
-                                {o.type === 'sub' ? '-' : o.type === 'add' ? '+' : ''}₹{o.amount.toLocaleString()}
+                                {o.type === 'sub' ? '-' : o.type === 'add' ? '+' : ''}₹{Number(o.amount).toLocaleString()}
                               </p>
                               <Badge variant="outline" className={cn(
                                 "text-[7px] font-black border-slate-100 h-5 px-2 uppercase",
@@ -385,4 +392,3 @@ export default function UserDetailPage() {
     </div>
   );
 }
-
