@@ -68,7 +68,6 @@ export default function UserDetailPage() {
 
       if (pError) throw pError;
       setUser(profile);
-      console.log("Admin: Node data loaded", profile);
 
       const { data: orderData, error: oError } = await supabase
         .from('p2p_orders')
@@ -117,7 +116,7 @@ export default function UserDetailPage() {
         newBalance = amount;
       }
 
-      console.log(`Admin: Updating Balance: ${currentBalance} -> ${newBalance} (Mode: ${adjustType})`);
+      console.log(`Admin DB Sync: Updating ${userId} from ${currentBalance} to ${newBalance}`);
 
       // Step 2: Perform update
       const { error: updateError } = await supabase
@@ -127,17 +126,19 @@ export default function UserDetailPage() {
 
       if (updateError) throw updateError;
 
-      // Step 3: Verify and Sync
+      // Step 3: Local Sync
+      setUser((prev: any) => ({ ...prev, balance: newBalance }));
+      
       toast({ 
         title: "Success", 
-        description: `Balance ${adjustType === 'add' ? 'increased' : adjustType === 'sub' ? 'decreased' : 'set'} to ₹${newBalance.toLocaleString()}.` 
+        description: `Balance updated to ₹${newBalance.toLocaleString()}.` 
       });
       
       setIsBalanceDialogOpen(false);
       setAdjustAmount("");
       
-      // Force immediate re-fetch to confirm DB change
-      await fetchUserData();
+      // Verification fetch
+      fetchUserData();
 
     } catch (error: any) {
       console.error("Balance Update Error:", error);
@@ -339,7 +340,7 @@ export default function UserDetailPage() {
                   <div className="grid grid-cols-1 gap-3">
                     {[
                       { label: "Phone Identifier", value: user.mobile, icon: Smartphone, color: "text-blue-500" },
-                      { label: "Locked Assets", value: `₹{Number(user.locked_balance || 0).toLocaleString()}`, icon: Ban, color: "text-red-500" },
+                      { label: "Locked Assets", value: `₹${Number(user.locked_balance || 0).toLocaleString()}`, icon: Ban, color: "text-red-500" },
                       { label: "Registered At", value: new Date(user.created_at).toLocaleDateString(), icon: Activity, color: "text-amber-500" },
                     ].map((row, i) => (
                       <div key={i} className="flex justify-between items-center px-6 py-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors">
@@ -396,7 +397,7 @@ export default function UserDetailPage() {
                                 )}>{acc.is_online ? "Live" : "Idle"}</Badge>
                               </div>
                               <code className="text-[10px] font-black text-primary block mt-1 tracking-wider">{acc.upi}</code>
-                              <span className="text-[8px] font-bold text-slate-400 uppercase block mt-0.5">{acc.account_holder_name || 'Verification Pending'}</span>
+                              <span className="text-[8px] font-bold text-gray-400 uppercase block mt-0.5">{acc.account_holder_name || 'Verification Pending'}</span>
                             </div>
                           </div>
                           <Button variant="ghost" size="icon" onClick={() => handleCopy(acc.upi, "UPI ID")} className="h-10 w-10 rounded-xl text-slate-300 hover:text-primary hover:bg-primary/5">
