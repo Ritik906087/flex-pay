@@ -86,18 +86,26 @@ export default function UserDetailPage() {
 
   const handleBalanceUpdate = async () => {
     const amount = parseFloat(adjustAmount);
-    if (isNaN(amount) || amount < 0) {
+    if (isNaN(amount)) {
       toast({ variant: "destructive", title: "Invalid Amount", description: "Please enter a valid numeric value." });
       return;
     }
 
     try {
       setIsUpdatingBalance(true);
-      let newBalance = user.balance;
+      // Ensure we treat the current balance as a number to avoid string concatenation
+      const currentBalance = Number(user?.balance || 0);
+      let newBalance = currentBalance;
 
-      if (adjustType === 'add') newBalance += amount;
-      else if (adjustType === 'sub') newBalance = Math.max(0, newBalance - amount);
-      else if (adjustType === 'set') newBalance = amount;
+      if (adjustType === 'add') {
+        newBalance = currentBalance + amount;
+      } else if (adjustType === 'sub') {
+        newBalance = Math.max(0, currentBalance - amount);
+      } else if (adjustType === 'set') {
+        newBalance = amount;
+      }
+
+      console.log(`Updating balance for ${userId}: ${currentBalance} -> ${newBalance} (${adjustType} ${amount})`);
 
       const { error } = await supabase
         .from('profiles')
@@ -106,17 +114,20 @@ export default function UserDetailPage() {
 
       if (error) throw error;
 
-      setUser({ ...user, balance: newBalance });
+      // Update local state immediately for snappy UI
+      setUser((prev: any) => ({ ...prev, balance: newBalance }));
       setIsBalanceDialogOpen(false);
       setAdjustAmount("");
       
       toast({ 
-        title: "Balance Updated", 
-        description: `Successfully ${adjustType === 'add' ? 'added' : adjustType === 'sub' ? 'deducted' : 'set'} funds for ${user.name}.` 
+        title: "Success", 
+        description: `Balance ${adjustType === 'add' ? 'increased' : adjustType === 'sub' ? 'decreased' : 'set'} to ₹${newBalance.toLocaleString()}.` 
       });
       
-      fetchUserData(); // Refresh logs and data
+      // Re-fetch to confirm and sync other data
+      fetchUserData(); 
     } catch (error: any) {
+      console.error("Balance Update Error:", error);
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
     } finally {
       setIsUpdatingBalance(false);
@@ -139,7 +150,7 @@ export default function UserDetailPage() {
     );
   }, [orders, logSearch]);
 
-  if (loading) {
+  if (loading && !user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8FAFC]">
         <div className="relative">
@@ -181,7 +192,7 @@ export default function UserDetailPage() {
       )}>
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40">
           <div className="flex items-center gap-4 lg:gap-6">
-            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500">
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500 lg:hidden">
                <Menu size={20} />
             </Button>
             <button 
