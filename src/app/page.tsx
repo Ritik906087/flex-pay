@@ -28,6 +28,8 @@ export default function Home() {
       }
     }, 5000);
 
+    let profileSub: any = null;
+
     const initialize = async () => {
       try {
         setSyncStatus("Checking Auth...");
@@ -44,25 +46,35 @@ export default function Home() {
         setSyncStatus("Terminal Ready");
         setLoading(false);
 
-        // Subscribe to changes in background
-        const profileSub = supabase.channel('profile_sync')
+        // Subscribe to changes in background with a unique channel name per user
+        profileSub = supabase.channel(`profile_sync_${user.id}`)
           .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, 
+            { 
+              event: '*', 
+              schema: 'public', 
+              table: 'profiles', 
+              filter: `id=eq.${user.id}` 
+            }, 
             () => fetchProfile(user.id)
           )
           .subscribe();
 
-        return () => { 
-          supabase.removeChannel(profileSub); 
-          if (initTimeoutRef.current) clearTimeout(initTimeoutRef.current);
-        };
       } catch (err) {
         console.error("Initialization error:", err);
-        setLoading(false); // Open anyway on error
+        setLoading(false);
       }
     };
 
     initialize();
+
+    return () => { 
+      if (profileSub) {
+        supabase.removeChannel(profileSub);
+      }
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {
