@@ -2,7 +2,7 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Headphones, MessageCircle, Mail, ExternalLink, ShieldCheck, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Headphones, MessageCircle, Mail, ExternalLink, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Support() {
@@ -74,7 +74,7 @@ export default function Support() {
           </div>
         </div>
 
-        {/* FAQs Section Placeholder */}
+        {/* FAQs Section */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
           <h4 className="text-[11px] font-black text-gray-900 uppercase mb-4">Common Issues</h4>
           <div className="space-y-4">
