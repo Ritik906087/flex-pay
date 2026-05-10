@@ -125,6 +125,11 @@ export default function UserDetailPage() {
 
   const latestIntel = securityIntel[0]?.details;
 
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied", description: `${label} copied.` });
+  };
+
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       <AdminSidebar activeTab="users" onTabChange={(tab) => router.push("/admin?tab=" + tab)} isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
@@ -151,6 +156,7 @@ export default function UserDetailPage() {
                 </div>
                 <h3 className="text-xl font-black text-slate-900 uppercase">{user?.name}</h3>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">ID: {user?.id.slice(0, 8).toUpperCase()}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Mobile: {user?.mobile}</p>
               </div>
 
               {latestIntel && (
@@ -176,7 +182,7 @@ export default function UserDetailPage() {
                   <Dialog open={isBalanceDialogOpen} onOpenChange={setIsBalanceDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="w-full bg-white text-slate-900 hover:bg-slate-100 font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl shadow-xl shadow-black/10">
-                        <Settings2 size={16} className="mr-2" /> ADJUST ASSETS
+                        <Settings2 size={16} className="mr-2" /> MANAGE ASSETS
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md rounded-[2rem] p-8 border-0">
@@ -212,10 +218,10 @@ export default function UserDetailPage() {
           <div className="flex-1 space-y-8">
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "IP Location", value: latestIntel?.network?.city || 'Unknown', icon: Globe, color: "text-blue-500", bg: "bg-blue-50" },
-                  { label: "ISP Provider", value: latestIntel?.network?.isp?.slice(0, 15) || 'Unknown', icon: Activity, color: "text-purple-500", bg: "bg-purple-50" },
-                  { label: "Device Fingerprint", value: latestIntel?.fingerprintId?.slice(0, 10) || 'Unknown', icon: Fingerprint, color: "text-emerald-500", bg: "bg-emerald-50" },
-                  { label: "VPN Status", value: latestIntel?.network?.vpn ? 'DETECTED' : 'SECURE', icon: ShieldCheck, color: latestIntel?.network?.vpn ? "text-red-500" : "text-emerald-500", bg: latestIntel?.network?.vpn ? "bg-red-50" : "bg-emerald-50" },
+                  { label: "IP Location", value: latestIntel?.network?.city || latestIntel?.network_info?.city || 'Unknown', icon: Globe, color: "text-blue-500", bg: "bg-blue-50" },
+                  { label: "ISP Provider", value: (latestIntel?.network?.isp || latestIntel?.network_info?.isp || 'Unknown').slice(0, 15), icon: Activity, color: "text-purple-500", bg: "bg-purple-50" },
+                  { label: "Device Fingerprint", value: (latestIntel?.fingerprintId || 'Unknown').slice(0, 12), icon: Fingerprint, color: "text-emerald-500", bg: "bg-emerald-50" },
+                  { label: "VPN Status", value: (latestIntel?.network?.vpn || latestIntel?.network_info?.vpn) ? 'DETECTED' : 'SECURE', icon: ShieldCheck, color: (latestIntel?.network?.vpn || latestIntel?.network_info?.vpn) ? "text-red-500" : "text-emerald-500", bg: (latestIntel?.network?.vpn || latestIntel?.network_info?.vpn) ? "bg-red-50" : "bg-emerald-50" },
                 ].map((item, i) => (
                   <Card key={i} className="border-0 shadow-sm rounded-3xl p-5 bg-white">
                     <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center mb-4", item.bg, item.color)}>
@@ -240,10 +246,10 @@ export default function UserDetailPage() {
                          <h4 className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2"><Cpu size={16} className="text-primary" /> Hardware Signals</h4>
                          <div className="space-y-4">
                             {[
-                              { label: "Operating System", value: latestIntel?.device?.os, icon: Monitor },
-                              { label: "CPU Cores", value: latestIntel?.device?.cores, icon: Cpu },
-                              { label: "RAM Estimate", value: `${latestIntel?.device?.ram} GB`, icon: HardDrive },
-                              { label: "Resolution", value: latestIntel?.device?.resolution, icon: Monitor },
+                              { label: "Operating System", value: latestIntel?.device?.os || latestIntel?.device_info?.os, icon: Monitor },
+                              { label: "CPU Cores", value: latestIntel?.device?.cores || latestIntel?.device_info?.cores, icon: Cpu },
+                              { label: "RAM Estimate", value: `${latestIntel?.device?.ram || latestIntel?.device_info?.ram || 'N/A'} GB`, icon: HardDrive },
+                              { label: "Resolution", value: latestIntel?.device?.resolution || latestIntel?.device_info?.resolution, icon: Monitor },
                             ].map((s, i) => (
                               <div key={i} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
                                 <span className="text-[9px] font-bold text-slate-400 uppercase">{s.label}</span>
@@ -256,10 +262,10 @@ export default function UserDetailPage() {
                          <h4 className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2"><Globe size={16} className="text-primary" /> Network Signals</h4>
                          <div className="space-y-4">
                             {[
-                              { label: "Public IP", value: latestIntel?.network?.ip },
-                              { label: "ISP / Carrier", value: latestIntel?.network?.isp },
-                              { label: "Country / State", value: `${latestIntel?.network?.country}, ${latestIntel?.network?.region}` },
-                              { label: "Proxy / TOR", value: latestIntel?.network?.proxy || latestIntel?.network?.tor ? 'DETECTED' : 'NONE' },
+                              { label: "Public IP", value: latestIntel?.network?.ip || latestIntel?.network_info?.ip },
+                              { label: "ISP / Carrier", value: latestIntel?.network?.isp || latestIntel?.network_info?.isp },
+                              { label: "Country / State", value: `${latestIntel?.network?.country || latestIntel?.network_info?.country}, ${latestIntel?.network?.region || latestIntel?.network_info?.region}` },
+                              { label: "Proxy / TOR", value: latestIntel?.network?.proxy || latestIntel?.network_info?.proxy ? 'DETECTED' : 'NONE' },
                             ].map((s, i) => (
                               <div key={i} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
                                 <span className="text-[9px] font-bold text-slate-400 uppercase">{s.label}</span>
@@ -289,9 +295,20 @@ export default function UserDetailPage() {
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                           <div className="col-span-2">
-                              <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Virtual Payment Address</span>
-                              <p className="text-[12px] font-black text-primary tracking-tight">{acc.upi}</p>
+                           <div className="col-span-1">
+                              <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Holder Name</span>
+                              <p className="text-[11px] font-black text-slate-900 uppercase truncate">{acc.account_holder_name}</p>
+                           </div>
+                           <div className="col-span-1 text-right">
+                              <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Linked Mobile</span>
+                              <p className="text-[11px] font-black text-slate-900">{acc.mobile}</p>
+                           </div>
+                           <div className="col-span-2 mt-2 pt-2 border-t border-slate-200">
+                              <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">UPI ID (VPA)</span>
+                              <div className="flex items-center justify-between">
+                                <p className="text-[12px] font-black text-primary tracking-tight">{acc.upi}</p>
+                                <button onClick={() => handleCopy(acc.upi, "UPI ID")} className="text-slate-300 hover:text-primary transition-colors"><Copy size={12}/></button>
+                              </div>
                            </div>
                         </div>
                      </Card>
@@ -299,6 +316,15 @@ export default function UserDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-6 space-y-4">
+                   <div className="relative mb-4 group">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                      <Input 
+                        placeholder="Filter by UTR, ID, Reason or Amount..." 
+                        value={logSearch}
+                        onChange={(e) => setLogSearch(e.target.value)}
+                        className="h-14 bg-white border-slate-100 rounded-2xl pl-12 text-[11px] font-bold focus:ring-4 focus:ring-primary/5 transition-all shadow-sm" 
+                      />
+                   </div>
                    <div className="grid gap-3 pb-10">
                       {combinedLogs.map((o, i) => (
                         <Card key={i} className={cn("border-0 p-5 rounded-[1.8rem] bg-white shadow-sm flex items-center justify-between border-l-4", o.entryType === 'admin' ? "border-amber-400" : "border-primary")}>
@@ -323,6 +349,12 @@ export default function UserDetailPage() {
                            </div>
                         </Card>
                       ))}
+                      {combinedLogs.length === 0 && (
+                        <div className="flex flex-col items-center py-20 opacity-20">
+                           <History size={48} />
+                           <p className="text-[10px] font-black mt-4 uppercase">No records found</p>
+                        </div>
+                      )}
                    </div>
                 </TabsContent>
              </Tabs>
