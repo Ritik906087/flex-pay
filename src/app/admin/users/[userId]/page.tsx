@@ -66,7 +66,7 @@ export default function UserDetailPage() {
       if (pError) throw pError;
       setUser(profile);
 
-      // Fetch linked terminals separately for robustness
+      // Fetch linked terminals
       const { data: accounts, error: aError } = await supabase
         .from('linked_accounts')
         .select('*')
@@ -320,25 +320,42 @@ export default function UserDetailPage() {
                    <TabsTrigger value="history" className="flex-1 rounded-2xl text-[10px] font-black uppercase">Audit History ({combinedLogs.length})</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="linked" className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <TabsContent value="linked" className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                    {linkedAccounts.length === 0 ? (
                      <div className="col-span-full py-20 text-center opacity-30 bg-white rounded-[2rem] border-2 border-dashed border-slate-200"><p className="text-[10px] font-black uppercase">No Linked Terminals</p></div>
                    ) : (
                      linkedAccounts.map((acc: any, i: number) => (
-                       <Card key={i} className="border-0 p-6 rounded-[2rem] bg-white shadow-sm flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center p-2 border border-slate-100">
-                               {acc.logo ? <Image src={acc.logo} alt="" width={40} height={40} className="object-contain" unoptimized /> : <SmartphoneIcon className="text-slate-200" />}
+                       <Card key={i} className="border-0 p-6 rounded-[2rem] bg-white shadow-sm hover:shadow-md transition-all">
+                          <div className="flex items-start justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center p-2.5 border border-slate-100">
+                                 {acc.logo ? <Image src={acc.logo} alt="" width={44} height={44} className="object-contain" unoptimized /> : <SmartphoneIcon className="text-slate-200" />}
+                              </div>
+                              <div>
+                                 <div className="flex items-center gap-2">
+                                    <span className="text-[13px] font-black text-slate-900 uppercase">{acc.app_name}</span>
+                                    <div className={cn("w-2 h-2 rounded-full", acc.is_online ? "bg-emerald-500 animate-pulse" : "bg-slate-300")} />
+                                 </div>
+                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{acc.is_online ? 'Terminal Online' : 'Terminal Offline'}</p>
+                              </div>
                             </div>
-                            <div>
-                               <div className="flex items-center gap-2">
-                                  <span className="text-[12px] font-black text-slate-900 uppercase">{acc.app_name}</span>
-                                  <div className={cn("w-1.5 h-1.5 rounded-full", acc.is_online ? "bg-emerald-500" : "bg-slate-300")} />
-                               </div>
-                               <code className="text-[10px] font-black text-primary block mt-0.5">{acc.upi}</code>
-                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleCopy(acc.upi, "UPI")} className="text-slate-300 hover:text-primary"><Copy size={16}/></Button>
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => handleCopy(acc.upi, "UPI")} className="text-slate-300"><Copy size={14}/></Button>
+                          
+                          <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                             <div>
+                                <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Account Holder</span>
+                                <p className="text-[11px] font-black text-slate-900 uppercase truncate">{acc.account_holder_name || 'NOT PROVIDED'}</p>
+                             </div>
+                             <div>
+                                <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Phone Linked</span>
+                                <p className="text-[11px] font-black text-slate-900">{acc.mobile || 'NOT PROVIDED'}</p>
+                             </div>
+                             <div className="col-span-2 mt-2 pt-2 border-t border-slate-200/50">
+                                <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Virtual Payment Address</span>
+                                <p className="text-[12px] font-black text-primary tracking-tight">{acc.upi}</p>
+                             </div>
+                          </div>
                        </Card>
                      ))
                    )}
