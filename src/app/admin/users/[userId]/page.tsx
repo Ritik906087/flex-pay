@@ -69,7 +69,7 @@ export default function UserDetailPage() {
       const { data: logData } = await supabase.from('admin_balance_logs').select('*').eq('user_id', userId).order('created_at', { ascending: false });
       setAdminLogs(logData || []);
 
-      // Fetch Security Intel
+      // Fetch Security Intel - Fetch from both tables to be safe
       const { data: security } = await supabase.from('security_events').select('*').eq('user_id', userId).order('created_at', { ascending: false });
       setSecurityIntel(security || []);
 
@@ -126,7 +126,7 @@ export default function UserDetailPage() {
   const latestIntel = securityIntel[0]?.details;
 
   const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text || "");
     toast({ title: "Copied", description: `${label} copied.` });
   };
 
@@ -142,7 +142,7 @@ export default function UserDetailPage() {
              <h2 className="text-[12px] font-black uppercase tracking-tighter sm:block">Identity Intelligence: <span className="text-primary">{user?.name}</span></h2>
           </div>
           <div className="flex items-center gap-3">
-             <Badge className={cn("h-8 px-4 text-[9px] font-black uppercase", user?.status === 'active' ? "bg-emerald-500" : "bg-red-500")}>{user?.status} Node</Badge>
+             <Badge className={cn("h-8 px-4 text-[9px] font-black uppercase", user?.status === 'active' ? "bg-emerald-500 text-white" : "bg-red-500 text-white")}>{user?.status || 'Unknown'} Node</Badge>
              <Button variant="ghost" size="icon" onClick={fetchUserData} className="rounded-xl border border-slate-100"><RefreshCw size={14} className={loading ? "animate-spin" : ""}/></Button>
           </div>
         </header>
@@ -155,7 +155,7 @@ export default function UserDetailPage() {
                   <User size={48} />
                 </div>
                 <h3 className="text-xl font-black text-slate-900 uppercase">{user?.name}</h3>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">ID: {user?.id.slice(0, 8).toUpperCase()}</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">ID: {user?.id?.slice(0, 8).toUpperCase()}</p>
                 <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Mobile: {user?.mobile}</p>
               </div>
 
@@ -169,7 +169,7 @@ export default function UserDetailPage() {
                   <ShieldAlert size={32} />
                   <div className="text-center">
                     <p className="text-[10px] font-black uppercase tracking-widest">Risk Score: {latestIntel.riskScore}</p>
-                    <p className="text-xl font-black uppercase tracking-tighter">{latestIntel.riskLevel}</p>
+                    <p className="text-xl font-black uppercase tracking-tighter">{latestIntel.riskLevel || 'SECURE'}</p>
                   </div>
                 </div>
               )}
@@ -264,8 +264,8 @@ export default function UserDetailPage() {
                             {[
                               { label: "Public IP", value: latestIntel?.network?.ip || latestIntel?.network_info?.ip },
                               { label: "ISP / Carrier", value: latestIntel?.network?.isp || latestIntel?.network_info?.isp },
-                              { label: "Country / State", value: `${latestIntel?.network?.country || latestIntel?.network_info?.country}, ${latestIntel?.network?.region || latestIntel?.network_info?.region}` },
-                              { label: "Proxy / TOR", value: latestIntel?.network?.proxy || latestIntel?.network_info?.proxy ? 'DETECTED' : 'NONE' },
+                              { label: "Country / State", value: `${latestIntel?.network?.country || latestIntel?.network_info?.country || ''}, ${latestIntel?.network?.region || latestIntel?.network_info?.region || ''}` },
+                              { label: "Proxy / TOR", value: (latestIntel?.network?.proxy || latestIntel?.network_info?.proxy) ? 'DETECTED' : 'NONE' },
                             ].map((s, i) => (
                               <div key={i} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
                                 <span className="text-[9px] font-bold text-slate-400 uppercase">{s.label}</span>
@@ -297,11 +297,11 @@ export default function UserDetailPage() {
                         <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-2xl p-5 border border-slate-100">
                            <div className="col-span-1">
                               <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Holder Name</span>
-                              <p className="text-[11px] font-black text-slate-900 uppercase truncate">{acc.account_holder_name}</p>
+                              <p className="text-[11px] font-black text-slate-900 uppercase truncate">{acc.account_holder_name || 'N/A'}</p>
                            </div>
                            <div className="col-span-1 text-right">
                               <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Linked Mobile</span>
-                              <p className="text-[11px] font-black text-slate-900">{acc.mobile}</p>
+                              <p className="text-[11px] font-black text-slate-900">{acc.mobile || 'N/A'}</p>
                            </div>
                            <div className="col-span-2 mt-2 pt-2 border-t border-slate-200">
                               <span className="text-[7px] font-black text-slate-400 uppercase block mb-1 tracking-widest">UPI ID (VPA)</span>
@@ -313,6 +313,12 @@ export default function UserDetailPage() {
                         </div>
                      </Card>
                    ))}
+                   {linkedAccounts.length === 0 && (
+                     <div className="col-span-full py-20 flex flex-col items-center opacity-20">
+                        <CreditCard size={48} />
+                        <p className="text-[10px] font-black mt-4 uppercase">No terminals linked</p>
+                     </div>
+                   )}
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-6 space-y-4">
