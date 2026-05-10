@@ -23,7 +23,6 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "users", label: "Node Directory", icon: Users },
     { id: "approvals", label: "Audit Review", icon: CheckCircle2, badge: pendingCount },
-    { id: "history", label: "System Logs", icon: History },
   ];
 
   const handleNavClick = (id: string) => {
@@ -42,8 +41,8 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
               <ShieldCheck size={22} />
             </div>
             <div>
-              <h1 className="text-[13px] font-black text-slate-900 tracking-tight uppercase">Audit Terminal</h1>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Admin Control</p>
+              <h1 className="text-[13px] font-black text-slate-900 tracking-tight uppercase">Admin Terminal</h1>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Control Center</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onToggle} className="lg:hidden text-slate-400 h-10 w-10">
@@ -85,7 +84,7 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
         <div className="mt-auto pt-8 border-t border-slate-100 shrink-0">
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-4 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-14 px-5 border border-transparent hover:border-red-100" 
+            className="w-full justify-start gap-4 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-14 px-5" 
             onClick={() => router.push('/')}
           >
             <LogOut size={18} />
@@ -96,3 +95,4 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
     </aside>
   );
 }
+

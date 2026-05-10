@@ -41,56 +41,49 @@ export default function AdminPanel() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Admin: Initializing Sync...");
+      console.log("Admin Sync: Starting comprehensive data fetch...");
 
-      // 1. Fetch Stats: Total Node Count
-      const { count: nodeCount, error: nodeError } = await supabase
+      // 1. Fetch Profiles (Nodes)
+      const { data: profileData, error: pError, count: pCount } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      
-      if (nodeError) console.error("Admin: Profiles Fetch Error", nodeError);
-
-      // 2. Fetch All Profiles for the Users list
-      const { data: profileData, error: pError } = await supabase
-        .from('profiles')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
       
-      if (pError) console.error("Admin: Profiles List Error", pError);
-      if (profileData) setAllUsers(profileData);
+      if (pError) {
+        console.error("Admin Sync: Profile fetch failed:", pError.message);
+      } else {
+        console.log(`Admin Sync: Successfully fetched ${profileData?.length || 0} profiles.`);
+        setAllUsers(profileData || []);
+      }
 
-      // 3. Fetch Orders with details
-      // Note: Using a simpler query first to avoid join issues if RLS is tricky
-      const { data: orderData, error: orderError } = await supabase
+      // 2. Fetch Orders
+      const { data: orderData, error: oError } = await supabase
         .from('p2p_orders')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (orderError) {
-        console.error("Admin: Orders Fetch Error", orderError);
-        throw orderError;
-      }
-
-      console.log(`Admin: Successfully fetched ${orderData?.length || 0} orders and ${nodeCount || 0} nodes.`);
-
-      if (orderData) {
-        setOrders(orderData);
-        const successOrders = orderData.filter(o => o.status === 'success');
+      if (oError) {
+        console.error("Admin Sync: Order fetch failed:", oError.message);
+      } else {
+        console.log(`Admin Sync: Successfully fetched ${orderData?.length || 0} orders.`);
+        setOrders(orderData || []);
+        
+        const successOrders = (orderData || []).filter(o => o.status === 'success');
         const totalVolume = successOrders.reduce((acc, o) => acc + Number(o.amount), 0);
         
         setStats({
           volume: totalVolume,
-          nodes: nodeCount || 0,
-          review: orderData.filter(o => o.status === 'in-review').length,
+          nodes: pCount || profileData?.length || 0,
+          review: (orderData || []).filter(o => o.status === 'in-review').length,
           success: successOrders.length
         });
       }
     } catch (error: any) {
-      console.error("Admin Sync Critical Failure:", error.message);
+      console.error("Admin Sync Critical Error:", error.message);
       toast({ 
         variant: "destructive", 
         title: "Sync Failed", 
-        description: error.message 
+        description: "Check console for detailed logs." 
       });
     } finally {
       setLoading(false);
@@ -101,19 +94,24 @@ export default function AdminPanel() {
     fetchData();
     
     // Subscribe to realtime changes
-    const adminChannel = supabase
-      .channel('admin_live_feed')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_orders' }, (payload) => {
-        console.log("Realtime: Order change detected", payload);
-        fetchData();
-      })
+    const profilesChannel = supabase.channel('admin_profiles_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
         console.log("Realtime: Profile change detected", payload);
         fetchData();
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(adminChannel); };
+    const ordersChannel = supabase.channel('admin_orders_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_orders' }, (payload) => {
+        console.log("Realtime: Order change detected", payload);
+        fetchData();
+      })
+      .subscribe();
+
+    return () => { 
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(ordersChannel);
+    };
   }, [fetchData]);
 
   const handleAction = async (orderId: string, status: 'approve' | 'reject') => {
@@ -173,7 +171,7 @@ export default function AdminPanel() {
             <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500">
               {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </Button>
-            <h2 className="text-[12px] lg:text-[14px] font-black text-slate-900 uppercase tracking-tighter hidden sm:block">Control Center</h2>
+            <h2 className="text-[12px] lg:text-[14px] font-black text-slate-900 uppercase tracking-tighter">Terminal Admin</h2>
           </div>
           <div className="flex items-center gap-2 lg:gap-4">
              <Button variant="ghost" size="sm" onClick={fetchData} className="text-slate-400 h-10 w-10 rounded-xl bg-slate-50 border border-slate-100">
@@ -181,7 +179,7 @@ export default function AdminPanel() {
              </Button>
              <div className="relative hidden md:block">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                <Input placeholder="Search system..." className="w-64 h-11 pl-10 bg-slate-50 border-transparent rounded-2xl text-[11px] font-bold focus:bg-white transition-all" />
+                <Input placeholder="Search logs..." className="w-64 h-11 pl-10 bg-slate-50 border-transparent rounded-2xl text-[11px] font-bold focus:bg-white transition-all" />
              </div>
           </div>
         </header>
@@ -197,34 +195,34 @@ export default function AdminPanel() {
                    { label: "Settled", value: stats.success.toString(), icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50" },
                  ].map((stat, i) => (
                    <Card key={i} className="border-0 shadow-sm rounded-3xl overflow-hidden bg-white hover:shadow-md transition-shadow">
-                     <CardContent className="p-5 lg:p-8">
-                       <div className="flex justify-between items-start mb-3 lg:mb-5">
+                     <CardContent className="p-4 lg:p-8">
+                       <div className="flex justify-between items-start mb-2 lg:mb-5">
                          <div className={cn("w-10 h-10 lg:w-12 lg:h-12 rounded-2xl flex items-center justify-center", stat.bg, stat.color)}>
                            <stat.icon size={20} />
                          </div>
                        </div>
                        <span className="text-[8px] lg:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</span>
-                       <h3 className="text-base lg:text-2xl font-black text-slate-900 mt-1">{stat.value}</h3>
+                       <h3 className="text-sm lg:text-2xl font-black text-slate-900 mt-1">{stat.value}</h3>
                      </CardContent>
                    </Card>
                  ))}
               </div>
 
-              <Card className="border-0 shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
+              <Card className="border-0 shadow-sm rounded-[2rem] lg:rounded-[2.5rem] bg-white overflow-hidden">
                 <CardContent className="p-0">
-                  <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Recent Terminal Activity</h3>
-                    <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary">View Full Logs</Button>
+                  <div className="p-6 lg:p-8 border-b border-slate-50 flex justify-between items-center">
+                    <h3 className="text-[10px] lg:text-sm font-black uppercase tracking-widest text-slate-900">Recent Network Activity</h3>
+                    <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary">Live Logs</Button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                          <th className="px-8 py-4">Transaction ID</th>
-                          <th className="px-8 py-4">Amount</th>
-                          <th className="px-8 py-4">Status</th>
-                          <th className="px-8 py-4">Timestamp</th>
-                          <th className="px-8 py-4 text-right">Actions</th>
+                          <th className="px-6 lg:px-8 py-4">Transaction</th>
+                          <th className="px-6 lg:px-8 py-4">Amount</th>
+                          <th className="px-6 lg:px-8 py-4">Status</th>
+                          <th className="px-6 lg:px-8 py-4 hidden md:table-cell">Timestamp</th>
+                          <th className="px-6 lg:px-8 py-4 text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
@@ -232,19 +230,19 @@ export default function AdminPanel() {
                           <tr>
                             <td colSpan={5} className="px-8 py-20 text-center opacity-30">
                               <History size={40} className="mx-auto mb-3" />
-                              <p className="text-[10px] font-black uppercase tracking-widest">No terminal data synchronized</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest">No activity synchronized</p>
                             </td>
                           </tr>
                         ) : (
                           orders.slice(0, 10).map((order) => (
                             <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-8 py-5">
+                              <td className="px-6 lg:px-8 py-5">
                                 <span className="text-[11px] font-black text-slate-900">{order.id}</span>
                               </td>
-                              <td className="px-8 py-5">
+                              <td className="px-6 lg:px-8 py-5">
                                 <span className="text-[11px] font-black text-slate-900">₹{order.amount}</span>
                               </td>
-                              <td className="px-8 py-5">
+                              <td className="px-6 lg:px-8 py-5">
                                 <Badge className={cn(
                                   "text-[8px] font-black uppercase border-0 h-6 px-3",
                                   order.status === 'success' ? "bg-emerald-50 text-emerald-600" :
@@ -253,11 +251,11 @@ export default function AdminPanel() {
                                   {order.status}
                                 </Badge>
                               </td>
-                              <td className="px-8 py-5 text-[10px] font-bold text-slate-400">
+                              <td className="px-6 lg:px-8 py-5 text-[10px] font-bold text-slate-400 hidden md:table-cell">
                                 {new Date(order.created_at).toLocaleString()}
                               </td>
-                              <td className="px-8 py-5 text-right">
-                                <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setActiveTab('approvals'); }} className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary">
+                              <td className="px-6 lg:px-8 py-5 text-right">
+                                <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); }} className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary">
                                   <Eye size={14} />
                                 </Button>
                               </td>
@@ -277,7 +275,7 @@ export default function AdminPanel() {
               {allUsers.length === 0 ? (
                 <div className="col-span-full py-40 flex flex-col items-center justify-center opacity-20">
                   <Users size={80} />
-                  <p className="text-[16px] font-black uppercase mt-6 tracking-widest">No Nodes Detected</p>
+                  <p className="text-[16px] font-black uppercase mt-6 tracking-widest">No nodes detected</p>
                 </div>
               ) : (
                 allUsers.map((u) => (
@@ -287,7 +285,7 @@ export default function AdminPanel() {
                         <Users size={24} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-[13px] font-black text-slate-900 uppercase truncate">{u.name || 'Anonymous'}</h4>
+                        <h4 className="text-[13px] font-black text-slate-900 uppercase truncate">{u.name || 'Anonymous Node'}</h4>
                         <p className="text-[10px] font-bold text-slate-400 tracking-tight">{u.mobile}</p>
                       </div>
                       <Badge className={cn(
@@ -301,8 +299,8 @@ export default function AdminPanel() {
                         <p className="text-[14px] font-black text-slate-900">₹{u.balance}</p>
                       </div>
                       <div className="bg-slate-50 p-4 rounded-xl">
-                        <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Locked</span>
-                        <p className="text-[14px] font-black text-slate-900">₹{u.locked_balance}</p>
+                        <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Invite Code</span>
+                        <p className="text-[11px] font-black text-primary uppercase">{u.invite_code || '---'}</p>
                       </div>
                     </div>
                     <Button 
@@ -342,7 +340,7 @@ export default function AdminPanel() {
                          </div>
                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 overflow-hidden">
                             <span className="text-[8px] font-black text-slate-400 uppercase mb-1 block">UTR Reference</span>
-                            <p className="text-[11px] font-black text-primary truncate tracking-wider">{order.utr}</p>
+                            <p className="text-[11px] font-black text-primary truncate tracking-wider">{order.utr || '---'}</p>
                          </div>
                       </div>
                       <Button className="w-full h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest bg-primary hover:bg-primary/90" onClick={() => setSelectedOrder(order)}>
@@ -371,15 +369,12 @@ export default function AdminPanel() {
                 </div>
               </div>
               <div className="flex items-center gap-2 lg:gap-4">
-                 <Button variant="ghost" size="icon" onClick={() => selectedOrder?.screenshot_url && window.open(selectedOrder.screenshot_url)} className="text-slate-400 hover:text-primary h-10 w-10 bg-slate-50 rounded-xl">
-                    <ExternalLink size={18} />
-                 </Button>
                  <Badge className="h-10 lg:h-12 px-4 lg:px-8 text-sm lg:text-xl font-black bg-primary rounded-2xl border-0 shadow-lg shadow-primary/20">₹{selectedOrder?.amount}</Badge>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row gap-4 lg:gap-8 no-scrollbar">
-              <div className="flex-[1.5] min-h-[400px] flex flex-col gap-4">
+              <div className="flex-[1.5] min-h-[300px] flex flex-col gap-4">
                  <div className="flex-1 bg-slate-50 rounded-[1.5rem] lg:rounded-[2.5rem] border border-slate-100 relative overflow-hidden flex items-center justify-center">
                     {selectedOrder?.screenshot_url ? (
                       <div 
@@ -420,15 +415,13 @@ export default function AdminPanel() {
                       <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Audit Context</h3>
                       <div className="space-y-1.5">
                         <span className="text-[8px] font-bold text-slate-400 uppercase">Buyer Reference</span>
-                        <div className="bg-white p-4 rounded-xl border border-slate-100 flex items-center gap-3">
-                           <Users size={14} className="text-primary" />
+                        <div className="bg-white p-4 rounded-xl border border-slate-100">
                            <p className="text-[11px] font-black truncate">{selectedOrder?.buyer_id || 'Unknown'}</p>
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <span className="text-[8px] font-bold text-slate-400 uppercase">Merchant Terminal</span>
-                        <div className="bg-white p-4 rounded-xl border border-slate-100 flex items-center gap-3">
-                           <TrendingUp size={14} className="text-emerald-500" />
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">Seller UPI</span>
+                        <div className="bg-white p-4 rounded-xl border border-slate-100">
                            <p className="text-[11px] font-black truncate text-primary">{selectedOrder?.seller_upi}</p>
                         </div>
                       </div>
@@ -439,7 +432,7 @@ export default function AdminPanel() {
                    <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-[9px] font-black text-slate-400 uppercase">UTR Number</span>
-                        <span className="text-[11px] font-black text-primary tracking-widest">{selectedOrder?.utr}</span>
+                        <span className="text-[11px] font-black text-primary tracking-widest">{selectedOrder?.utr || '---'}</span>
                       </div>
                    </div>
                 </div>
@@ -456,3 +449,4 @@ export default function AdminPanel() {
     </div>
   );
 }
+
