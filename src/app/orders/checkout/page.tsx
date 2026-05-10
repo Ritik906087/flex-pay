@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { P2PEngine, P2POrder } from "@/lib/p2p-engine";
+import { P2PEngine } from "@/lib/p2p-engine";
 import { supabase } from "@/lib/supabase";
 
 function CheckoutContent() {

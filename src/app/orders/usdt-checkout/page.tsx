@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   CheckCircle2, Loader2, Copy, Clock, QrCode, 
@@ -26,7 +26,6 @@ function UsdtCheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const initialized = useRef(false);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [timeLeft, setTimeLeft] = useState(1800);

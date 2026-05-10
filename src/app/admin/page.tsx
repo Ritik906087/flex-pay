@@ -18,8 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { supabase } from "@/lib/supabase";
-import { P2PEngine } from "@/lib/p2p-engine";
-import Image from "next/image";
 
 function AdminPanelContent() {
   const router = useRouter();
