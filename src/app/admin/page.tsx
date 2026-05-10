@@ -340,8 +340,8 @@ export default function AdminPanel() {
                         <p className="text-[14px] font-black text-slate-900">₹{u.balance}</p>
                       </div>
                       <div className="bg-slate-50 p-4 rounded-xl">
-                        <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">Invite Code</span>
-                        <p className="text-[11px] font-black text-primary uppercase">{u.invite_code || '---'}</p>
+                        <span className="text-[8px] font-black text-slate-400 uppercase block mb-1">UID Code</span>
+                        <p className="text-[11px] font-black text-primary uppercase">{u.id.slice(0, 8).toUpperCase()}</p>
                       </div>
                     </div>
                     <Button 

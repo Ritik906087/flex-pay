@@ -141,7 +141,7 @@ export default function UserDetailPage() {
                   <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">{user.name}</h3>
                   <div className="flex items-center gap-2 mb-4">
                     <Hash size={12} className="text-primary" />
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user.id.slice(0, 8)}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: {user.id.slice(0, 8).toUpperCase()}</p>
                   </div>
                 </div>
 
@@ -160,7 +160,7 @@ export default function UserDetailPage() {
                     {[
                       { label: "Mobile", value: user.mobile, icon: Smartphone },
                       { label: "Locked", value: `₹${Number(user.locked_balance || 0).toLocaleString()}`, icon: Ban },
-                      { label: "Status", value: user.is_selling ? "Selling ON" : "Selling OFF", icon: ShieldCheck },
+                      { label: "UID", value: user.id.slice(0, 8).toUpperCase(), icon: Hash },
                     ].map((row, i) => (
                       <div key={i} className="flex justify-between items-center px-4 py-3 bg-slate-50/50 rounded-2xl border border-slate-100">
                         <div className="flex items-center gap-2.5 text-slate-400">
