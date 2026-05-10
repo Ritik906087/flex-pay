@@ -7,13 +7,23 @@ import {
   Smartphone, User, Hash, ShieldCheck, 
   TrendingUp, CreditCard, History, Plus, Ban, 
   ChevronLeft, Copy, Search, Filter, Menu, RefreshCw, 
-  ExternalLink, SmartphoneIcon, Wallet, Activity, ArrowUpRight
+  SmartphoneIcon, Wallet, Activity, ChevronRight,
+  Settings2, PlusCircle, MinusCircle, Equal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -31,6 +41,12 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [logSearch, setLogSearch] = useState("");
+  
+  // Balance Management State
+  const [isBalanceDialogOpen, setIsBalanceDialogOpen] = useState(false);
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustType, setAdjustType] = useState<'add' | 'sub' | 'set'>('add');
+  const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -39,7 +55,6 @@ export default function UserDetailPage() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      // Fetch profile with linked accounts
       const { data: profile, error: pError } = await supabase
         .from('profiles')
         .select(`
@@ -52,7 +67,6 @@ export default function UserDetailPage() {
       if (pError) throw pError;
       setUser(profile);
 
-      // Fetch user specific orders (as buyer or seller)
       const { data: orderData, error: oError } = await supabase
         .from('p2p_orders')
         .select('*')
@@ -67,6 +81,45 @@ export default function UserDetailPage() {
       toast({ variant: "destructive", title: "Audit Failed", description: error.message });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBalanceUpdate = async () => {
+    const amount = parseFloat(adjustAmount);
+    if (isNaN(amount) || amount < 0) {
+      toast({ variant: "destructive", title: "Invalid Amount", description: "Please enter a valid numeric value." });
+      return;
+    }
+
+    try {
+      setIsUpdatingBalance(true);
+      let newBalance = user.balance;
+
+      if (adjustType === 'add') newBalance += amount;
+      else if (adjustType === 'sub') newBalance = Math.max(0, newBalance - amount);
+      else if (adjustType === 'set') newBalance = amount;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ balance: newBalance })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setUser({ ...user, balance: newBalance });
+      setIsBalanceDialogOpen(false);
+      setAdjustAmount("");
+      
+      toast({ 
+        title: "Balance Updated", 
+        description: `Successfully ${adjustType === 'add' ? 'added' : adjustType === 'sub' ? 'deducted' : 'set'} funds for ${user.name}.` 
+      });
+      
+      fetchUserData(); // Refresh logs and data
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Update Failed", description: error.message });
+    } finally {
+      setIsUpdatingBalance(false);
     }
   };
 
@@ -182,7 +235,73 @@ export default function UserDetailPage() {
                 <div className="space-y-6">
                   <div className="bg-slate-900 rounded-[2rem] lg:rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
                     <div className="relative z-10">
-                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] block mb-2">Liquid Balance</span>
+                       <div className="flex items-center justify-between mb-2">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] block">Liquid Balance</span>
+                          <Dialog open={isBalanceDialogOpen} onOpenChange={setIsBalanceDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 text-white">
+                                <Settings2 size={14} />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md rounded-[2rem] p-8 bg-white border-0 shadow-2xl">
+                              <DialogHeader>
+                                <DialogTitle className="text-xl font-black uppercase text-slate-900 flex items-center gap-3">
+                                  <Wallet className="text-primary" /> Manage Assets
+                                </DialogTitle>
+                                <DialogDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">
+                                  Manually adjust liquidity for node: {user.id.slice(0, 8).toUpperCase()}
+                                </DialogDescription>
+                              </DialogHeader>
+                              
+                              <div className="py-6 space-y-6">
+                                <div className="grid grid-cols-3 gap-3">
+                                  {[
+                                    { id: 'add', label: 'ADD', icon: PlusCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+                                    { id: 'sub', label: 'DEDUCT', icon: MinusCircle, color: 'text-red-500', bg: 'bg-red-50' },
+                                    { id: 'set', label: 'SET', icon: Equal, color: 'text-blue-500', bg: 'bg-blue-50' },
+                                  ].map((type) => (
+                                    <button
+                                      key={type.id}
+                                      onClick={() => setAdjustType(type.id as any)}
+                                      className={cn(
+                                        "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all",
+                                        adjustType === type.id 
+                                          ? "border-primary bg-primary/5 shadow-inner" 
+                                          : "border-slate-100 bg-slate-50 hover:bg-slate-100"
+                                      )}
+                                    >
+                                      <type.icon size={20} className={cn("mb-2", adjustType === type.id ? "text-primary" : type.color)} />
+                                      <span className="text-[8px] font-black uppercase">{type.label}</span>
+                                    </button>
+                                  ))}
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-[9px] font-black text-slate-400 uppercase ml-1 tracking-widest">Adjustment Amount (₹)</label>
+                                  <Input 
+                                    type="number" 
+                                    placeholder="Enter amount..." 
+                                    value={adjustAmount}
+                                    onChange={(e) => setAdjustAmount(e.target.value)}
+                                    className="h-14 bg-slate-50 border-slate-100 rounded-2xl text-lg font-black focus:bg-white transition-all px-6"
+                                  />
+                                </div>
+                              </div>
+
+                              <DialogFooter className="flex-col sm:flex-row gap-3">
+                                <Button variant="ghost" onClick={() => setIsBalanceDialogOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest flex-1">CANCEL</Button>
+                                <Button 
+                                  onClick={handleBalanceUpdate} 
+                                  disabled={isUpdatingBalance}
+                                  className="rounded-xl bg-slate-900 hover:bg-black text-white font-black uppercase text-[10px] tracking-widest flex-[2] h-12 shadow-xl shadow-slate-900/20"
+                                >
+                                  {isUpdatingBalance ? <RefreshCw className="animate-spin mr-2" size={14} /> : null}
+                                  EXECUTE PROTOCOL
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                       </div>
                        <div className="flex items-center justify-between">
                           <p className="text-3xl lg:text-4xl font-black tracking-tighter">₹{Number(user.balance || 0).toLocaleString()}</p>
                           <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
