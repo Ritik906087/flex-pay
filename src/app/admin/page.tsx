@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   IndianRupee, Users, Search, History, CheckCircle, Ban, Menu, Clock, 
@@ -32,6 +32,7 @@ export default function AdminPanel() {
   const [stats, setStats] = useState({ volume: 0, nodes: 0, review: 0, success: 0 });
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [globalSearch, setGlobalSearch] = useState("");
   
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -41,18 +42,17 @@ export default function AdminPanel() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Admin Sync: Starting comprehensive data fetch...");
+      console.log("Admin Sync: Fetching database content...");
 
-      // 1. Fetch Profiles (Nodes)
+      // 1. Fetch Profiles
       const { data: profileData, error: pError, count: pCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
       
       if (pError) {
-        console.error("Admin Sync: Profile fetch failed:", pError.message);
+        console.error("Admin Sync: Profile error:", pError.message);
       } else {
-        console.log(`Admin Sync: Successfully fetched ${profileData?.length || 0} profiles.`);
         setAllUsers(profileData || []);
       }
 
@@ -63,9 +63,8 @@ export default function AdminPanel() {
         .order('created_at', { ascending: false });
 
       if (oError) {
-        console.error("Admin Sync: Order fetch failed:", oError.message);
+        console.error("Admin Sync: Order error:", oError.message);
       } else {
-        console.log(`Admin Sync: Successfully fetched ${orderData?.length || 0} orders.`);
         setOrders(orderData || []);
         
         const successOrders = (orderData || []).filter(o => o.status === 'success');
@@ -83,7 +82,7 @@ export default function AdminPanel() {
       toast({ 
         variant: "destructive", 
         title: "Sync Failed", 
-        description: "Check console for detailed logs." 
+        description: error.message 
       });
     } finally {
       setLoading(false);
@@ -93,19 +92,12 @@ export default function AdminPanel() {
   useEffect(() => {
     fetchData();
     
-    // Subscribe to realtime changes
     const profilesChannel = supabase.channel('admin_profiles_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
-        console.log("Realtime: Profile change detected", payload);
-        fetchData();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchData())
       .subscribe();
 
     const ordersChannel = supabase.channel('admin_orders_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_orders' }, (payload) => {
-        console.log("Realtime: Order change detected", payload);
-        fetchData();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_orders' }, () => fetchData())
       .subscribe();
 
     return () => { 
@@ -113,6 +105,40 @@ export default function AdminPanel() {
       supabase.removeChannel(ordersChannel);
     };
   }, [fetchData]);
+
+  // Filtering Logic
+  const filteredOrders = useMemo(() => {
+    if (!globalSearch) return orders;
+    const query = globalSearch.toLowerCase();
+    return orders.filter(o => 
+      o.id.toLowerCase().includes(query) || 
+      o.amount.toString().includes(query) ||
+      o.status.toLowerCase().includes(query) ||
+      (o.utr && o.utr.toLowerCase().includes(query))
+    );
+  }, [orders, globalSearch]);
+
+  const filteredUsers = useMemo(() => {
+    if (!globalSearch) return allUsers;
+    const query = globalSearch.toLowerCase();
+    return allUsers.filter(u => 
+      (u.name && u.name.toLowerCase().includes(query)) || 
+      u.mobile.includes(query) ||
+      u.id.toLowerCase().includes(query) ||
+      (u.invite_code && u.invite_code.toLowerCase().includes(query))
+    );
+  }, [allUsers, globalSearch]);
+
+  const pendingOrders = useMemo(() => {
+    const pending = orders.filter(o => o.status === 'in-review');
+    if (!globalSearch) return pending;
+    const query = globalSearch.toLowerCase();
+    return pending.filter(o => 
+      o.id.toLowerCase().includes(query) || 
+      o.amount.toString().includes(query) ||
+      (o.utr && o.utr.toLowerCase().includes(query))
+    );
+  }, [orders, globalSearch]);
 
   const handleAction = async (orderId: string, status: 'approve' | 'reject') => {
     try {
@@ -123,7 +149,7 @@ export default function AdminPanel() {
       } else {
         const { error } = await P2PEngine.rejectOrder(orderId);
         if (error) throw error;
-        toast({ variant: "destructive", title: "Rejected", description: "Funds returned to seller." });
+        toast({ variant: "destructive", title: "Rejected", description: "Order cancelled." });
       }
       setSelectedOrder(null);
       fetchData();
@@ -131,8 +157,6 @@ export default function AdminPanel() {
       toast({ variant: "destructive", title: "Action Failed", description: error.message });
     }
   };
-
-  const pendingOrders = orders.filter(o => o.status === 'in-review');
 
   const resetImage = () => {
     setZoom(1);
@@ -142,7 +166,6 @@ export default function AdminPanel() {
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] relative overflow-x-hidden">
-      {/* Sidebar Overlay for Mobile */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-[45] lg:hidden backdrop-blur-sm" 
@@ -157,7 +180,7 @@ export default function AdminPanel() {
           if (window.innerWidth < 1024) setIsSidebarOpen(false);
           router.push(`/admin?tab=${tab}`);
         }} 
-        pendingCount={pendingOrders.length} 
+        pendingCount={orders.filter(o => o.status === 'in-review').length} 
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
@@ -179,12 +202,30 @@ export default function AdminPanel() {
              </Button>
              <div className="relative hidden md:block">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                <Input placeholder="Search logs..." className="w-64 h-11 pl-10 bg-slate-50 border-transparent rounded-2xl text-[11px] font-bold focus:bg-white transition-all" />
+                <Input 
+                  placeholder="Search across all logs..." 
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
+                  className="w-64 h-11 pl-10 bg-slate-50 border-transparent rounded-2xl text-[11px] font-bold focus:bg-white transition-all" 
+                />
              </div>
           </div>
         </header>
 
         <main className="p-4 lg:p-10 max-w-[1600px] w-full mx-auto flex-1">
+          {/* Mobile Search Bar */}
+          <div className="md:hidden mb-6">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+              <Input 
+                placeholder="Search..." 
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                className="w-full h-12 pl-10 bg-white border-slate-200 rounded-2xl text-[12px] font-bold" 
+              />
+            </div>
+          </div>
+
           {activeTab === "dashboard" && (
             <div className="space-y-8">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
@@ -212,7 +253,7 @@ export default function AdminPanel() {
                 <CardContent className="p-0">
                   <div className="p-6 lg:p-8 border-b border-slate-50 flex justify-between items-center">
                     <h3 className="text-[10px] lg:text-sm font-black uppercase tracking-widest text-slate-900">Recent Network Activity</h3>
-                    <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary">Live Logs</Button>
+                    {globalSearch && <Badge variant="secondary" className="text-[8px] font-black uppercase">Filtered: {filteredOrders.length}</Badge>}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -226,15 +267,15 @@ export default function AdminPanel() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {orders.length === 0 ? (
+                        {filteredOrders.length === 0 ? (
                           <tr>
                             <td colSpan={5} className="px-8 py-20 text-center opacity-30">
                               <History size={40} className="mx-auto mb-3" />
-                              <p className="text-[10px] font-black uppercase tracking-widest">No activity synchronized</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest">No matching activity</p>
                             </td>
                           </tr>
                         ) : (
-                          orders.slice(0, 10).map((order) => (
+                          filteredOrders.slice(0, 15).map((order) => (
                             <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
                               <td className="px-6 lg:px-8 py-5">
                                 <span className="text-[11px] font-black text-slate-900">{order.id}</span>
@@ -255,7 +296,7 @@ export default function AdminPanel() {
                                 {new Date(order.created_at).toLocaleString()}
                               </td>
                               <td className="px-6 lg:px-8 py-5 text-right">
-                                <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); }} className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary">
+                                <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)} className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary">
                                   <Eye size={14} />
                                 </Button>
                               </td>
@@ -272,13 +313,13 @@ export default function AdminPanel() {
 
           {activeTab === "users" && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-              {allUsers.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <div className="col-span-full py-40 flex flex-col items-center justify-center opacity-20">
                   <Users size={80} />
-                  <p className="text-[16px] font-black uppercase mt-6 tracking-widest">No nodes detected</p>
+                  <p className="text-[16px] font-black uppercase mt-6 tracking-widest">No nodes found</p>
                 </div>
               ) : (
-                allUsers.map((u) => (
+                filteredUsers.map((u) => (
                   <Card key={u.id} className="border-0 shadow-sm rounded-[2rem] bg-white overflow-hidden p-6 hover:shadow-md transition-all group">
                     <div className="flex items-center gap-4 mb-6">
                       <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
@@ -449,4 +490,3 @@ export default function AdminPanel() {
     </div>
   );
 }
-
