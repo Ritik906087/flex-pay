@@ -42,7 +42,7 @@ export const P2PEngine = {
       `)
       .eq('is_selling', true)
       .eq('status', 'active')
-      .gte('balance', amount)
+      .gte('balance', amount) // Critical: Ensure seller has enough balance
       .neq('id', buyerId);
 
     if (sellerError || !sellers) return { error: "Matching Engine Error" };
@@ -50,9 +50,10 @@ export const P2PEngine = {
     // Filter sellers who have at least one online account
     const validSellers = sellers.filter(s => s.linked_accounts.some((acc: any) => acc.is_online));
 
-    if (validSellers.length === 0) return { error: "No seller available currently" };
+    if (validSellers.length === 0) return { error: "No seller available currently with sufficient balance." };
 
-    const seller = validSellers[0];
+    // Select the best seller (could be random or based on rating, here we pick first)
+    const seller = validSellers[Math.floor(Math.random() * validSellers.length)];
     const onlineAccount = seller.linked_accounts.find((acc: any) => acc.is_online);
 
     const orderId = `#ORD${Math.floor(100000000 + Math.random() * 900000000)}`;
@@ -83,7 +84,11 @@ export const P2PEngine = {
 
     const { error: orderError } = await supabase.from('p2p_orders').insert([newOrder]);
 
-    if (orderError) return { error: "Order generation failed" };
+    if (orderError) {
+      // Rollback balance lock if order fails
+      await supabase.rpc('refund_seller_balance', { p_seller_id: seller.id, p_amount: amount });
+      return { error: "Order generation failed" };
+    }
 
     return { order: newOrder };
   },
@@ -97,28 +102,32 @@ export const P2PEngine = {
 
   approveOrder: async (orderId: string) => {
     const { data: order } = await supabase.from('p2p_orders').select('*').eq('id', orderId).single();
-    if (!order) return;
+    if (!order) return { error: "Order not found" };
 
-    // Deduct from seller's locked balance permanently
-    await supabase.rpc('finalize_order_success', {
+    // Finalize transaction in database
+    const { error } = await supabase.rpc('finalize_order_success', {
       p_seller_id: order.seller_id,
       p_buyer_id: order.buyer_id,
-      p_amount: order.amount,
-      p_profit: (order.amount * order.profit_percent / 100) + order.bonus
+      p_amount: Number(order.amount),
+      p_profit: (Number(order.amount) * Number(order.profit_percent) / 100) + Number(order.bonus)
     });
+
+    if (error) return { error: error.message };
 
     return await supabase.from('p2p_orders').update({ status: 'success' }).eq('id', orderId);
   },
 
   rejectOrder: async (orderId: string) => {
     const { data: order } = await supabase.from('p2p_orders').select('*').eq('id', orderId).single();
-    if (!order) return;
+    if (!order) return { error: "Order not found" };
 
     // Refund seller's locked balance
-    await supabase.rpc('refund_seller_balance', {
+    const { error } = await supabase.rpc('refund_seller_balance', {
       p_seller_id: order.seller_id,
-      p_amount: order.amount
+      p_amount: Number(order.amount)
     });
+
+    if (error) return { error: error.message };
 
     return await supabase.from('p2p_orders').update({ status: 'rejected' }).eq('id', orderId);
   }

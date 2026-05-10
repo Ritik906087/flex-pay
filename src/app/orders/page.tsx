@@ -22,18 +22,24 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { P2PEngine } from "@/lib/p2p-engine";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
-// Market orders will be empty initially until sellers post them
-const MARKET_ORDERS: any[] = [];
+// Sample Market Orders (In production these could be dynamic or pre-set amounts)
+const MARKET_AMOUNTS = [
+  { id: 'M1', amount: 500 },
+  { id: 'M2', amount: 1000 },
+  { id: 'M3', amount: 2000 },
+  { id: 'M4', amount: 5000 },
+  { id: 'M5', amount: 10000 },
+  { id: 'M6', amount: 20000 },
+];
 
 export default function Orders() {
   const router = useRouter();
   const { toast } = useToast();
   const [pendingOrder, setPendingOrder] = useState<any>(null);
   const [isMatching, setIsMatching] = useState(false);
-  
-  const [minAmount, setMinAmount] = useState<string>("0");
-  const [maxAmount, setMaxAmount] = useState<string>("1000000");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     checkPending();
@@ -42,53 +48,67 @@ export default function Orders() {
     return () => window.removeEventListener('p2p_order_update', handleUpdate);
   }, []);
 
-  const checkPending = () => {
-    const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-    const pending = history.find((o: any) => o.status === 'pending-payment' || o.status === 'in-review');
-    setPendingOrder(pending || null);
+  const checkPending = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: orders } = await supabase
+        .from('p2p_orders')
+        .select('*')
+        .eq('buyer_id', user.id)
+        .in('status', ['pending-payment', 'in-review'])
+        .maybeSingle();
+      
+      setPendingOrder(orders || null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleBuyClick = (order: any) => {
+  const handleBuyClick = async (amount: number) => {
     if (pendingOrder) {
-      toast({ variant: "destructive", title: "Active Order", description: "Please complete or cancel your pending order first." });
+      toast({ variant: "destructive", title: "Active Order", description: "Complete or cancel your pending order first." });
       return;
     }
 
     setIsMatching(true);
-    setTimeout(() => {
-      const buyerId = localStorage.getItem('flexpay_user_id') || "USER_" + Math.random().toString(36).substr(2, 6);
-      const matched = P2PEngine.matchOrder(order.amount, buyerId);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
 
-      setIsMatching(false);
-      if (matched) {
-        toast({ title: "Seller Matched!", description: "Order created successfully." });
-        router.push(`/orders/checkout?id=${matched.id}`);
+      const result = await P2PEngine.matchOrder(amount, user.id);
+
+      if (result.order) {
+        toast({ title: "Seller Matched!", description: "Transfer funds to complete settlement." });
+        router.push(`/orders/checkout?id=${result.order.id}`);
       } else {
         toast({ 
           variant: "destructive", 
-          title: "No Seller Available", 
-          description: "Currently no seller has sufficient balance for this amount." 
+          title: "No Match Found", 
+          description: result.error || "Currently no seller has sufficient liquidity." 
         });
       }
-    }, 1500);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setIsMatching(false);
+    }
   };
-
-  const filteredOrders = useMemo(() => {
-    return MARKET_ORDERS.filter(order => {
-      const min = minAmount ? parseInt(minAmount) : 0;
-      const max = maxAmount ? parseInt(maxAmount) : 1000000;
-      return order.amount >= min && order.amount <= max;
-    });
-  }, [minAmount, maxAmount]);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
       <Tabs defaultValue="upi" className="w-full">
         <div className="bg-white px-5 pt-6 pb-2 border-b border-gray-100 sticky top-0 z-20">
-          <div className="flex justify-between items-center mb-1.5 px-0.5">
+          <div className="flex justify-between items-center mb-1.5">
             <div className="flex items-center gap-2">
               <span className="text-[12px] font-black text-primary uppercase tracking-tight">P2P Market</span>
-              <span className="bg-green-100 text-green-600 text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase">Live Sync</span>
+              <span className="bg-green-100 text-green-600 text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase">Verified</span>
             </div>
           </div>
 
@@ -99,11 +119,11 @@ export default function Orders() {
         </div>
 
         <div className="flex-1 overflow-y-auto pb-24 px-5">
-          <TabsContent value="upi" className="mt-2 space-y-2.5">
+          <TabsContent value="upi" className="mt-2 space-y-3">
             {isMatching && (
               <div className="bg-white p-4 rounded-xl border border-primary/20 flex items-center justify-center gap-3 animate-pulse shadow-sm">
                 <Loader2 className="animate-spin text-primary" size={16} />
-                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Searching for Seller...</span>
+                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Searching Network...</span>
               </div>
             )}
 
@@ -114,36 +134,28 @@ export default function Orders() {
               >
                 <div className="flex items-center gap-2.5">
                   <AlertCircle size={14} className="text-amber-500" />
-                  <p className="text-[10px] font-bold text-amber-900 uppercase">Task In Progress: {pendingOrder.id}</p>
+                  <p className="text-[10px] font-bold text-amber-900 uppercase">Active Task: {pendingOrder.id}</p>
                 </div>
                 <ArrowRight size={12} className="text-amber-400" />
               </button>
             )}
 
-            <div className="flex flex-col gap-2">
-              {filteredOrders.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 opacity-30">
-                  <BadgeIndianRupee size={40} className="text-gray-400 mb-3" />
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">No Active Orders in Market</p>
-                </div>
-              ) : (
-                filteredOrders.map((order) => (
-                  <div key={order.id} className="bg-white p-3.5 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
-                    <div>
-                      <span className="text-[7px] font-bold text-gray-400 uppercase">{order.id}</span>
-                      <p className="text-sm font-black text-gray-900">₹{order.amount.toLocaleString()}</p>
-                    </div>
-                    <Button 
-                      size="sm"
-                      className="h-8 px-6 rounded-lg font-black text-[9px] uppercase tracking-wider"
-                      onClick={() => handleBuyClick(order)}
-                      disabled={isMatching}
-                    >
-                      BUY
-                    </Button>
+            <div className="grid grid-cols-1 gap-2.5">
+              {MARKET_AMOUNTS.map((order) => (
+                <div key={order.id} className="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                  <div>
+                    <span className="text-[8px] font-bold text-gray-400 uppercase">Settlement Request</span>
+                    <p className="text-lg font-black text-gray-900">₹{order.amount.toLocaleString()}</p>
                   </div>
-                ))
-              )}
+                  <Button 
+                    className="h-10 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary shadow-lg shadow-primary/10"
+                    onClick={() => handleBuyClick(order.amount)}
+                    disabled={isMatching || !!pendingOrder}
+                  >
+                    BUY
+                  </Button>
+                </div>
+              ))}
             </div>
           </TabsContent>
         </div>
