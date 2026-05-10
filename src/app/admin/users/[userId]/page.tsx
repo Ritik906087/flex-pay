@@ -130,6 +130,7 @@ export default function UserDetailPage() {
       const { data: { user: adminAuthUser } } = await supabase.auth.getUser();
       const adminId = adminAuthUser?.id || null; 
 
+      // Updated RPC call with correct parameter order as per SQL fix
       const { error: rpcError } = await supabase.rpc('admin_adjust_balance_v2', {
         p_user_id: userId,
         p_amount: amount,
@@ -149,6 +150,7 @@ export default function UserDetailPage() {
       setAdjustAmount("");
       setAdjustReason("");
       
+      // Atomic refresh
       fetchUserData();
 
     } catch (error: any) {
@@ -166,24 +168,31 @@ export default function UserDetailPage() {
 
   const combinedLogs = useMemo(() => {
     const all = [
-      ...orders.map(o => ({ ...o, entryType: 'p2p' })),
+      ...orders.map(o => ({ 
+        ...o, 
+        entryType: 'p2p',
+        timestamp: o.created_at
+      })),
       ...adminLogs.map(l => ({ 
         ...l, 
         entryType: 'admin', 
-        id: "LOG-" + l.id.slice(0, 8), 
+        id: "ADJ-" + l.id.slice(0, 8).toUpperCase(), 
         amount: Number(l.amount), 
-        status: 'manual',
-        type: l.type
+        status: 'COMPLETE',
+        type: l.type,
+        timestamp: l.created_at,
+        remark: l.reason
       }))
     ];
     
-    all.sort((a, b) => new Date(b.created_at || b.timestamp).getTime() - new Date(a.created_at || a.timestamp).getTime());
+    all.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
     if (!logSearch) return all;
     const q = logSearch.toLowerCase();
     return all.filter(o => 
       o.id.toLowerCase().includes(q) || 
       (o.utr && o.utr.toLowerCase().includes(q)) || 
+      (o.remark && o.remark.toLowerCase().includes(q)) ||
       (o.reason && o.reason.toLowerCase().includes(q)) ||
       o.amount.toString().includes(q)
     );
@@ -368,45 +377,60 @@ export default function UserDetailPage() {
                          <Input placeholder="Search History, Reasons, UTR..." value={logSearch} onChange={e => setLogSearch(e.target.value)} className="h-12 pl-10 bg-slate-50 border-0 rounded-xl text-[11px] font-bold uppercase"/>
                       </div>
                    </div>
-                   <div className="grid gap-3">
-                      {combinedLogs.map((o, i) => (
-                        <Card key={i} className={cn(
-                          "border-0 p-5 rounded-[1.8rem] bg-white shadow-sm flex items-center justify-between",
-                          o.entryType === 'admin' ? "border-l-4 border-amber-400" : ""
-                        )}>
-                           <div className="flex items-center gap-4">
-                              <div className={cn(
-                                "w-10 h-10 rounded-xl flex items-center justify-center", 
-                                o.status === 'success' ? "bg-emerald-50 text-emerald-500" : 
-                                o.entryType === 'admin' ? "bg-amber-50 text-amber-500" : "bg-blue-50 text-blue-500"
-                              )}>
-                                 {o.entryType === 'admin' ? <ShieldCheck size={18} /> : <History size={18} />}
-                              </div>
-                              <div className="max-w-[300px]">
-                                 <div className="flex items-center gap-2">
-                                    <span className="text-[12px] font-black uppercase tracking-tight">{o.id}</span>
-                                    {o.entryType === 'admin' && <Badge className="text-[7px] bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">ADMIN ADJ</Badge>}
-                                 </div>
-                                 <p className="text-[8px] font-bold text-slate-400 uppercase mt-0.5 truncate">
-                                    {new Date(o.created_at || o.timestamp).toLocaleString()} {o.utr ? " • UTR: " + o.utr : ""}
-                                    {o.reason && <span className="text-slate-900 block mt-1 normal-case italic">Reason: {o.reason}</span>}
-                                 </p>
-                              </div>
-                           </div>
-                           <div className="text-right">
-                              <p className={cn(
-                                "text-lg font-black",
-                                o.type === 'sub' ? "text-red-500" : o.type === 'add' ? "text-emerald-500" : "text-slate-900"
-                              )}>
-                                {o.type === 'sub' ? '-' : o.type === 'add' ? '+' : ''}₹{Number(o.amount).toLocaleString()}
-                              </p>
-                              <Badge variant="outline" className={cn(
-                                "text-[7px] font-black border-slate-100 h-5 px-2 uppercase",
-                                o.status === 'success' ? "text-emerald-500" : "text-slate-400"
-                              )}>{o.status}</Badge>
-                           </div>
-                        </Card>
-                      ))}
+                   <div className="grid gap-3 pb-10">
+                      {combinedLogs.length === 0 ? (
+                        <div className="py-20 text-center opacity-30">
+                          <History size={40} className="mx-auto mb-3" />
+                          <p className="text-[10px] font-black uppercase">No Audit History Found</p>
+                        </div>
+                      ) : (
+                        combinedLogs.map((o, i) => (
+                          <Card key={i} className={cn(
+                            "border-0 p-5 rounded-[1.8rem] bg-white shadow-sm flex items-center justify-between",
+                            o.entryType === 'admin' ? "border-l-4 border-amber-400" : "border-l-4 border-primary"
+                          )}>
+                             <div className="flex items-center gap-4 overflow-hidden">
+                                <div className={cn(
+                                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0", 
+                                  o.status === 'success' || o.status === 'COMPLETE' ? "bg-emerald-50 text-emerald-500" : 
+                                  o.entryType === 'admin' ? "bg-amber-50 text-amber-500" : "bg-blue-50 text-blue-500"
+                                )}>
+                                   {o.entryType === 'admin' ? <ShieldCheck size={18} /> : <History size={18} />}
+                                </div>
+                                <div className="min-w-0">
+                                   <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="text-[12px] font-black uppercase tracking-tight truncate">{o.id}</span>
+                                      {o.entryType === 'admin' && <Badge className="text-[7px] bg-amber-100 text-amber-700 hover:bg-amber-100 border-0 h-4">ADMIN {o.type?.toUpperCase()}</Badge>}
+                                   </div>
+                                   <p className="text-[8px] font-bold text-slate-400 uppercase mt-0.5 truncate">
+                                      {new Date(o.timestamp).toLocaleString()} {o.utr ? " • UTR: " + o.utr : ""}
+                                   </p>
+                                   {(o.remark || o.reason) && (
+                                      <div className="mt-1 flex items-start gap-1">
+                                        <MessageSquare size={8} className="mt-0.5 text-primary shrink-0" />
+                                        <p className="text-[9px] font-bold text-slate-600 leading-tight italic">
+                                          "{o.remark || o.reason}"
+                                        </p>
+                                      </div>
+                                   )}
+                                </div>
+                             </div>
+                             <div className="text-right shrink-0 ml-4">
+                                <p className={cn(
+                                  "text-lg font-black",
+                                  o.type === 'sub' || (o.entryType === 'p2p' && o.status === 'rejected') ? "text-red-500" : 
+                                  o.type === 'add' || o.status === 'success' ? "text-emerald-500" : "text-slate-900"
+                                )}>
+                                  {o.type === 'sub' ? '-' : o.type === 'add' ? '+' : ''}₹{Number(o.amount).toLocaleString()}
+                                </p>
+                                <Badge variant="outline" className={cn(
+                                  "text-[7px] font-black border-slate-100 h-5 px-2 uppercase",
+                                  o.status === 'success' || o.status === 'COMPLETE' ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"
+                                )}>{o.status}</Badge>
+                             </div>
+                          </Card>
+                        ))
+                      )}
                    </div>
                 </TabsContent>
              </Tabs>
