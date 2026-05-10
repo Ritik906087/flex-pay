@@ -138,7 +138,7 @@ export default function UserDetailPage() {
       setAdjustAmount("");
       setAdjustReason("");
       
-      // Artificially wait to ensure propagation
+      // Refresh data
       setTimeout(() => fetchUserData(), 500);
 
     } catch (error: any) {
