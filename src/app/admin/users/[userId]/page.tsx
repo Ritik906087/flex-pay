@@ -55,6 +55,8 @@ export default function UserDetailPage() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
+      console.log(`Admin: Fetching full audit data for node ${userId}`);
+      
       const { data: profile, error: pError } = await supabase
         .from('profiles')
         .select(`
@@ -66,6 +68,7 @@ export default function UserDetailPage() {
 
       if (pError) throw pError;
       setUser(profile);
+      console.log("Admin: Node data loaded", profile);
 
       const { data: orderData, error: oError } = await supabase
         .from('p2p_orders')
@@ -86,15 +89,24 @@ export default function UserDetailPage() {
 
   const handleBalanceUpdate = async () => {
     const amount = parseFloat(adjustAmount);
-    if (isNaN(amount)) {
-      toast({ variant: "destructive", title: "Invalid Amount", description: "Please enter a valid numeric value." });
+    if (isNaN(amount) || amount < 0) {
+      toast({ variant: "destructive", title: "Invalid Amount", description: "Please enter a positive numeric value." });
       return;
     }
 
     try {
       setIsUpdatingBalance(true);
-      // Ensure we treat the current balance as a number to avoid string concatenation
-      const currentBalance = Number(user?.balance || 0);
+      
+      // Step 1: Get latest balance directly from DB to avoid stale state
+      const { data: currentData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('balance')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const currentBalance = Number(currentData.balance || 0);
       let newBalance = currentBalance;
 
       if (adjustType === 'add') {
@@ -105,27 +117,28 @@ export default function UserDetailPage() {
         newBalance = amount;
       }
 
-      console.log(`Updating balance for ${userId}: ${currentBalance} -> ${newBalance} (${adjustType} ${amount})`);
+      console.log(`Admin: Updating Balance: ${currentBalance} -> ${newBalance} (Mode: ${adjustType})`);
 
-      const { error } = await supabase
+      // Step 2: Perform update
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({ balance: newBalance })
         .eq('id', userId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      // Update local state immediately for snappy UI
-      setUser((prev: any) => ({ ...prev, balance: newBalance }));
-      setIsBalanceDialogOpen(false);
-      setAdjustAmount("");
-      
+      // Step 3: Verify and Sync
       toast({ 
         title: "Success", 
         description: `Balance ${adjustType === 'add' ? 'increased' : adjustType === 'sub' ? 'decreased' : 'set'} to ₹${newBalance.toLocaleString()}.` 
       });
       
-      // Re-fetch to confirm and sync other data
-      fetchUserData(); 
+      setIsBalanceDialogOpen(false);
+      setAdjustAmount("");
+      
+      // Force immediate re-fetch to confirm DB change
+      await fetchUserData();
+
     } catch (error: any) {
       console.error("Balance Update Error:", error);
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
@@ -326,7 +339,7 @@ export default function UserDetailPage() {
                   <div className="grid grid-cols-1 gap-3">
                     {[
                       { label: "Phone Identifier", value: user.mobile, icon: Smartphone, color: "text-blue-500" },
-                      { label: "Locked Assets", value: `₹${Number(user.locked_balance || 0).toLocaleString()}`, icon: Ban, color: "text-red-500" },
+                      { label: "Locked Assets", value: `₹{Number(user.locked_balance || 0).toLocaleString()}`, icon: Ban, color: "text-red-500" },
                       { label: "Registered At", value: new Date(user.created_at).toLocaleDateString(), icon: Activity, color: "text-amber-500" },
                     ].map((row, i) => (
                       <div key={i} className="flex justify-between items-center px-6 py-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors">
