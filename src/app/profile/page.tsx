@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function Profile() {
   const { toast } = useToast();
@@ -24,28 +25,32 @@ export default function Profile() {
   const [balance, setBalance] = useState(0);
 
   useEffect(() => {
-    const adminFlag = localStorage.getItem('is_admin') === 'true';
-    const userMobile = localStorage.getItem('flexpay_user_mobile') || "User";
-    const userId = localStorage.getItem('flexpay_user_id') || "...";
-    
-    setIsAdmin(adminFlag);
-    setMobile(userMobile);
-    setUid(userId.slice(0, 8).toUpperCase());
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setMobile(user.user_metadata?.mobile || "User");
+        setUid(user.id.slice(0, 8).toUpperCase());
 
-    const loadBalance = () => {
-      const savedOrders = localStorage.getItem('flexpay_orders');
-      if (savedOrders) {
-        const orders = JSON.parse(savedOrders);
-        const successOrders = orders.filter((o: any) => o.status === 'success');
-        const calculatedBalance = successOrders.reduce((acc: number, o: any) => 
-          acc + (o.amount * (o.profitPercent || 0) / 100 + (o.bonus || 0)), 0);
-        setBalance(calculatedBalance);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setBalance(profile.balance || 0);
+          setIsAdmin(profile.is_admin || false);
+        }
+      } else {
+        router.push('/login');
       }
     };
-    loadBalance();
-  }, []);
 
-  const handleLogout = () => {
+    fetchUserData();
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('is_admin');
     localStorage.removeItem('flexpay_user_id');
     localStorage.removeItem('flexpay_user_mobile');
@@ -105,7 +110,6 @@ export default function Profile() {
       <div className="px-4 mt-4 flex flex-col gap-3 pb-24">
         <div className="bg-white rounded-[1.5rem] border border-gray-100 overflow-hidden shadow-sm">
           
-          {/* 1. Sell Center (Sell History) */}
           <Link href="/profile/sell">
             <button className="w-full px-4 py-3.5 flex items-center justify-between border-b border-gray-50 active:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
@@ -116,7 +120,6 @@ export default function Profile() {
             </button>
           </Link>
 
-          {/* 2. Buy History (Order History) */}
           <Link href="/profile/history">
             <button className="w-full px-4 py-3.5 flex items-center justify-between border-b border-gray-50 active:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
@@ -127,7 +130,6 @@ export default function Profile() {
             </button>
           </Link>
 
-          {/* 3. Link Account */}
           <Link href="/profile/link-account">
             <button className="w-full px-4 py-3.5 flex items-center justify-between border-b border-gray-50 active:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
@@ -138,7 +140,6 @@ export default function Profile() {
             </button>
           </Link>
 
-          {/* 4. Newbie Reward */}
           <Link href="/profile/newbie-reward">
             <button className="w-full px-4 py-3.5 flex items-center justify-between border-b border-gray-50 active:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
@@ -152,7 +153,6 @@ export default function Profile() {
             </button>
           </Link>
 
-          {/* 5. Support */}
           <Link href="/profile/support">
             <button className="w-full px-4 py-3.5 flex items-center justify-between border-b border-gray-50 active:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
@@ -163,7 +163,6 @@ export default function Profile() {
             </button>
           </Link>
 
-          {/* Admin Terminal (Optional if logged in as admin) */}
           {isAdmin && (
             <Link href="/admin">
               <button className="w-full px-4 py-3.5 flex items-center justify-between border-b border-gray-50 active:bg-slate-50 transition-colors">
@@ -176,7 +175,6 @@ export default function Profile() {
             </Link>
           )}
 
-          {/* 6. Logout */}
           <button 
             onClick={handleLogout}
             className="w-full px-4 py-4 flex items-center justify-center gap-2 bg-red-50/50 text-red-500 active:bg-red-100 transition-colors"

@@ -17,13 +17,13 @@ export default function Home() {
   const [profile, setProfile] = useState<any>(null);
   const [activity, setActivity] = useState<any[]>([]);
   const [syncStatus, setSyncStatus] = useState("Initializing...");
+  const [displayUid, setDisplayUid] = useState("...");
   const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Failsafe: Maximum 5 seconds loading
     initTimeoutRef.current = setTimeout(() => {
       if (loading) {
-        console.log("Initialization timeout reached, showing app anyway.");
         setLoading(false);
       }
     }, 5000);
@@ -40,6 +40,9 @@ export default function Home() {
           return;
         }
 
+        // Set default UID from UUID
+        setDisplayUid(user.id.slice(0, 8).toUpperCase());
+
         setSyncStatus("Syncing Profile...");
         await fetchProfile(user.id);
         
@@ -49,14 +52,13 @@ export default function Home() {
         // Subscribe to changes in background with a unique channel name per user
         const channelName = `profile_sync_${user.id}`;
         
-        // Clean up any existing channels with the same name to prevent errors
-        const existingChannels = supabase.getChannels();
-        const staleChannel = existingChannels.find(ch => ch.name === channelName);
-        if (staleChannel) {
-          await supabase.removeChannel(staleChannel);
+        // Ensure any existing channel with this name is removed first
+        const existingChannel = supabase.getChannels().find(ch => ch.name === channelName);
+        if (existingChannel) {
+          await supabase.removeChannel(existingChannel);
         }
 
-        // Initialize channel and add listeners BEFORE calling subscribe()
+        // Create channel, add listener, and subscribe in ONE chain
         profileSub = supabase.channel(channelName)
           .on('postgres_changes', 
             { 
@@ -66,10 +68,8 @@ export default function Home() {
               filter: `id=eq.${user.id}` 
             }, 
             () => fetchProfile(user.id)
-          );
-
-        // Finally, subscribe
-        profileSub.subscribe();
+          )
+          .subscribe();
 
       } catch (err) {
         console.error("Initialization error:", err);
@@ -104,7 +104,9 @@ export default function Home() {
         .order('created_at', { ascending: false })
         .limit(5);
       
-      if (profileData) setProfile(profileData);
+      if (profileData) {
+        setProfile(profileData);
+      }
       if (orders) setActivity(orders);
     } catch (err) {
       console.error("Fetch data error:", err);
@@ -187,7 +189,10 @@ export default function Home() {
       <div className="px-4 mt-6 pb-28">
         <div className="flex items-center justify-between mb-4 px-1">
           <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Terminal Logs</h3>
-          {!profile && <span className="text-[8px] font-black text-amber-500 uppercase animate-pulse">Offline Mode</span>}
+          <div className="flex items-center gap-2">
+            <span className="text-[8px] font-bold text-gray-400 uppercase">ID: {displayUid}</span>
+            {!profile && <span className="text-[8px] font-black text-amber-500 uppercase animate-pulse">Offline</span>}
+          </div>
         </div>
         
         <div className="flex flex-col gap-2.5">

@@ -19,7 +19,7 @@ export default function Invite() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Using the first 8 characters of UUID as the UID/Invite Code
+          // Using the first 8 characters of UUID as the UID/Invite Code as per request
           setInviteCode(user.id.slice(0, 8).toUpperCase());
         }
       } catch (error) {
