@@ -47,7 +47,17 @@ export default function Home() {
         setLoading(false);
 
         // Subscribe to changes in background with a unique channel name per user
-        profileSub = supabase.channel(`profile_sync_${user.id}`)
+        const channelName = `profile_sync_${user.id}`;
+        
+        // Clean up any existing channels with the same name to prevent errors
+        const existingChannels = supabase.getChannels();
+        const staleChannel = existingChannels.find(ch => ch.name === channelName);
+        if (staleChannel) {
+          await supabase.removeChannel(staleChannel);
+        }
+
+        // Initialize channel and add listeners BEFORE calling subscribe()
+        profileSub = supabase.channel(channelName)
           .on('postgres_changes', 
             { 
               event: '*', 
@@ -56,8 +66,10 @@ export default function Home() {
               filter: `id=eq.${user.id}` 
             }, 
             () => fetchProfile(user.id)
-          )
-          .subscribe();
+          );
+
+        // Finally, subscribe
+        profileSub.subscribe();
 
       } catch (err) {
         console.error("Initialization error:", err);
