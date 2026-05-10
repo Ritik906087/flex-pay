@@ -33,15 +33,19 @@ function UsdtCheckoutContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+  const [orderData, setOrderData] = useState({ id: "#USDT000", amount: 0, usdt: "0", profit: 8 });
 
   const TRC20_ADDRESS = "TYv3u4PqX9Rz8Wd2mK5h7B1N4L6J0S9A3Q";
 
-  const orderData = {
-    id: searchParams.get('id') || "#USDT000",
-    amount: parseInt(searchParams.get('amount') || "0"),
-    usdt: searchParams.get('usdt') || "0",
-    profit: parseInt(searchParams.get('profit') || "8"),
-  };
+  // Hydrate order data after mount
+  useEffect(() => {
+    setOrderData({
+      id: searchParams.get('id') || "#USDT000",
+      amount: parseInt(searchParams.get('amount') || "0"),
+      usdt: searchParams.get('usdt') || "0",
+      profit: parseInt(searchParams.get('profit') || "8"),
+    });
+  }, [searchParams]);
 
   useEffect(() => {
     if (timeLeft <= 0) {

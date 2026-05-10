@@ -18,14 +18,19 @@ function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const orderId = searchParams.get('id');
-
+  
+  const [orderId, setOrderId] = useState<string | null>(null);
   const [order, setOrder] = useState<any | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [timeLeft, setTimeLeft] = useState(1800);
   const [utr, setUtr] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Hydrate search params after mount
+  useEffect(() => {
+    setOrderId(searchParams.get('id'));
+  }, [searchParams]);
 
   const loadOrder = async () => {
     if (!orderId) return;
@@ -50,17 +55,17 @@ function CheckoutContent() {
   };
 
   useEffect(() => {
-    loadOrder();
+    if (orderId) loadOrder();
   }, [orderId]);
 
   useEffect(() => {
-    if (timeLeft <= 0 && order?.status === 'pending-payment') {
-      P2PEngine.rejectOrder(orderId!);
+    if (timeLeft <= 0 && order?.status === 'pending-payment' && orderId) {
+      P2PEngine.rejectOrder(orderId);
       return;
     }
     const timer = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, order]);
+  }, [timeLeft, order, orderId]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -74,14 +79,14 @@ function CheckoutContent() {
   };
 
   const handleSubmitProof = async () => {
-    if (!utr) {
+    if (!utr || !orderId) {
       toast({ variant: "destructive", title: "Error", description: "UTR Required." });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { error } = await P2PEngine.submitProof(orderId!, utr, "");
+      const { error } = await P2PEngine.submitProof(orderId, utr, "");
       if (error) throw error;
       toast({ title: "Submitted", description: "Proof is under review." });
       router.push('/profile/history');
@@ -92,7 +97,12 @@ function CheckoutContent() {
     }
   };
 
-  if (!order) return null;
+  if (!order) return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <Loader2 className="animate-spin text-primary" size={32} />
+      <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Order...</p>
+    </div>
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -150,7 +160,7 @@ function CheckoutContent() {
               <Button 
                 variant="outline" 
                 className="flex-1 h-14 rounded-xl font-black uppercase tracking-wider text-[9px] border-red-100 text-red-500 bg-red-50/30"
-                onClick={() => P2PEngine.rejectOrder(order.id)}
+                onClick={() => orderId && P2PEngine.rejectOrder(orderId)}
               >
                 CANCEL
               </Button>

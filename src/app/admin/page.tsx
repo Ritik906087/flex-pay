@@ -24,15 +24,20 @@ function AdminPanelContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || "dashboard");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [securityLogs, setSecurityLogs] = useState<any[]>([]);
   const [stats, setStats] = useState({ volume: 0, nodes: 0, review: 0, risk: 0 });
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [globalSearch, setGlobalSearch] = useState("");
+
+  // Sync tab with search params after hydration
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
   
   const fetchData = useCallback(async () => {
     try {
@@ -172,7 +177,7 @@ function AdminPanelContent() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                          {filteredSecurity.map((log) => (
+                          {securityLogs.map((log) => (
                             <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                               <td className="px-8 py-5">
                                 <div className="flex items-center gap-3">
@@ -228,11 +233,11 @@ function AdminPanelContent() {
                    <div className="space-y-4">
                       <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
                         <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Multi-Account Detection</span>
-                        <p className="text-sm font-black">7 Suspected Collusions</p>
+                        <p className="text-sm font-black">{stats.risk} Critical Alerts</p>
                       </div>
                       <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                        <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">VPN Blocks (24h)</span>
-                        <p className="text-sm font-black">128 Unauthorized IPs</p>
+                        <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Total Network Nodes</span>
+                        <p className="text-sm font-black">{stats.nodes} Active Assets</p>
                       </div>
                    </div>
                 </Card>
