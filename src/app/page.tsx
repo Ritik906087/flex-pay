@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { BottomNav } from "@/components/bottom-nav";
-import { TrendingUp, Wallet, ShoppingBag, Info, Loader2 } from "lucide-react";
+import { TrendingUp, Wallet, ShoppingBag, Info, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { supabase } from "@/lib/supabase";
@@ -25,21 +25,24 @@ export default function Home() {
 
     const initialize = async () => {
       try {
+        console.log("[HOME] Initializing System...");
         setSyncStatus("Checking Auth...");
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         
         if (authError || !user) {
+          console.warn("[HOME] Auth failed, redirecting to login.");
           router.push('/login');
           return;
         }
 
         setDisplayUid(user.id.slice(0, 8).toUpperCase());
 
-        // Perform Device Intelligence Audit
-        setSyncStatus("Security Audit...");
+        // Perform Advanced Device Intelligence Audit
+        setSyncStatus("Sentinel Guard Audit...");
+        console.log("[HOME] Starting Security Engine Audit...");
         await SecurityEngine.captureAll(user.id);
 
-        setSyncStatus("Syncing Terminal...");
+        setSyncStatus("Syncing Assets...");
         await fetchProfile(user.id);
         
         setSyncStatus("Terminal Ready");
@@ -49,12 +52,15 @@ export default function Home() {
         profileSub = supabase.channel(channelName)
           .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, 
-            () => fetchProfile(user.id)
+            () => {
+              console.log("[HOME] Profile updated in realtime.");
+              fetchProfile(user.id);
+            }
           )
           .subscribe();
 
       } catch (err) {
-        console.error("Initialization error:", err);
+        console.error("[HOME] Initialization error:", err);
         setLoading(false);
       }
     };
@@ -64,7 +70,7 @@ export default function Home() {
     return () => { 
       if (profileSub) supabase.removeChannel(profileSub);
     };
-  }, []);
+  }, [router]);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -74,17 +80,20 @@ export default function Home() {
       if (profileData) setProfile(profileData);
       if (orders) setActivity(orders);
     } catch (err) {
-      console.error("Fetch data error:", err);
+      console.error("[HOME] Fetch profile data error:", err);
     }
   };
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center h-full bg-white px-10">
-      <div className="w-14 h-14 bg-primary rounded-[1.5rem] flex items-center justify-center shadow-2xl mb-6 animate-float">
-        <span className="text-2xl font-black text-white">FP</span>
+      <div className="w-16 h-16 bg-primary rounded-[1.8rem] flex items-center justify-center shadow-2xl mb-8 animate-float">
+        <span className="text-3xl font-black text-white">FP</span>
       </div>
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-gray-900 text-[11px] font-black tracking-[0.2em] uppercase">Syncing Terminal</p>
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center gap-2">
+          <ShieldCheck size={14} className="text-primary animate-pulse" />
+          <p className="text-gray-900 text-[11px] font-black tracking-[0.2em] uppercase">SENTINEL ACTIVE</p>
+        </div>
         <div className="flex items-center gap-2">
           <Loader2 size={12} className="animate-spin text-primary/40" />
           <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{syncStatus}</span>
@@ -149,6 +158,12 @@ export default function Home() {
               </div>
             </div>
           ))}
+          {activity.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 opacity-20">
+               <ShoppingBag size={32} />
+               <p className="text-[10px] font-black mt-2 uppercase">No Terminal Activity</p>
+            </div>
+          )}
         </div>
       </div>
       <BottomNav />

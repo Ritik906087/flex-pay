@@ -9,7 +9,7 @@ import {
   ChevronLeft, Copy, Search, Filter, Menu, RefreshCw, 
   SmartphoneIcon, Wallet, Activity, ChevronRight,
   Settings2, PlusCircle, MinusCircle, Equal, IndianRupee, MessageSquare, AlertTriangle,
-  Fingerprint, Globe, Cpu, HardDrive, Monitor, ShieldAlert
+  Fingerprint, Globe, Cpu, HardDrive, Monitor, ShieldAlert, Loader2, Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ export default function UserDetailPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [adminLogs, setAdminLogs] = useState<any[]>([]);
   const [linkedAccounts, setLinkedAccounts] = useState<any[]>([]);
-  const [securityIntel, setSecurityIntel] = useState<any[]>([]);
+  const [securityEvents, setSecurityEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [logSearch, setLogSearch] = useState("");
@@ -69,9 +69,8 @@ export default function UserDetailPage() {
       const { data: logData } = await supabase.from('admin_balance_logs').select('*').eq('user_id', userId).order('created_at', { ascending: false });
       setAdminLogs(logData || []);
 
-      // Fetch Security Intel - Fetch from both tables to be safe
-      const { data: security } = await supabase.from('security_events').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-      setSecurityIntel(security || []);
+      const { data: security } = await supabase.from('security_events').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10);
+      setSecurityEvents(security || []);
 
     } catch (error: any) {
       toast({ variant: "destructive", title: "Audit Failed", description: error.message });
@@ -104,6 +103,8 @@ export default function UserDetailPage() {
       if (rpcError) throw rpcError;
       toast({ title: "Asset Updated", description: "Ledger updated successfully." });
       setIsBalanceDialogOpen(false);
+      setAdjustAmount("");
+      setAdjustReason("");
       fetchUserData();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -120,15 +121,26 @@ export default function UserDetailPage() {
     all.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     if (!logSearch) return all;
     const q = logSearch.toLowerCase();
-    return all.filter(o => o.id.toLowerCase().includes(q) || (o.remark && o.remark.toLowerCase().includes(q)) || (o.reason && o.reason.toLowerCase().includes(q)));
+    return all.filter(o => 
+      o.id.toLowerCase().includes(q) || 
+      (o.remark && o.remark.toLowerCase().includes(q)) || 
+      (o.reason && o.reason.toLowerCase().includes(q))
+    );
   }, [orders, adminLogs, logSearch]);
 
-  const latestIntel = securityIntel[0]?.details;
+  const latestIntel = securityEvents[0]?.details;
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text || "");
     toast({ title: "Copied", description: `${label} copied.` });
   };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+      <Loader2 className="animate-spin text-primary mb-4" size={40} />
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Syncing Intelligence...</p>
+    </div>
+  );
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
@@ -139,7 +151,7 @@ export default function UserDetailPage() {
           <div className="flex items-center gap-4">
              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden"><Menu size={20}/></Button>
              <button onClick={() => router.back()} className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary"><ChevronLeft size={20}/></button>
-             <h2 className="text-[12px] font-black uppercase tracking-tighter sm:block">Identity Intelligence: <span className="text-primary">{user?.name}</span></h2>
+             <h2 className="text-[12px] font-black uppercase sm:block">Audit Terminal: <span className="text-primary">{user?.name}</span></h2>
           </div>
           <div className="flex items-center gap-3">
              <Badge className={cn("h-8 px-4 text-[9px] font-black uppercase", user?.status === 'active' ? "bg-emerald-500 text-white" : "bg-red-500 text-white")}>{user?.status || 'Unknown'} Node</Badge>
@@ -205,7 +217,7 @@ export default function UserDetailPage() {
                       </div>
                       <DialogFooter>
                         <Button onClick={handleBalanceUpdate} disabled={isUpdatingBalance} className="w-full h-14 bg-slate-900 hover:bg-black font-black uppercase text-[10px] tracking-widest rounded-2xl">
-                          {isUpdatingBalance ? <RefreshCw className="animate-spin mr-2" size={14}/> : <ShieldCheck className="mr-2" size={14}/>} COMMIT CHANGES
+                          {isUpdatingBalance ? <Loader2 className="animate-spin mr-2" size={14}/> : <ShieldCheck className="mr-2" size={14}/>} COMMIT CHANGES
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -218,10 +230,10 @@ export default function UserDetailPage() {
           <div className="flex-1 space-y-8">
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "IP Location", value: latestIntel?.network?.city || latestIntel?.network_info?.city || 'Unknown', icon: Globe, color: "text-blue-500", bg: "bg-blue-50" },
-                  { label: "ISP Provider", value: (latestIntel?.network?.isp || latestIntel?.network_info?.isp || 'Unknown').slice(0, 15), icon: Activity, color: "text-purple-500", bg: "bg-purple-50" },
-                  { label: "Device Fingerprint", value: (latestIntel?.fingerprintId || 'Unknown').slice(0, 12), icon: Fingerprint, color: "text-emerald-500", bg: "bg-emerald-50" },
-                  { label: "VPN Status", value: (latestIntel?.network?.vpn || latestIntel?.network_info?.vpn) ? 'DETECTED' : 'SECURE', icon: ShieldCheck, color: (latestIntel?.network?.vpn || latestIntel?.network_info?.vpn) ? "text-red-500" : "text-emerald-500", bg: (latestIntel?.network?.vpn || latestIntel?.network_info?.vpn) ? "bg-red-50" : "bg-emerald-50" },
+                  { label: "IP Location", value: latestIntel?.network?.city ? `${latestIntel.network.city}, ${latestIntel.network.country}` : 'Unknown', icon: Globe, color: "text-blue-500", bg: "bg-blue-50" },
+                  { label: "ISP Provider", value: latestIntel?.network?.isp?.slice(0, 18) || 'Unknown', icon: Activity, color: "text-purple-500", bg: "bg-purple-50" },
+                  { label: "Device Fingerprint", value: latestIntel?.fingerprintId?.slice(0, 12) || 'Unknown', icon: Fingerprint, color: "text-emerald-500", bg: "bg-emerald-50" },
+                  { label: "VPN Status", value: latestIntel?.network?.vpn ? 'DETECTED' : 'SECURE', icon: ShieldCheck, color: latestIntel?.network?.vpn ? "text-red-500" : "text-emerald-500", bg: latestIntel?.network?.vpn ? "bg-red-50" : "bg-emerald-50" },
                 ].map((item, i) => (
                   <Card key={i} className="border-0 shadow-sm rounded-3xl p-5 bg-white">
                     <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center mb-4", item.bg, item.color)}>
@@ -246,10 +258,12 @@ export default function UserDetailPage() {
                          <h4 className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2"><Cpu size={16} className="text-primary" /> Hardware Signals</h4>
                          <div className="space-y-4">
                             {[
-                              { label: "Operating System", value: latestIntel?.device?.os || latestIntel?.device_info?.os, icon: Monitor },
-                              { label: "CPU Cores", value: latestIntel?.device?.cores || latestIntel?.device_info?.cores, icon: Cpu },
-                              { label: "RAM Estimate", value: `${latestIntel?.device?.ram || latestIntel?.device_info?.ram || 'N/A'} GB`, icon: HardDrive },
-                              { label: "Resolution", value: latestIntel?.device?.resolution || latestIntel?.device_info?.resolution, icon: Monitor },
+                              { label: "Operating System", value: latestIntel?.device?.os, icon: Monitor },
+                              { label: "OS Version", value: latestIntel?.device?.osVersion, icon: Info },
+                              { label: "Browser", value: `${latestIntel?.device?.browser} ${latestIntel?.device?.browserVersion || ''}`, icon: Globe },
+                              { label: "CPU Cores", value: latestIntel?.device?.cores, icon: Cpu },
+                              { label: "RAM Estimate", value: `${latestIntel?.device?.ram || 'N/A'} GB`, icon: HardDrive },
+                              { label: "Resolution", value: latestIntel?.device?.resolution, icon: Monitor },
                             ].map((s, i) => (
                               <div key={i} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
                                 <span className="text-[9px] font-bold text-slate-400 uppercase">{s.label}</span>
@@ -262,10 +276,12 @@ export default function UserDetailPage() {
                          <h4 className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2"><Globe size={16} className="text-primary" /> Network Signals</h4>
                          <div className="space-y-4">
                             {[
-                              { label: "Public IP", value: latestIntel?.network?.ip || latestIntel?.network_info?.ip },
-                              { label: "ISP / Carrier", value: latestIntel?.network?.isp || latestIntel?.network_info?.isp },
-                              { label: "Country / State", value: `${latestIntel?.network?.country || latestIntel?.network_info?.country || ''}, ${latestIntel?.network?.region || latestIntel?.network_info?.region || ''}` },
-                              { label: "Proxy / TOR", value: (latestIntel?.network?.proxy || latestIntel?.network_info?.proxy) ? 'DETECTED' : 'NONE' },
+                              { label: "Public IP", value: latestIntel?.network?.ip },
+                              { label: "WebRTC Leak IP", value: latestIntel?.network?.webrtcIP },
+                              { label: "ISP / Carrier", value: latestIntel?.network?.isp },
+                              { label: "Country / State", value: `${latestIntel?.network?.country || ''}, ${latestIntel?.network?.region || ''}` },
+                              { label: "Connection", value: latestIntel?.network?.connectionType },
+                              { label: "Proxy / TOR", value: (latestIntel?.network?.proxy || latestIntel?.network?.tor) ? 'DETECTED' : 'NONE' },
                             ].map((s, i) => (
                               <div key={i} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
                                 <span className="text-[9px] font-bold text-slate-400 uppercase">{s.label}</span>
@@ -313,12 +329,6 @@ export default function UserDetailPage() {
                         </div>
                      </Card>
                    ))}
-                   {linkedAccounts.length === 0 && (
-                     <div className="col-span-full py-20 flex flex-col items-center opacity-20">
-                        <CreditCard size={48} />
-                        <p className="text-[10px] font-black mt-4 uppercase">No terminals linked</p>
-                     </div>
-                   )}
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-6 space-y-4">
@@ -355,12 +365,6 @@ export default function UserDetailPage() {
                            </div>
                         </Card>
                       ))}
-                      {combinedLogs.length === 0 && (
-                        <div className="flex flex-col items-center py-20 opacity-20">
-                           <History size={48} />
-                           <p className="text-[10px] font-black mt-4 uppercase">No records found</p>
-                        </div>
-                      )}
                    </div>
                 </TabsContent>
              </Tabs>
