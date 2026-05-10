@@ -80,7 +80,7 @@ export default function UserDetailPage() {
       if (oError) throw oError;
       setOrders(orderData || []);
 
-      // Fetch Admin Adjustments Logs (Only for admin display)
+      // Fetch Admin Adjustments Logs
       const { data: logData, error: lError } = await supabase
         .from('admin_balance_logs')
         .select('*')
@@ -114,13 +114,15 @@ export default function UserDetailPage() {
 
     try {
       setIsUpdatingBalance(true);
-      const { data: { user: adminUser } } = await supabase.auth.getUser();
-      if (!adminUser) throw new Error("Admin session expired");
+      
+      // Get admin ID if available from Supabase session
+      const { data: { user: adminAuthUser } } = await supabase.auth.getUser();
+      const adminId = adminAuthUser?.id || null; // Fallback to null for bypass login
 
       // Use RPC for guaranteed balance and log atomic update
       const { error: rpcError } = await supabase.rpc('admin_adjust_balance_v2', {
         p_user_id: userId,
-        p_admin_id: adminUser.id,
+        p_admin_id: adminId,
         p_amount: amount,
         p_type: adjustType,
         p_reason: adjustReason
@@ -130,13 +132,15 @@ export default function UserDetailPage() {
 
       toast({ 
         title: "Protocol Success", 
-        description: `Assets modified for node ${userId.slice(0, 8).toUpperCase()}.` 
+        description: "Assets modified for node " + userId.slice(0, 8).toUpperCase()
       });
       
       setIsBalanceDialogOpen(false);
       setAdjustAmount("");
       setAdjustReason("");
-      fetchUserData(); // Refresh dashboard
+      
+      // Artificial delay to ensure DB propagation before re-fetch
+      setTimeout(() => fetchUserData(), 500);
 
     } catch (error: any) {
       console.error("RPC Error:", error.message);
@@ -148,14 +152,14 @@ export default function UserDetailPage() {
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: "Copied", description: `${label} copied to clipboard.` });
+    toast({ title: "Copied", description: label + " copied to clipboard." });
   };
 
   // Combine both P2P and Admin logs for history tab
   const combinedLogs = useMemo(() => {
     const all = [
       ...orders.map(o => ({ ...o, entryType: 'p2p' })),
-      ...adminLogs.map(l => ({ ...l, entryType: 'admin', id: `LOG-${l.id.slice(0, 8)}`, amount: l.amount, status: 'manual' }))
+      ...adminLogs.map(l => ({ ...l, entryType: 'admin', id: "LOG-" + l.id.slice(0, 8), amount: l.amount, status: 'manual' }))
     ];
     
     // Sort by date
@@ -180,11 +184,14 @@ export default function UserDetailPage() {
     );
   }
 
+  const userBalance = Number(user?.balance || 0);
+  const lockedBalance = Number(user?.locked_balance || 0);
+
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       <AdminSidebar 
         activeTab="users" 
-        onTabChange={(tab) => router.push(`/admin?tab=${tab}`)} 
+        onTabChange={(tab) => router.push("/admin?tab=" + tab)} 
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       />
@@ -219,7 +226,7 @@ export default function UserDetailPage() {
               <div className="space-y-4">
                 <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden group">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Liquid Balance</span>
-                  <p className="text-3xl font-black mb-6">₹{Number(user?.balance || 0).toLocaleString()}</p>
+                  <p className="text-3xl font-black mb-6">₹{userBalance.toLocaleString()}</p>
                   
                   <Dialog open={isBalanceDialogOpen} onOpenChange={setIsBalanceDialogOpen}>
                     <DialogTrigger asChild>
@@ -276,7 +283,7 @@ export default function UserDetailPage() {
                 <div className="space-y-2">
                    {[
                      { label: "Mobile", value: user?.mobile, icon: Smartphone },
-                     { label: "Locked", value: `₹${Number(user?.locked_balance || 0).toLocaleString()}`, icon: Ban },
+                     { label: "Locked", value: "₹" + lockedBalance.toLocaleString(), icon: Ban },
                      { label: "Registered", value: new Date(user?.created_at).toLocaleDateString(), icon: Activity },
                    ].map((item, i) => (
                      <div key={i} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -350,7 +357,7 @@ export default function UserDetailPage() {
                                     {o.entryType === 'admin' && <Badge className="text-[7px] bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">ADMIN ADJ</Badge>}
                                  </div>
                                  <p className="text-[8px] font-bold text-slate-400 uppercase mt-0.5 truncate">
-                                    {new Date(o.created_at || o.timestamp).toLocaleString()} {o.utr ? `• UTR: ${o.utr}` : ''}
+                                    {new Date(o.created_at || o.timestamp).toLocaleString()} {o.utr ? " • UTR: " + o.utr : ""}
                                     {o.reason && <span className="text-slate-900 block mt-1 normal-case italic">Reason: {o.reason}</span>}
                                  </p>
                               </div>
@@ -378,3 +385,4 @@ export default function UserDetailPage() {
     </div>
   );
 }
+
