@@ -59,22 +59,27 @@ export default function AdminPanel() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log("Fetching Admin Data...");
+      console.log("Fetching Admin Data from Supabase...");
 
-      // 1. Fetch Profiles (Nodes)
+      // 1. Fetch Profiles (Nodes) - This is where the recursion error was happening
       const { data: profileData, error: profileError, count: nodeCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' });
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        if (profileError.message.includes("recursion")) {
+          throw new Error("Database Security Error: Please run the SQL fix in Supabase Editor to clear infinite recursion.");
+        }
+        throw profileError;
+      }
 
       // 2. Fetch Orders with details
       const { data: orderData, error: orderError } = await supabase
         .from('p2p_orders')
         .select(`
           *,
-          buyer:profiles!buyer_id(name, mobile),
-          seller:profiles!seller_id(name, mobile)
+          buyer:profiles!p2p_orders_buyer_id_fkey(name, mobile),
+          seller:profiles!p2p_orders_seller_id_fkey(name, mobile)
         `)
         .order('created_at', { ascending: false });
 
@@ -91,11 +96,14 @@ export default function AdminPanel() {
           review: orderData.filter(o => o.status === 'in-review').length,
           success: successOrders.length
         });
-        console.log("Stats Updated:", { volume: totalVolume, nodes: nodeCount });
       }
     } catch (error: any) {
       console.error("Fetch Error:", error.message);
-      toast({ variant: "destructive", title: "Sync Failed", description: error.message });
+      toast({ 
+        variant: "destructive", 
+        title: "Sync Failed", 
+        description: error.message 
+      });
     } finally {
       setLoading(false);
     }
