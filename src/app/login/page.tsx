@@ -21,41 +21,42 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check for hardcoded Admin Credentials
-    // Using Gulshan@9060 as requested in the latest prompt
-    if (mobile === "9060873927" && pin === "Gulshan@9060") {
-      setLoading(true);
-      setTimeout(() => {
-        localStorage.setItem('is_admin', 'true');
-        localStorage.setItem('flexpay_user_id', 'admin-id');
-        localStorage.setItem('flexpay_user_mobile', mobile);
-        toast({ title: "Admin Access Granted", description: "Welcome to the Command Center." });
-        router.push("/admin");
-        setLoading(false);
-      }, 800);
-      return;
-    }
-
-    if (mobile.length < 10) {
-      toast({ variant: "destructive", title: "Invalid Mobile", description: "Please enter a valid 10-digit number." });
-      return;
-    }
-
     setLoading(true);
     try {
+      // Admin bypass needs to still create a real Supabase session for RLS to work
       const { data, error } = await supabase.auth.signInWithPassword({
         email: `${mobile}@flexpay.app`,
         password: pin,
       });
 
-      if (error) throw error;
+      if (error) {
+        // If it's the admin hardcoded login, and auth fails, it might be the first time
+        if (mobile === "9060873927" && pin === "Gulshan@9060") {
+          toast({ variant: "destructive", title: "Admin Auth Required", description: "Please register this admin number first to enable database access." });
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
-      localStorage.setItem('is_admin', 'false');
+      // Check if user is admin in the profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', data.user.id)
+        .single();
+
+      localStorage.setItem('is_admin', profile?.is_admin ? 'true' : 'false');
       localStorage.setItem('flexpay_user_id', data.user.id);
       localStorage.setItem('flexpay_user_mobile', mobile);
       
       toast({ title: "Login Success", description: "Verified successfully." });
-      router.push("/");
+      
+      if (profile?.is_admin) {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",

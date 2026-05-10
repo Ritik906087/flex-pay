@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
   Smartphone, User, Hash, ShieldCheck, 
@@ -39,6 +39,7 @@ export default function UserDetailPage() {
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [adminLogs, setAdminLogs] = useState<any[]>([]);
+  const [linkedAccounts, setLinkedAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [logSearch, setLogSearch] = useState("");
@@ -50,25 +51,32 @@ export default function UserDetailPage() {
   const [adjustType, setAdjustType] = useState<'add' | 'sub' | 'set'>('add');
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
 
-  useEffect(() => {
-    fetchUserData();
-  }, [userId]);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
+    if (!userId) return;
     try {
       setLoading(true);
-      // Fetch user profile and linked terminals from Supabase
+      
+      // Fetch user profile
       const { data: profile, error: pError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          linked_accounts (*)
-        `)
+        .select('*')
         .eq('id', userId)
         .single();
 
       if (pError) throw pError;
       setUser(profile);
+
+      // Fetch linked terminals separately for robustness
+      const { data: accounts, error: aError } = await supabase
+        .from('linked_accounts')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (aError) {
+        console.error("Linked accounts error:", aError.message);
+      } else {
+        setLinkedAccounts(accounts || []);
+      }
 
       // Fetch P2P activity
       const { data: orderData, error: oError } = await supabase
@@ -98,7 +106,11 @@ export default function UserDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, toast]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const handleBalanceUpdate = async () => {
     const amount = parseFloat(adjustAmount);
@@ -118,7 +130,6 @@ export default function UserDetailPage() {
       const { data: { user: adminAuthUser } } = await supabase.auth.getUser();
       const adminId = adminAuthUser?.id || null; 
 
-      // Call the RPC with the correct parameter order from our new SQL
       const { error: rpcError } = await supabase.rpc('admin_adjust_balance_v2', {
         p_user_id: userId,
         p_amount: amount,
@@ -138,8 +149,7 @@ export default function UserDetailPage() {
       setAdjustAmount("");
       setAdjustReason("");
       
-      // Refresh data
-      setTimeout(() => fetchUserData(), 500);
+      fetchUserData();
 
     } catch (error: any) {
       console.error("RPC Error:", error.message);
@@ -306,15 +316,15 @@ export default function UserDetailPage() {
           <div className="flex-1 space-y-6">
              <Tabs defaultValue="linked" className="w-full">
                 <TabsList className="w-full bg-white h-16 p-2 rounded-[2rem] border border-slate-100 shadow-sm">
-                   <TabsTrigger value="linked" className="flex-1 rounded-2xl text-[10px] font-black uppercase">Terminals ({user?.linked_accounts?.length || 0})</TabsTrigger>
+                   <TabsTrigger value="linked" className="flex-1 rounded-2xl text-[10px] font-black uppercase">Terminals ({linkedAccounts.length})</TabsTrigger>
                    <TabsTrigger value="history" className="flex-1 rounded-2xl text-[10px] font-black uppercase">Audit History ({combinedLogs.length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="linked" className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                   {user?.linked_accounts?.length === 0 ? (
+                   {linkedAccounts.length === 0 ? (
                      <div className="col-span-full py-20 text-center opacity-30 bg-white rounded-[2rem] border-2 border-dashed border-slate-200"><p className="text-[10px] font-black uppercase">No Linked Terminals</p></div>
                    ) : (
-                     user?.linked_accounts?.map((acc: any, i: number) => (
+                     linkedAccounts.map((acc: any, i: number) => (
                        <Card key={i} className="border-0 p-6 rounded-[2rem] bg-white shadow-sm flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center p-2 border border-slate-100">
