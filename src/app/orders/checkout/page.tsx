@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   CheckCircle2, Loader2, Copy, Clock, QrCode, 
@@ -12,59 +12,53 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { P2PEngine, P2POrder } from "@/lib/p2p-engine";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { supabase } from "@/lib/supabase";
 
-export default function Checkout() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const orderId = searchParams.get('id');
 
-  const [order, setOrder] = useState<P2POrder | null>(null);
+  const [order, setOrder] = useState<any | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [timeLeft, setTimeLeft] = useState(1800);
   const [utr, setUtr] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadOrder();
-    const handleUpdate = () => loadOrder();
-    window.addEventListener('p2p_order_update', handleUpdate);
-    return () => window.removeEventListener('p2p_order_update', handleUpdate);
-  }, [orderId]);
+  const loadOrder = async () => {
+    if (!orderId) return;
+    try {
+      const { data, error } = await supabase
+        .from('p2p_orders')
+        .select('*')
+        .eq('id', orderId)
+        .maybeSingle();
 
-  const loadOrder = () => {
-    const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-    const found = history.find((o: P2POrder) => o.id === orderId);
-    if (found) {
-      setOrder(found);
-      const remaining = Math.max(0, Math.floor((found.expiryTime - Date.now()) / 1000));
-      setTimeLeft(remaining);
-      if (found.status === 'success') {
-        toast({ title: "Order Success!", description: "Commission credited." });
-        router.push('/profile/history');
+      if (data) {
+        setOrder(data);
+        const expiryDate = new Date(data.expiry_time).getTime();
+        const remaining = Math.max(0, Math.floor((expiryDate - Date.now()) / 1000));
+        setTimeLeft(remaining);
+      } else {
+        router.push('/orders');
       }
-    } else {
-      router.push('/orders');
+    } catch (e) {
+      console.error(e);
     }
   };
 
   useEffect(() => {
+    loadOrder();
+  }, [orderId]);
+
+  useEffect(() => {
     if (timeLeft <= 0 && order?.status === 'pending-payment') {
-      P2PEngine.cancelOrder(orderId!, "Time limit exceeded");
+      P2PEngine.rejectOrder(orderId!);
       return;
     }
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    const timer = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(timer);
   }, [timeLeft, order]);
 
@@ -79,24 +73,23 @@ export default function Checkout() {
     toast({ title: "Copied", description: "Copied to clipboard." });
   };
 
-  const handleSubmitProof = () => {
-    if (!utr || !file) {
-      toast({ variant: "destructive", title: "Error", description: "UTR and Screenshot required." });
+  const handleSubmitProof = async () => {
+    if (!utr) {
+      toast({ variant: "destructive", title: "Error", description: "UTR Required." });
       return;
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-      const updated = history.map((o: P2POrder) => 
-        o.id === orderId ? { ...o, status: 'in-review', utr, timestamp: Date.now() } : o
-      );
-      localStorage.setItem('flexpay_orders', JSON.stringify(updated));
-      setIsSubmitting(false);
-      window.dispatchEvent(new CustomEvent('p2p_order_update'));
+    try {
+      const { error } = await P2PEngine.submitProof(orderId!, utr, "");
+      if (error) throw error;
       toast({ title: "Submitted", description: "Proof is under review." });
       router.push('/profile/history');
-    }, 1500);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Submission Failed", description: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!order) return null;
@@ -138,10 +131,10 @@ export default function Checkout() {
               <div className="w-full space-y-2">
                 <span className="text-[8px] font-bold text-gray-400 uppercase text-center block">Merchant VPA</span>
                 <div className="flex items-center justify-between bg-gray-50 px-5 py-3 rounded-xl border border-gray-100">
-                  <span className="text-[11px] font-black text-primary">{order.sellerUpi}</span>
-                  <button onClick={() => handleCopy(order.sellerUpi)} className="text-primary"><Copy size={16}/></button>
+                  <span className="text-[11px] font-black text-primary">{order.seller_upi}</span>
+                  <button onClick={() => handleCopy(order.seller_upi)} className="text-primary"><Copy size={16}/></button>
                 </div>
-                <p className="text-[8px] font-bold text-gray-400 text-center uppercase">Verified Name: {order.sellerName}</p>
+                <p className="text-[8px] font-bold text-gray-400 text-center uppercase">Verified Name: {order.seller_name}</p>
               </div>
             </div>
 
@@ -157,7 +150,7 @@ export default function Checkout() {
               <Button 
                 variant="outline" 
                 className="flex-1 h-14 rounded-xl font-black uppercase tracking-wider text-[9px] border-red-100 text-red-500 bg-red-50/30"
-                onClick={() => P2PEngine.cancelOrder(order.id, "User Cancelled")}
+                onClick={() => P2PEngine.rejectOrder(order.id)}
               >
                 CANCEL
               </Button>
@@ -208,5 +201,18 @@ export default function Checkout() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function Checkout() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin text-primary" size={32} />
+        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Order...</p>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

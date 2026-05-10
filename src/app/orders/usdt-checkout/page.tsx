@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   CheckCircle2, Loader2, Copy, Clock, QrCode, 
@@ -22,7 +22,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
-export default function UsdtCheckout() {
+function UsdtCheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -45,31 +45,11 @@ export default function UsdtCheckout() {
   };
 
   useEffect(() => {
-    if (!initialized.current && orderData.id !== "#USDT000") {
-      const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-      const existingIdx = history.findIndex((o: any) => o.id === orderData.id);
-      
-      if (existingIdx === -1) {
-        const newOrder = {
-          ...orderData,
-          profitPercent: orderData.profit,
-          bonus: 0,
-          status: 'pending-payment',
-          timestamp: Date.now(),
-          type: 'USDT'
-        };
-        localStorage.setItem('flexpay_orders', JSON.stringify([newOrder, ...history]));
-      }
-      initialized.current = true;
-    }
-  }, [orderData]);
-
-  useEffect(() => {
     if (timeLeft <= 0) {
       handleCancelOrder("Time limit exceeded");
       return;
     }
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    const timer = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
 
@@ -93,11 +73,6 @@ export default function UsdtCheckout() {
     }
     setIsCancelling(true);
     setTimeout(() => {
-      const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-      const updated = history.map((o: any) => 
-        o.id === orderData.id ? { ...o, status: 'cancelled', cancelReason: r } : o
-      );
-      localStorage.setItem('flexpay_orders', JSON.stringify(updated));
       setIsCancelling(false);
       router.push('/orders');
     }, 1000);
@@ -111,16 +86,6 @@ export default function UsdtCheckout() {
 
     setIsSubmitting(true);
     setTimeout(() => {
-      const history = JSON.parse(localStorage.getItem('flexpay_orders') || '[]');
-      const updated = history.map((o: any) => 
-        o.id === orderData.id ? { 
-          ...o, 
-          status: 'in-review', 
-          txid, 
-          timestamp: Date.now() 
-        } : o
-      );
-      localStorage.setItem('flexpay_orders', JSON.stringify(updated));
       setIsSubmitting(false);
       toast({ title: "Submitted", description: "Transaction verification in progress." });
       router.push('/orders');
@@ -258,5 +223,18 @@ export default function UsdtCheckout() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function UsdtCheckout() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin text-primary" size={32} />
+        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Payment Terminal...</p>
+      </div>
+    }>
+      <UsdtCheckoutContent />
+    </Suspense>
   );
 }

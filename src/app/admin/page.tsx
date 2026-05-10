@@ -1,13 +1,13 @@
 
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   IndianRupee, Users, Search, History, CheckCircle, Ban, Menu, Clock, 
   Maximize2, ZoomIn, ZoomOut, RotateCw, Eye, SmartphoneIcon, AlertCircle,
   Download, ExternalLink, RefreshCw, X, TrendingUp, ShieldCheck, ShieldAlert,
-  Globe, Fingerprint, Activity, Terminal
+  Globe, Fingerprint, Activity, Terminal, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import { supabase } from "@/lib/supabase";
 import { P2PEngine } from "@/lib/p2p-engine";
 import Image from "next/image";
 
-export default function AdminPanel() {
+function AdminPanelContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -36,16 +36,10 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [globalSearch, setGlobalSearch] = useState("");
   
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Fetch Profiles
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
@@ -53,7 +47,6 @@ export default function AdminPanel() {
       
       setAllUsers(profileData || []);
 
-      // Fetch Orders
       const { data: orderData } = await supabase
         .from('p2p_orders')
         .select('*')
@@ -61,7 +54,6 @@ export default function AdminPanel() {
 
       setOrders(orderData || []);
 
-      // Fetch Security Intel
       const { data: securityData } = await supabase
         .from('security_events')
         .select('*, profiles(name)')
@@ -91,7 +83,6 @@ export default function AdminPanel() {
     fetchData();
   }, [fetchData]);
 
-  // Filtering Logic
   const filteredSecurity = useMemo(() => {
     if (!globalSearch) return securityLogs;
     const q = globalSearch.toLowerCase();
@@ -101,24 +92,6 @@ export default function AdminPanel() {
       l.details?.network?.isp?.toLowerCase().includes(q)
     );
   }, [securityLogs, globalSearch]);
-
-  const handleAction = async (orderId: string, status: 'approve' | 'reject') => {
-    try {
-      if (status === 'approve') {
-        const { error } = await P2PEngine.approveOrder(orderId);
-        if (error) throw error;
-        toast({ title: "Approved", description: "Order settled successfully." });
-      } else {
-        const { error } = await P2PEngine.rejectOrder(orderId);
-        if (error) throw error;
-        toast({ variant: "destructive", title: "Rejected", description: "Order cancelled." });
-      }
-      setSelectedOrder(null);
-      fetchData();
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Action Failed", description: error.message });
-    }
-  };
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] relative overflow-x-hidden">
@@ -269,7 +242,6 @@ export default function AdminPanel() {
             </div>
           )}
           
-          {/* Keep existing Tabs handling logic */}
           {activeTab === "users" && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {allUsers.map((u) => (
@@ -305,5 +277,18 @@ export default function AdminPanel() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AdminPanel() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8FAFC]">
+        <Loader2 className="animate-spin text-primary mb-4" size={40} />
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading Sentinel Terminal...</p>
+      </div>
+    }>
+      <AdminPanelContent />
+    </Suspense>
   );
 }
