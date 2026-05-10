@@ -57,7 +57,7 @@ export default function UserDetailPage() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      // Fetch user profile and linked terminals
+      // Fetch user profile and linked terminals from Supabase
       const { data: profile, error: pError } = await supabase
         .from('profiles')
         .select(`
@@ -115,7 +115,6 @@ export default function UserDetailPage() {
     try {
       setIsUpdatingBalance(true);
       
-      // Get admin ID if available from Supabase session
       const { data: { user: adminAuthUser } } = await supabase.auth.getUser();
       const adminId = adminAuthUser?.id || null; 
 
@@ -139,7 +138,7 @@ export default function UserDetailPage() {
       setAdjustAmount("");
       setAdjustReason("");
       
-      // Artificial delay to ensure DB propagation before re-fetch
+      // Artificially wait to ensure propagation
       setTimeout(() => fetchUserData(), 500);
 
     } catch (error: any) {
@@ -155,7 +154,6 @@ export default function UserDetailPage() {
     toast({ title: "Copied", description: label + " copied to clipboard." });
   };
 
-  // Combine both P2P and Admin logs for history tab
   const combinedLogs = useMemo(() => {
     const all = [
       ...orders.map(o => ({ ...o, entryType: 'p2p' })),
@@ -165,11 +163,10 @@ export default function UserDetailPage() {
         id: "LOG-" + l.id.slice(0, 8), 
         amount: Number(l.amount), 
         status: 'manual',
-        type: l.type // 'add', 'sub', 'set'
+        type: l.type
       }))
     ];
     
-    // Sort by date
     all.sort((a, b) => new Date(b.created_at || b.timestamp).getTime() - new Date(a.created_at || a.timestamp).getTime());
 
     if (!logSearch) return all;

@@ -5,13 +5,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, CreditCard, User, 
-  Smartphone, Hash, AlertCircle, RefreshCw, StopCircle, ChevronRight, Plus
+  Smartphone, Hash, AlertCircle, RefreshCw, StopCircle, ChevronRight, Plus, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 
 const PAYMENT_APPS = [
   { 
@@ -41,111 +42,137 @@ const PAYMENT_APPS = [
   },
 ];
 
-interface Account {
-  id: string;
-  name: string;
-  mobile: string;
-  upi: string;
-  logo: string;
-  appName: string;
-  isOnline: boolean;
-  linkedAt: number;
-}
-
 export default function LinkAccount() {
   const router = useRouter();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<"initial" | "selection" | "form" | "linked">("initial");
   const [selectedApp, setSelectedApp] = useState<any>(null);
   const [formData, setFormData] = useState({ name: "", mobile: "", upi: "" });
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('flexpay_linked_accounts');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setAccounts(parsed);
-      if (parsed.length > 0) setStep("linked");
-    }
+    fetchAccounts();
   }, []);
 
-  const syncToUser = (newAccounts: Account[]) => {
-    const currentUserId = localStorage.getItem('flexpay_user_id');
-    if (!currentUserId) return;
-
-    const users = JSON.parse(localStorage.getItem('flexpay_users') || '[]');
-    const updatedUsers = users.map((u: any) => {
-      if (u.uid === currentUserId) {
-        return { ...u, linkedAccounts: newAccounts };
+  const fetchAccounts = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
       }
-      return u;
-    });
-    localStorage.setItem('flexpay_users', JSON.stringify(updatedUsers));
-    window.dispatchEvent(new CustomEvent('flexpay_users_update'));
+
+      const { data, error } = await supabase
+        .from('linked_accounts')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setAccounts(data || []);
+      if (data && data.length > 0) {
+        setStep("linked");
+      } else {
+        setStep("initial");
+      }
+    } catch (error: any) {
+      console.error("Fetch accounts error:", error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const saveAccounts = (newAccounts: Account[]) => {
-    setAccounts(newAccounts);
-    localStorage.setItem('flexpay_linked_accounts', JSON.stringify(newAccounts));
-    syncToUser(newAccounts);
-    if (newAccounts.length === 0) setStep("initial");
-  };
-
-  const handleLink = () => {
+  const handleLink = async () => {
     if (!formData.name || !formData.mobile || !formData.upi) {
       toast({ variant: "destructive", title: "Error", description: "All fields are required" });
       return;
     }
 
-    const isDuplicate = accounts.some(acc => acc.upi.toLowerCase() === formData.upi.toLowerCase() && acc.id !== editingId);
-    if (isDuplicate) {
-      toast({ variant: "destructive", title: "Already Linked", description: "This UPI is already linked." });
-      return;
-    }
+    try {
+      setSubmitting(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    if (editingId) {
-      const updated = accounts.map(acc => 
-        acc.id === editingId ? { ...acc, ...formData } : acc
-      );
-      saveAccounts(updated);
+      if (editingId) {
+        const { error } = await supabase
+          .from('linked_accounts')
+          .update({
+            account_holder_name: formData.name,
+            mobile: formData.mobile,
+            upi: formData.upi
+          })
+          .eq('id', editingId);
+
+        if (error) throw error;
+        toast({ title: "Success", description: "Account updated successfully" });
+      } else {
+        const { error } = await supabase
+          .from('linked_accounts')
+          .insert([{
+            user_id: user.id,
+            account_holder_name: formData.name,
+            mobile: formData.mobile,
+            upi: formData.upi,
+            app_name: selectedApp.name,
+            logo: selectedApp.logo,
+            is_online: true
+          }]);
+
+        if (error) throw error;
+        toast({ title: "Success", description: "Account linked successfully" });
+      }
+
+      setFormData({ name: "", mobile: "", upi: "" });
       setEditingId(null);
-      toast({ title: "Success", description: "Account updated successfully" });
-    } else {
-      const newAccount: Account = {
-        id: Math.random().toString(36).substr(2, 9),
-        ...formData,
-        appName: selectedApp.name,
-        logo: selectedApp.logo,
-        isOnline: true,
-        linkedAt: Date.now()
-      };
-      saveAccounts([...accounts, newAccount]);
-      toast({ title: "Success", description: "Account linked successfully" });
+      await fetchAccounts();
+      setStep("linked");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setSubmitting(false);
     }
-
-    setFormData({ name: "", mobile: "", upi: "" });
-    setStep("linked");
   };
 
-  const toggleStatus = (id: string) => {
-    const updated = accounts.map(acc => 
-      acc.id === id ? { ...acc, isOnline: !acc.isOnline } : acc
-    );
-    saveAccounts(updated);
-    const acc = updated.find(a => a.id === id);
-    toast({ 
-      title: acc?.isOnline ? "Started Selling" : "Stopped Selling", 
-      description: acc?.isOnline ? "This UPI is now Online." : "This UPI is now Offline."
-    });
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('linked_accounts')
+        .update({ is_online: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setAccounts(accounts.map(acc => 
+        acc.id === id ? { ...acc, is_online: !currentStatus } : acc
+      ));
+      
+      toast({ 
+        title: !currentStatus ? "Started Selling" : "Stopped Selling", 
+        description: !currentStatus ? "This UPI is now Online." : "This UPI is now Offline."
+      });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    }
   };
 
-  const handleEdit = (account: Account) => {
+  const handleEdit = (account: any) => {
     setEditingId(account.id);
-    setFormData({ name: account.name, mobile: account.mobile, upi: account.upi });
-    setSelectedApp(PAYMENT_APPS.find(a => a.name === account.appName));
+    setFormData({ name: account.account_holder_name, mobile: account.mobile, upi: account.upi });
+    setSelectedApp(PAYMENT_APPS.find(a => a.name === account.app_name) || PAYMENT_APPS[0]);
     setStep("form");
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5F7FB]">
+        <Loader2 className="animate-spin text-primary" size={32} />
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-4">Syncing Terminals...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F7FB]">
@@ -207,7 +234,7 @@ export default function LinkAccount() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 relative rounded-lg overflow-hidden border border-gray-50">
-                      <Image src={app.logo} alt={app.name} fill className="object-cover" />
+                      <Image src={app.logo} alt={app.name} fill className="object-cover" unoptimized />
                     </div>
                     <span className="text-[9px] font-black text-gray-700 uppercase">{app.name}</span>
                   </div>
@@ -222,7 +249,7 @@ export default function LinkAccount() {
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
               <div className="w-9 h-9 relative rounded-xl overflow-hidden border border-gray-50">
-                <Image src={selectedApp.logo} alt={selectedApp.name} fill className="object-cover" />
+                <Image src={selectedApp.logo} alt={selectedApp.name} fill className="object-cover" unoptimized />
               </div>
               <div>
                 <h4 className="text-[10px] font-black text-gray-900 uppercase">{selectedApp.name}</h4>
@@ -282,8 +309,9 @@ export default function LinkAccount() {
             <Button 
               className="w-full h-11 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-primary/10"
               onClick={handleLink}
+              disabled={submitting}
             >
-              {editingId ? "UPDATE ACCOUNT" : "GET MY ACCOUNT"}
+              {submitting ? <Loader2 className="animate-spin mr-2" size={14} /> : (editingId ? "UPDATE ACCOUNT" : "GET MY ACCOUNT")}
             </Button>
           </div>
         )}
@@ -295,14 +323,14 @@ export default function LinkAccount() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 relative rounded-lg overflow-hidden border border-gray-50">
-                      <Image src={acc.logo} alt={acc.appName} fill className="object-cover" />
+                      <Image src={acc.logo} alt={acc.app_name} fill className="object-cover" unoptimized />
                     </div>
                     <div>
-                      <h3 className="text-[10px] font-black text-gray-900 uppercase">{acc.appName}</h3>
+                      <h3 className="text-[10px] font-black text-gray-900 uppercase">{acc.app_name}</h3>
                       <div className="flex items-center gap-1">
-                        <div className={cn("w-1 h-1 rounded-full", acc.isOnline ? "bg-green-500 animate-pulse" : "bg-gray-400")}></div>
-                        <span className={cn("text-[7px] font-black uppercase tracking-widest", acc.isOnline ? "text-green-500" : "text-gray-400")}>
-                          {acc.isOnline ? "Online" : "Offline"}
+                        <div className={cn("w-1 h-1 rounded-full", acc.is_online ? "bg-green-500 animate-pulse" : "bg-gray-400")}></div>
+                        <span className={cn("text-[7px] font-black uppercase tracking-widest", acc.is_online ? "text-green-500" : "text-gray-400")}>
+                          {acc.is_online ? "Online" : "Offline"}
                         </span>
                       </div>
                     </div>
@@ -312,7 +340,7 @@ export default function LinkAccount() {
                 <div className="grid grid-cols-2 gap-y-2 mb-4">
                   <div>
                     <span className="text-[6px] font-bold text-gray-400 uppercase tracking-widest block">Holder</span>
-                    <p className="text-[9px] font-black text-gray-900 uppercase truncate pr-2">{acc.name}</p>
+                    <p className="text-[9px] font-black text-gray-900 uppercase truncate pr-2">{acc.account_holder_name}</p>
                   </div>
                   <div className="text-right">
                     <span className="text-[6px] font-bold text-gray-400 uppercase tracking-widest block">Mobile</span>
@@ -326,14 +354,14 @@ export default function LinkAccount() {
 
                 <div className="flex gap-2">
                   <Button 
-                    onClick={() => toggleStatus(acc.id)}
+                    onClick={() => toggleStatus(acc.id, acc.is_online)}
                     variant="outline"
                     className={cn(
                       "flex-1 h-8 rounded-lg font-black text-[7px] uppercase tracking-wider transition-all",
-                      acc.isOnline ? "border-red-50 bg-red-50 text-red-500" : "bg-green-500 text-white border-0"
+                      acc.is_online ? "border-red-50 bg-red-50 text-red-500" : "bg-green-500 text-white border-0"
                     )}
                   >
-                    {acc.isOnline ? (
+                    {acc.is_online ? (
                       <><StopCircle size={10} className="mr-1.5" /> STOP SELL</>
                     ) : (
                       <><RefreshCw size={10} className="mr-1.5" /> START SELL</>
