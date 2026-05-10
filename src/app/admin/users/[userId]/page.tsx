@@ -1,12 +1,13 @@
 
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
   Smartphone, User, Hash, ShieldCheck, 
   TrendingUp, CreditCard, History, Plus, Ban, 
-  ChevronLeft, Copy, Search, Filter, Menu, RefreshCw
+  ChevronLeft, Copy, Search, Filter, Menu, RefreshCw, 
+  ExternalLink, SmartphoneIcon, Wallet, Activity, ArrowUpRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,7 @@ export default function UserDetailPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [logSearch, setLogSearch] = useState("");
 
   useEffect(() => {
     fetchUserData();
@@ -38,7 +39,7 @@ export default function UserDetailPage() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      // Fetch profile
+      // Fetch profile with linked accounts
       const { data: profile, error: pError } = await supabase
         .from('profiles')
         .select(`
@@ -51,7 +52,7 @@ export default function UserDetailPage() {
       if (pError) throw pError;
       setUser(profile);
 
-      // Fetch user specific orders
+      // Fetch user specific orders (as buyer or seller)
       const { data: orderData, error: oError } = await supabase
         .from('p2p_orders')
         .select('*')
@@ -62,7 +63,8 @@ export default function UserDetailPage() {
       setOrders(orderData || []);
 
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      console.error("Audit Fetch Error:", error.message);
+      toast({ variant: "destructive", title: "Audit Failed", description: error.message });
     } finally {
       setLoading(false);
     }
@@ -73,10 +75,25 @@ export default function UserDetailPage() {
     toast({ title: "Copied", description: `${label} copied to clipboard.` });
   };
 
+  const filteredLogs = useMemo(() => {
+    if (!logSearch) return orders;
+    const q = logSearch.toLowerCase();
+    return orders.filter(o => 
+      o.id.toLowerCase().includes(q) || 
+      (o.utr && o.utr.toLowerCase().includes(q)) || 
+      o.amount.toString().includes(q) ||
+      o.status.toLowerCase().includes(q)
+    );
+  }, [orders, logSearch]);
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]">
-        <RefreshCw className="animate-spin text-primary" size={32} />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8FAFC]">
+        <div className="relative">
+          <RefreshCw className="animate-spin text-primary" size={48} />
+          <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse"></div>
+        </div>
+        <p className="mt-6 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Initializing Identity Audit...</p>
       </div>
     );
   }
@@ -84,16 +101,20 @@ export default function UserDetailPage() {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]">
-        <div className="text-center">
-          <h1 className="text-2xl font-black text-slate-900 mb-4">Node Identity Not Found</h1>
-          <Button onClick={() => router.push('/admin')}>Back to Dashboard</Button>
+        <div className="text-center p-12 bg-white rounded-[3rem] shadow-xl border border-slate-100 max-w-sm">
+          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <Ban size={40} />
+          </div>
+          <h1 className="text-xl font-black text-slate-900 uppercase mb-2">Node Not Found</h1>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">The requested protocol identity does not exist in the registry.</p>
+          <Button onClick={() => router.push('/admin')} className="w-full rounded-2xl h-12 font-black uppercase tracking-widest bg-slate-900">Return to Terminal</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC] overflow-x-hidden">
       <AdminSidebar 
         activeTab="users" 
         onTabChange={(tab) => router.push(`/admin?tab=${tab}`)} 
@@ -102,154 +123,207 @@ export default function UserDetailPage() {
       />
 
       <div className={cn(
-        "flex-1 transition-all duration-300",
-        isSidebarOpen ? "ml-72" : "ml-0"
+        "flex-1 transition-all duration-300 min-h-screen flex flex-col",
+        isSidebarOpen ? "lg:ml-72" : "ml-0"
       )}>
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-40">
-          <div className="flex items-center gap-5">
-            {!isSidebarOpen && (
-              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-slate-600 mr-2">
-                <Menu size={20} />
-              </Button>
-            )}
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40">
+          <div className="flex items-center gap-4 lg:gap-6">
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500">
+               <Menu size={20} />
+            </Button>
             <button 
               onClick={() => router.push('/admin?tab=users')}
-              className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-all"
+              className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-primary transition-all shadow-sm"
             >
               <ChevronLeft size={20} />
             </button>
-            <h2 className="text-[14px] font-black text-slate-900 uppercase tracking-tight">
-              Manage Node: {user.name}
-            </h2>
+            <div className="hidden sm:block">
+              <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-tighter">
+                Identity Audit: <span className="text-primary">{user.name}</span>
+              </h2>
+            </div>
           </div>
-          <Badge className={cn(
-            "h-8 px-6 text-[10px] font-black uppercase tracking-widest border-0 shadow-lg",
-            user.status === 'active' ? "bg-green-500 text-white" : "bg-red-500 text-white"
-          )}>
-            Node {user.status}
-          </Badge>
+          <div className="flex items-center gap-3">
+             <Badge className={cn(
+                "h-8 px-4 lg:px-6 text-[8px] lg:text-[10px] font-black uppercase tracking-widest border-0 shadow-lg hidden sm:flex",
+                user.status === 'active' ? "bg-emerald-500 text-white shadow-emerald-500/20" : "bg-red-500 text-white shadow-red-500/20"
+              )}>
+                {user.status} NODE
+             </Badge>
+             <Button variant="ghost" size="icon" onClick={fetchUserData} className="rounded-xl h-10 w-10 bg-slate-50 border border-slate-100">
+                <RefreshCw size={14} className={cn(loading && "animate-spin")} />
+             </Button>
+          </div>
         </header>
 
-        <main className="p-10 max-w-[1400px] mx-auto">
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="w-full lg:w-[400px] space-y-8">
-              <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white p-10">
-                <div className="flex flex-col items-center text-center mb-10">
-                  <div className="w-24 h-24 rounded-[2rem] bg-slate-50 border-2 border-slate-100 flex items-center justify-center text-slate-200 shadow-inner mb-6 relative group overflow-hidden">
-                    <User size={48} className="group-hover:scale-110 transition-transform duration-500" />
+        <main className="p-4 lg:p-10 max-w-[1600px] w-full mx-auto space-y-8">
+          <div className="flex flex-col xl:flex-row gap-8">
+            {/* Profile Summary Column */}
+            <aside className="w-full xl:w-[450px] space-y-8 shrink-0">
+              <Card className="border-0 shadow-sm rounded-[2.5rem] lg:rounded-[3.5rem] overflow-hidden bg-white p-8 lg:p-12 relative">
+                <div className="absolute top-0 right-0 p-8">
+                   <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 border border-slate-100">
+                      <ShieldCheck size={24} />
+                   </div>
+                </div>
+
+                <div className="flex flex-col items-center text-center mb-10 mt-4">
+                  <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-[2.5rem] lg:rounded-[3.5rem] bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-white shadow-xl flex items-center justify-center text-slate-200 mb-6 group relative overflow-hidden">
+                    <User size={56} className="group-hover:scale-110 transition-transform duration-500 text-slate-300" />
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">{user.name}</h3>
-                  <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-xl lg:text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">{user.name || 'ANONYMOUS NODE'}</h3>
+                  <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-100">
                     <Hash size={12} className="text-primary" />
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: {user.id.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{user.id.slice(0, 8).toUpperCase()}</p>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] block mb-2">Liquid Assets</span>
-                    <div className="flex items-center justify-between">
-                      <p className="text-3xl font-black text-primary tracking-tight">₹{Number(user.balance || 0).toLocaleString()}</p>
-                      <div className="w-8 h-8 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
-                        <TrendingUp size={14} />
-                      </div>
+                  <div className="bg-slate-900 rounded-[2rem] lg:rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+                    <div className="relative z-10">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] block mb-2">Liquid Balance</span>
+                       <div className="flex items-center justify-between">
+                          <p className="text-3xl lg:text-4xl font-black tracking-tighter">₹{Number(user.balance || 0).toLocaleString()}</p>
+                          <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                            <TrendingUp size={18} className="text-emerald-400" />
+                          </div>
+                       </div>
                     </div>
+                    <Wallet size={120} className="absolute -bottom-6 -right-6 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-500" />
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-3">
                     {[
-                      { label: "Mobile", value: user.mobile, icon: Smartphone },
-                      { label: "Locked", value: `₹${Number(user.locked_balance || 0).toLocaleString()}`, icon: Ban },
-                      { label: "UID", value: user.id.slice(0, 8).toUpperCase(), icon: Hash },
+                      { label: "Phone Identifier", value: user.mobile, icon: Smartphone, color: "text-blue-500" },
+                      { label: "Locked Assets", value: `₹${Number(user.locked_balance || 0).toLocaleString()}`, icon: Ban, color: "text-red-500" },
+                      { label: "Registered At", value: new Date(user.created_at).toLocaleDateString(), icon: Activity, color: "text-amber-500" },
                     ].map((row, i) => (
-                      <div key={i} className="flex justify-between items-center px-4 py-3 bg-slate-50/50 rounded-2xl border border-slate-100">
-                        <div className="flex items-center gap-2.5 text-slate-400">
-                          <row.icon size={14} />
-                          <span className="text-[9px] font-bold uppercase tracking-widest">{row.label}</span>
+                      <div key={i} className="flex justify-between items-center px-6 py-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-3 text-slate-400">
+                          <row.icon size={16} className={row.color} />
+                          <span className="text-[9px] font-black uppercase tracking-widest">{row.label}</span>
                         </div>
-                        <span className="text-[10px] font-black text-slate-700">{row.value}</span>
+                        <span className="text-[11px] font-black text-slate-900 tracking-tight">{row.value}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </Card>
-            </div>
+            </aside>
 
-            <div className="flex-1">
+            {/* Main Tabs Column */}
+            <div className="flex-1 space-y-6">
               <Tabs defaultValue="linked" className="w-full">
-                <TabsList className="flex w-full bg-white h-16 p-2 rounded-[1.5rem] border border-slate-100 mb-8 shadow-sm">
-                  <TabsTrigger value="linked" className="flex-1 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
-                    <CreditCard size={16} className="mr-2" />
-                    Terminals ({user.linked_accounts?.length || 0})
+                <TabsList className="w-full bg-white h-16 p-2 rounded-[2rem] border border-slate-100 mb-8 shadow-sm flex">
+                  <TabsTrigger value="linked" className="flex-1 rounded-2xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg shadow-primary/20">
+                    <CreditCard size={16} className="mr-2 hidden sm:block" />
+                    Terminal Registry ({user.linked_accounts?.length || 0})
                   </TabsTrigger>
-                  <TabsTrigger value="history" className="flex-1 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
-                    <History size={16} className="mr-2" />
+                  <TabsTrigger value="history" className="flex-1 rounded-2xl text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg shadow-primary/20">
+                    <History size={16} className="mr-2 hidden sm:block" />
                     Network Logs ({orders.length})
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="linked" className="mt-0 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {user.linked_accounts?.map((acc: any, i: number) => (
-                      <Card key={i} className="border-slate-100 p-6 rounded-[2rem] flex items-center justify-between shadow-sm bg-white">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 relative rounded-xl overflow-hidden border border-slate-50 p-1 bg-slate-50">
-                            {acc.logo && <Image src={acc.logo} alt={acc.app_name} fill className="object-contain p-1" />}
+                <TabsContent value="linked" className="mt-0 space-y-6 animate-in fade-in duration-500">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                    {user.linked_accounts?.length === 0 ? (
+                       <div className="col-span-full py-24 flex flex-col items-center justify-center bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 opacity-30">
+                          <Plus size={48} className="mb-4" />
+                          <p className="text-[11px] font-black uppercase tracking-widest">No Terminal Registered</p>
+                       </div>
+                    ) : (
+                      user.linked_accounts?.map((acc: any, i: number) => (
+                        <Card key={i} className="border-0 p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] flex items-center justify-between shadow-sm bg-white hover:shadow-md transition-all group">
+                          <div className="flex items-center gap-5">
+                            <div className="w-14 h-14 relative rounded-2xl overflow-hidden border border-slate-100 p-2 bg-slate-50 group-hover:scale-105 transition-transform">
+                              {acc.logo ? (
+                                <Image src={acc.logo} alt={acc.app_name} fill className="object-contain p-1" unoptimized />
+                              ) : (
+                                <SmartphoneIcon className="w-full h-full text-slate-200" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[13px] font-black text-slate-900 uppercase tracking-tight">{acc.app_name}</p>
+                                <Badge className={cn(
+                                  "h-5 px-2 text-[7px] font-black uppercase border-0",
+                                  acc.is_online ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"
+                                )}>{acc.is_online ? "Live" : "Idle"}</Badge>
+                              </div>
+                              <code className="text-[10px] font-black text-primary block mt-1 tracking-wider">{acc.upi}</code>
+                              <span className="text-[8px] font-bold text-slate-400 uppercase block mt-0.5">{acc.account_holder_name || 'Verification Pending'}</span>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-[12px] font-black text-slate-900 uppercase">{acc.app_name}</p>
-                            <code className="text-[10px] font-bold text-primary block mt-0.5">{acc.upi}</code>
-                            <span className={cn(
-                              "text-[8px] font-black uppercase tracking-widest mt-1 inline-block",
-                              acc.is_online ? "text-green-500" : "text-slate-300"
-                            )}>
-                              {acc.is_online ? "Online" : "Offline"}
-                            </span>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleCopy(acc.upi, "UPI ID")}>
-                          <Copy size={14} className="text-slate-300" />
-                        </Button>
-                      </Card>
-                    ))}
+                          <Button variant="ghost" size="icon" onClick={() => handleCopy(acc.upi, "UPI ID")} className="h-10 w-10 rounded-xl text-slate-300 hover:text-primary hover:bg-primary/5">
+                            <Copy size={14} />
+                          </Button>
+                        </Card>
+                      ))
+                    )}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="history" className="mt-0 space-y-4">
-                   {orders.length === 0 ? (
-                      <div className="py-20 flex flex-col items-center justify-center opacity-20 border-2 border-dashed rounded-[3rem]">
-                        <History size={48} />
-                        <p className="text-[12px] font-black uppercase mt-4 tracking-widest">No Trade Data</p>
+                <TabsContent value="history" className="mt-0 space-y-6 animate-in fade-in duration-500">
+                   <div className="bg-white p-4 lg:p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-6 flex flex-col sm:flex-row gap-4">
+                      <div className="relative flex-1 group">
+                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
+                         <Input 
+                            placeholder="Audit logs by ID, UTR, or Amount..." 
+                            className="h-14 pl-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white text-[11px] font-bold uppercase transition-all"
+                            value={logSearch}
+                            onChange={(e) => setLogSearch(e.target.value)}
+                         />
                       </div>
-                   ) : (
-                      orders.map((order, i) => (
-                        <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center shadow-sm">
-                           <div className="flex items-center gap-4">
-                              <div className={cn(
-                                "w-10 h-10 rounded-xl flex items-center justify-center",
-                                order.status === 'success' ? "bg-green-50 text-green-500" : "bg-slate-50 text-slate-400"
-                              )}>
-                                <History size={18} />
+                      <Button variant="ghost" className="h-14 px-8 rounded-2xl bg-slate-50 border-slate-100 text-slate-500 font-black uppercase text-[10px] tracking-widest hidden sm:flex">
+                         <Filter size={16} className="mr-2" /> Filter Registry
+                      </Button>
+                   </div>
+
+                   <div className="grid grid-cols-1 gap-4">
+                      {filteredLogs.length === 0 ? (
+                         <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 opacity-20">
+                            <Activity size={64} />
+                            <p className="text-[14px] font-black uppercase mt-4 tracking-[0.3em]">No Network Logs</p>
+                         </div>
+                      ) : (
+                         filteredLogs.map((order, i) => (
+                           <Card key={i} className="bg-white p-6 lg:p-8 rounded-[2rem] border-0 flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-sm hover:shadow-md transition-all gap-4">
+                              <div className="flex items-center gap-5">
+                                 <div className={cn(
+                                   "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
+                                   order.status === 'success' ? "bg-emerald-50 text-emerald-500" : 
+                                   order.status === 'in-review' ? "bg-amber-50 text-amber-500" : "bg-slate-50 text-slate-400"
+                                 )}>
+                                   <History size={20} />
+                                 </div>
+                                 <div>
+                                    <div className="flex items-center gap-3">
+                                      <h4 className="text-[13px] font-black uppercase tracking-tighter text-slate-900">{order.id}</h4>
+                                      <Badge variant="outline" className="text-[8px] font-black border-slate-100 h-5 px-2">{order.buyer_id === userId ? "BUYER" : "SELLER"}</Badge>
+                                    </div>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                      {new Date(order.created_at).toLocaleString()} {order.utr ? `• UTR: ${order.utr}` : ''}
+                                    </p>
+                                 </div>
                               </div>
-                              <div>
-                                 <h4 className="text-[12px] font-black uppercase">{order.id}</h4>
-                                 <p className="text-[9px] font-bold text-slate-400 uppercase">
-                                   {new Date(order.created_at).toLocaleDateString()} • {order.buyer_id === userId ? "BUY" : "SELL"}
-                                 </p>
+                              <div className="flex items-center justify-between w-full sm:w-auto gap-8 sm:gap-12 pl-16 sm:pl-0">
+                                 <div className="text-right">
+                                    <p className="text-lg lg:text-xl font-black text-slate-900 tracking-tighter">₹{Number(order.amount).toLocaleString()}</p>
+                                    <span className={cn(
+                                      "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md mt-1 inline-block",
+                                      order.status === 'success' ? "text-emerald-500 bg-emerald-50" : "text-slate-400 bg-slate-100"
+                                    )}>{order.status}</span>
+                                 </div>
+                                 <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-slate-300 hover:text-primary">
+                                    <ChevronRight size={18} />
+                                 </Button>
                               </div>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-[14px] font-black">₹{order.amount}</p>
-                              <Badge className={cn(
-                                "text-[8px] font-black uppercase px-2 h-5 border-0",
-                                order.status === 'success' ? "bg-green-500" : "bg-slate-200 text-slate-600"
-                              )}>
-                                {order.status}
-                              </Badge>
-                           </div>
-                        </div>
-                      ))
-                   )}
+                           </Card>
+                         ))
+                      )}
+                   </div>
                 </TabsContent>
               </Tabs>
             </div>
