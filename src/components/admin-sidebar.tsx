@@ -20,11 +20,10 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
   const router = useRouter();
 
   const navItems = [
-    { id: "dashboard", label: "Overview", icon: LayoutDashboard },
-    { id: "users", label: "Nodes", icon: Users },
-    { id: "approvals", label: "Review", icon: CheckCircle2, badge: pendingCount },
-    { id: "history", label: "Logs", icon: History },
-    { id: "settings", label: "Config", icon: Settings },
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "users", label: "Node Directory", icon: Users },
+    { id: "approvals", label: "Audit Review", icon: CheckCircle2, badge: pendingCount },
+    { id: "history", label: "System Logs", icon: History },
   ];
 
   const handleNavClick = (id: string) => {
@@ -34,31 +33,31 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
   return (
     <aside className={cn(
       "bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50 transition-all duration-300 ease-in-out w-72 lg:translate-x-0",
-      isOpen ? "translate-x-0" : "-translate-x-full"
+      isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
     )}>
       <div className="p-8 flex flex-col h-full">
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex items-center justify-between mb-10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20">
+            <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-900/20">
               <ShieldCheck size={22} />
             </div>
             <div>
-              <h1 className="text-[13px] font-black text-slate-900 tracking-tight uppercase">Terminal</h1>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Admin</p>
+              <h1 className="text-[13px] font-black text-slate-900 tracking-tight uppercase">Audit Terminal</h1>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Admin Control</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onToggle} className="lg:hidden text-slate-400">
+          <Button variant="ghost" size="icon" onClick={onToggle} className="lg:hidden text-slate-400 h-10 w-10">
             <X size={20} />
           </Button>
         </div>
 
-        <nav className="space-y-1.5">
+        <nav className="space-y-2 flex-1 overflow-y-auto no-scrollbar py-2">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => handleNavClick(item.id)}
               className={cn(
-                "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-200 group",
+                "w-full flex items-center justify-between px-4 py-4 rounded-2xl transition-all duration-200 group",
                 activeTab === item.id 
                   ? "bg-primary text-white shadow-xl shadow-primary/20" 
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
@@ -69,7 +68,7 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
                   "transition-colors",
                   activeTab === item.id ? "text-white" : "text-slate-400 group-hover:text-primary"
                 )} />
-                <span className="text-[11px] font-black uppercase tracking-wider">{item.label}</span>
+                <span className="text-[11px] font-black uppercase tracking-widest">{item.label}</span>
               </div>
               {item.badge ? (
                 <span className={cn(
@@ -83,14 +82,14 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
           ))}
         </nav>
 
-        <div className="mt-auto pt-8 border-t border-slate-100">
+        <div className="mt-auto pt-8 border-t border-slate-100 shrink-0">
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-12 px-4" 
+            className="w-full justify-start gap-4 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-14 px-5 border border-transparent hover:border-red-100" 
             onClick={() => router.push('/')}
           >
             <LogOut size={18} />
-            <span className="text-[11px] font-black uppercase tracking-wider">Exit Terminal</span>
+            <span className="text-[11px] font-black uppercase tracking-widest">Exit Terminal</span>
           </Button>
         </div>
       </div>
