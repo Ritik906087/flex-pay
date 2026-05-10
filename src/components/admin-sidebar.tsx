@@ -2,7 +2,7 @@
 "use client"
 
 import { 
-  LayoutDashboard, Users, CheckCircle2, History, Settings, LogOut, ShieldCheck, ChevronLeft, Menu 
+  LayoutDashboard, Users, CheckCircle2, History, Settings, LogOut, ShieldCheck, ChevronLeft, X 
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -20,27 +20,23 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
   const router = useRouter();
 
   const navItems = [
-    { id: "dashboard", label: "System Overview", icon: LayoutDashboard },
-    { id: "users", label: "User Directory", icon: Users },
-    { id: "approvals", label: "Review Queue", icon: CheckCircle2, badge: pendingCount },
-    { id: "history", label: "Trade Logs", icon: History },
-    { id: "settings", label: "Configurations", icon: Settings },
+    { id: "dashboard", label: "Overview", icon: LayoutDashboard },
+    { id: "users", label: "Nodes", icon: Users },
+    { id: "approvals", label: "Review", icon: CheckCircle2, badge: pendingCount },
+    { id: "history", label: "Logs", icon: History },
+    { id: "settings", label: "Config", icon: Settings },
   ];
 
   const handleNavClick = (id: string) => {
-    if (window.location.pathname !== '/admin') {
-      router.push(`/admin?tab=${id}`);
-    } else {
-      onTabChange(id);
-    }
+    onTabChange(id);
   };
 
   return (
     <aside className={cn(
-      "bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out",
-      isOpen ? "translate-x-0 w-72" : "-translate-x-full w-72"
+      "bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 z-50 transition-all duration-300 ease-in-out w-72 lg:translate-x-0",
+      isOpen ? "translate-x-0" : "-translate-x-full"
     )}>
-      <div className="p-8">
+      <div className="p-8 flex flex-col h-full">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/20">
@@ -51,8 +47,8 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Admin</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onToggle} className="text-slate-400 hover:text-slate-900">
-            <ChevronLeft size={20} />
+          <Button variant="ghost" size="icon" onClick={onToggle} className="lg:hidden text-slate-400">
+            <X size={20} />
           </Button>
         </div>
 
@@ -86,17 +82,17 @@ export function AdminSidebar({ activeTab, onTabChange, pendingCount = 0, isOpen,
             </button>
           ))}
         </nav>
-      </div>
 
-      <div className="mt-auto p-8 border-t border-slate-100">
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-12" 
-          onClick={() => router.push('/')}
-        >
-          <LogOut size={18} />
-          <span className="text-[11px] font-black uppercase tracking-wider">Exit Terminal</span>
-        </Button>
+        <div className="mt-auto pt-8 border-t border-slate-100">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-12 px-4" 
+            onClick={() => router.push('/')}
+          >
+            <LogOut size={18} />
+            <span className="text-[11px] font-black uppercase tracking-wider">Exit Terminal</span>
+          </Button>
+        </div>
       </div>
     </aside>
   );
