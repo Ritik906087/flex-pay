@@ -1,18 +1,41 @@
+
 "use client"
 
+import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/bottom-nav";
-import { UserPlus, Copy, Share2, Users, Trophy, QrCode, Target, Info } from "lucide-react";
+import { UserPlus, Copy, Share2, Users, Trophy, QrCode, Target, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 export default function Invite() {
   const { toast } = useToast();
-  const inviteCode = "FLEX123456";
+  const [inviteCode, setInviteCode] = useState<string>("...");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserUid = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Using the first 8 characters of UUID as the UID/Invite Code
+          setInviteCode(user.id.slice(0, 8).toUpperCase());
+        }
+      } catch (error) {
+        console.error("Error fetching user for invite:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserUid();
+  }, []);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(`https://flexpay.app/register?ref=${inviteCode}`);
+    if (inviteCode === "...") return;
+    const link = `https://flexpay.app/register?ref=${inviteCode}`;
+    navigator.clipboard.writeText(link);
     if (window.navigator.vibrate) window.navigator.vibrate(50);
     toast({
       title: "Success",
@@ -21,6 +44,7 @@ export default function Invite() {
   };
 
   const copyUid = () => {
+    if (inviteCode === "...") return;
     navigator.clipboard.writeText(inviteCode);
     if (window.navigator.vibrate) window.navigator.vibrate(50);
     toast({
@@ -63,10 +87,17 @@ export default function Invite() {
       <div className="px-5 mt-6 flex flex-col items-center">
         <button 
           onClick={copyUid}
-          className="bg-white p-5 rounded-[1.8rem] border border-gray-100 flex flex-col items-center gap-3 shadow-sm w-full max-w-[240px] active:scale-[0.98] transition-all group"
+          disabled={loading}
+          className="bg-white p-5 rounded-[1.8rem] border border-gray-100 flex flex-col items-center gap-3 shadow-sm w-full max-w-[240px] active:scale-[0.98] transition-all group disabled:opacity-50"
         >
           <div className="bg-gray-50 p-2.5 rounded-2xl border border-gray-100 group-active:bg-gray-100 transition-colors">
-            <QrCode size={120} className="text-gray-900" />
+            {loading ? (
+              <div className="w-[120px] h-[120px] flex items-center justify-center">
+                <Loader2 className="animate-spin text-primary" size={32} />
+              </div>
+            ) : (
+              <QrCode size={120} className="text-gray-900" />
+            )}
           </div>
           <div className="text-center">
             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 block">Your Invite Code (UID)</span>
@@ -85,11 +116,15 @@ export default function Invite() {
           variant="outline"
           className="flex-1 h-12 rounded-xl font-bold uppercase tracking-wider border-gray-100 bg-white text-gray-600 shadow-sm text-[9px]"
           onClick={copyToClipboard}
+          disabled={loading}
         >
           <Copy className="mr-2" size={14} />
           Copy Link
         </Button>
-        <Button className="flex-1 h-12 rounded-xl font-black uppercase tracking-wider shadow-lg shadow-primary/10 text-[9px]">
+        <Button 
+          className="flex-1 h-12 rounded-xl font-black uppercase tracking-wider shadow-lg shadow-primary/10 text-[9px]"
+          disabled={loading}
+        >
           <Share2 className="mr-2" size={14} />
           Share Now
         </Button>
@@ -100,7 +135,6 @@ export default function Invite() {
         <h3 className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Reward System Rules</h3>
         
         <div className="bg-white p-4 rounded-[1.5rem] border border-gray-100 shadow-sm space-y-4">
-          {/* Level 1 Detail */}
           <div className="flex gap-4">
             <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shrink-0">
               <span className="font-black text-xs">L1</span>
@@ -121,7 +155,6 @@ export default function Invite() {
 
           <div className="h-px bg-gray-50"></div>
 
-          {/* Level 2 Detail */}
           <div className="flex gap-4">
             <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-500 shrink-0">
               <span className="font-black text-xs">L2</span>
